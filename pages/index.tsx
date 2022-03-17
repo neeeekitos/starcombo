@@ -78,7 +78,7 @@ const Home: NextPage = () => {
             </Button>
           </Link>
 
-          <Link href={"/create"} passHref>
+          <Link href={"/combos"} passHref>
             <Button
               bg='transparent'
               width={"145px"}
