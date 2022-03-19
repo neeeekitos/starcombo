@@ -15,7 +15,7 @@ import {Button, Flex, Heading} from "@chakra-ui/react"
 import {Abi, AccountInterface, AddTransactionResponse, Contract} from 'starknet'
 import {toBN} from 'starknet/utils/number'
 
-import BalancesAbi from '../contracts/balances.json'
+import BalancesAbi from '../contracts/artifacts/abis/balances.json'
 import {defaultProvider, ec, hash} from "starknet/src/index";
 import {transformCallsToMulticallArrays} from "starknet/src/utils/transaction";
 import {getStarknet} from "@argent/get-starknet";

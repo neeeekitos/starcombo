@@ -1,0 +1,22 @@
+[
+    {
+        "inputs": [
+            {
+                "name": "hash",
+                "type": "felt"
+            },
+            {
+                "name": "signature_len",
+                "type": "felt"
+            },
+            {
+                "name": "signature",
+                "type": "felt*"
+            }
+        ],
+        "name": "Account_is_valid_signature",
+        "outputs": [],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
