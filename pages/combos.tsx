@@ -21,6 +21,10 @@ import {transformCallsToMulticallArrays} from "starknet/src/utils/transaction";
 import {getStarknet} from "@argent/get-starknet";
 import {StarknetWindowObject} from "@argent/get-starknet/dist/extension.model";
 import {useEffect, useState} from "react";
+import ActionBlock from "./action-block";
+
+import styles from "./combos.module.css";
+import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../constants/contants";
 
 export const COUNTER_ADDRESS = '0x04d57c28ba8985ce952e5346bb0a63f64f8ac23884d341d2273ffbeeaf74c68b'
 
@@ -187,17 +191,25 @@ function DemoAccount() {
 const Combos: NextPage = () => {
 
   return (
-    <Flex
-      alignItems={"center"}
-      flexDir={"column"}
-
-    >
+    <div className={styles.container}>
       <DemoAccount/>
       <DemoContractCall/>
       <DemoContractInvoke/>
       <MulticallTest/>
-    </Flex>
+      <div className={styles.blockWrapper}>
+
+        <ActionBlock
+          action={ACTIONS[ActionTypes.SWAP]}
+          protocol={PROTOCOLS[ProtocolNames.JEDISWAP]}
+        />
+
+        <ActionBlock
+          action={ACTIONS[ActionTypes.ADD_LIQUIDITY]}
+          protocol={PROTOCOLS[ProtocolNames.AAVE]}
+        />
+      </div>
+    </div>
+
   )
 }
-
-export default Combos
+export default Combos;

@@ -1,0 +1,11 @@
+.blockWrapper {
+    padding: 20px;
+    width: 500px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
