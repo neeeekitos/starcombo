@@ -25,6 +25,7 @@ import ActionBlock from "./action-block";
 
 import styles from "./combos.module.css";
 import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../constants/contants";
+import Invocations from "../components/Invocations";
 
 export const COUNTER_ADDRESS = '0x04d57c28ba8985ce952e5346bb0a63f64f8ac23884d341d2273ffbeeaf74c68b'
 
@@ -95,72 +96,6 @@ function DemoContractInvoke() {
   )
 }
 
-const MulticallTest = () => {
-
-  const [acc, setAcc] = useState<AccountInterface>();
-  const [hash, setHash] = useState<string>();
-  useEffect(() => {
-
-    setup();
-
-  }, [])
-  const contract = useBalanceContract();
-
-  const setup = async () => {
-    const starknet = getStarknet();
-    await starknet.enable();
-    if (starknet.isConnected === false) {
-    }
-    console.log(starknet)
-    const account = starknet.account;
-    console.log(account);
-    if (account) setAcc(account);
-
-  }
-
-  const makeTransaction = async () => {
-    console.log(acc)
-    try {
-      const transac: AddTransactionResponse = await acc!.execute(
-        [
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          },
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          },
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          },
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          }
-        ],
-        [BalancesAbi as Abi, BalancesAbi as Abi, BalancesAbi as Abi, BalancesAbi as Abi]
-      )
-      console.log(transac);
-      setHash(transac.transaction_hash);
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-
-  return (
-    <Flex
-      marginTop={"50px"}>
-      <Button onClick={() => makeTransaction()}>Make Transaction</Button>
-      {hash && <div>
-        {hash}
-      </div>}
-    </Flex>
-  )
-
-}
 
 function DemoAccount() {
   const {account, connect} = useStarknet()
@@ -195,7 +130,7 @@ const Combos: NextPage = () => {
       <DemoAccount/>
       <DemoContractCall/>
       <DemoContractInvoke/>
-      <MulticallTest/>
+      <Invocations/>
       <div className={styles.blockWrapper}>
 
         <ActionBlock
