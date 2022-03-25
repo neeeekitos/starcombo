@@ -7,6 +7,7 @@ import {getStarknet} from "@argent/get-starknet/dist";
 
 
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json"
+import {ethers} from "ethers";
 
 
 const getPoolInfo = async (poolNumber: string) => {
@@ -95,6 +96,9 @@ const Invocations = () => {
     //     }
     //   ]
 
+    const testErc20Adress="0x7394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10"
+    const testErc20Dec = ethers.BigNumber.from(testErc20Adress).toBigInt().toString()
+    console.log(testErc20Dec)
     const poolNumber = "4";
     const poolInfo = await getPoolInfo(poolNumber); //4 is for test to tUSDC
     //TODO compute output amt here from pool values
@@ -104,7 +108,7 @@ const Invocations = () => {
       const transac: AddTransactionResponse = await acc!.execute(
         [
           {
-            contractAddress: "0x7394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10", //address for test token
+            contractAddress: testErc20Adress, //address for test token
             entrypoint: "approve",
             calldata: [
               "3222138877362455837336203414511899549532510795732583806035105711862644221454",
@@ -117,7 +121,7 @@ const Invocations = () => {
             entrypoint: "swap",
             calldata: [
               poolNumber,
-              "0x7394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10",
+              testErc20Dec,
               tokenAmt,
               "0",
               minOutputAmt,
