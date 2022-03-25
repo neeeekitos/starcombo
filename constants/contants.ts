@@ -158,3 +158,4 @@ export const JEDI_TOKENS = [
 ];
 
 export const JEDI_ROUTER_ADDRESS = '0x01ea2f12a70ad6a052f99a49dace349996a8e968a0d6d4e9ec34e0991e6d5e5e';
+export const JEDI_REGISTRY_ADDRESS = '0x0413ba8d51ec05be863eb82314f0cf0ffceff949e76c87cae0a4bd7f89cfc2b1'

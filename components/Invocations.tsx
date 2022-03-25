@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {Abi, AccountInterface, AddTransactionResponse, Contract} from "starknet";
+import {Abi, AccountInterface, AddTransactionResponse, Contract, Provider} from "starknet";
 import BalancesAbi from "../contracts/artifacts/abis/balances.json";
 import {Button, Flex} from "@chakra-ui/react";
 import {COUNTER_ADDRESS} from "../pages/combos";
@@ -7,10 +7,10 @@ import {getStarknet} from "@argent/get-starknet/dist";
 
 
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json"
-import ERC20Abi from "../contracts/artifacts/abis/ERC20_Mintable.json";
 
 import {ethers} from "ethers";
-import {JEDI_ROUTER_ADDRESS, JEDI_TOKENS} from "../constants/contants";
+import {JEDI_ROUTER_ADDRESS, JEDI_TOKENS,JEDI_REGISTRY_ADDRESS} from "../constants/contants";
+import {ChainId, Fetcher, Pair, Percent, Route, Token, TokenAmount, Trade} from "@jediswap/sdk";
 
 
 const getPoolInfo = async (poolNumber: string) => {
@@ -22,6 +22,7 @@ const Invocations = () => {
 
   const [acc, setAcc] = useState<AccountInterface>();
   const [hash, setHash] = useState<string>();
+  const [provider, setProvider]=useState<Provider>()
 
   useEffect(() => {
     setup();
@@ -35,6 +36,7 @@ const Invocations = () => {
       return;
     }
     console.log(starknet)
+    setProvider(starknet.provider)
     const account = starknet.account;
     console.log(account);
     setAcc(account);
@@ -110,40 +112,84 @@ const Invocations = () => {
   }
 
   const jediSwap = async () => {
-    // example of swapping tokens on jedi swap
-    // [
-    //   {
-    //     "contractAddress": "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c",
-    //     "entrypoint": "approve",
-    //     "calldata": [
-    //       "866079946690358847859985129991514658898248253189226492476287621475869744734",
-    //       "1000000000000000000",
-    //       "0"
-    //     ]
-    //   },
-    //   {
-    //     "contractAddress": "0x01ea2f12a70ad6a052f99a49dace349996a8e968a0d6d4e9ec34e0991e6d5e5e",
-    //     "entrypoint": "swap_exact_tokens_for_tokens",
-    //     "calldata": [
-    //       "1000000000000000000",
-    //       "0",
-    //       "3324",
-    //       "0",
-    //       "2",
-    //       "2142376297555024307137040930023258799355699005255497903690441922440230523500",
-    //       "2692716159122393784616706728158140843871764933665233947930296785143367321430",
-    //       "2798193459390376008727001279081998466241421508748572511158283351255833300357",
-    //       "1648216380"
-    //     ]
-    //   }
-    // ]
-    const amountFrom = "1000000000000000000";
-    const amountTo = "3316";
-    const tokenFrom = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c";
-    const tokenTo = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756";
+
+    const amountFrom = "100000000000000000000";
+    const amountTo = "3316"; //not necessary anymore for exact_tokens_for_tokens
+    const tokenFrom = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c"; //jedifeb0
+    const tokenTo = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756"; //jedifeb1
     const receiver = acc!.address;
+
+    //We need these but idk why tbh
+    const from = new Token(
+      ChainId.GÖRLI,
+      tokenFrom,
+      18,
+      't0'
+    )
+    const to = new Token(
+      ChainId.GÖRLI,
+      tokenTo,
+      18,
+      't1'
+    )
+
+    //Fetches liq pool address for tokenA and tokenB
+    const liquidityPoolForTokens = await provider?.callContract({
+      contractAddress:JEDI_REGISTRY_ADDRESS,
+      entrypoint:"get_pair_for",
+      calldata:[
+        ethers.BigNumber.from(tokenFrom).toBigInt().toString(),
+        ethers.BigNumber.from(tokenTo).toBigInt().toString()
+      ]
+    }).then((res) => res.result[0])
+
+    //TODO throw error for frontend if couldn't find pool
+    if(!liquidityPoolForTokens) return;
+    console.log(liquidityPoolForTokens)
+
+    const liqPoolToken0 =await provider?.callContract({
+      contractAddress:liquidityPoolForTokens!,
+      entrypoint:"token0",
+    }).then((res) => ethers.BigNumber.from(res.result[0]).toString())
+
+    if(!liqPoolToken0) return;
+    console.log(liqPoolToken0);
+
+    // get reserves for the tokenA tokenB liq pool
+    const liqReserves =await provider?.callContract({
+      contractAddress:liquidityPoolForTokens!,
+      entrypoint:"get_reserves",
+    }).then((res) => res.result);
+
+    if(!liqReserves) return;
+    console.log(liqReserves)
+    //TODO throw error for frontend
+
+    // TODO figure out why I had to do the inverse here
+    let liqReserveTokenFrom = liqPoolToken0===tokenFrom? liqReserves[2] : liqReserves[0];
+    let liqReserveTokenTo = liqPoolToken0===tokenFrom? liqReserves[0] : liqReserves[2];
+
+    console.log(liqReserveTokenFrom)
+    console.log(liqReserveTokenTo)
+
+    //Create pair to find the best trade for this pair. Use liq reserves as pair amounts
+    const pair_0_1 = new Pair(new TokenAmount(from, liqReserveTokenFrom), new TokenAmount(to, liqReserveTokenTo))
+
+    console.log(pair_0_1)
+    const trade = Trade.bestTradeExactIn([pair_0_1],new TokenAmount(from,amountFrom),to)[0];
+    console.log(trade)
+    console.log("execution price: $" + trade.executionPrice.toSignificant(6));
+    console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
+    const slippageTolerance = new Percent('50', '10000'); // 0.5%
+    const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;
+    const amountOutMinDec = ethers.BigNumber.from(amountOutMin.toString()).toBigInt()
+    console.log(amountOutMinDec)
+
+
     console.log(`receiver: ${receiver}`);
     console.log(Math.floor(Date.now() / 1000));
+
+
     const tx = [
       {
         contractAddress: tokenFrom,
@@ -160,13 +206,13 @@ const Invocations = () => {
         calldata: [
           amountFrom,
           "0",
-          amountTo,
+          amountOutMinDec.toString(),
           "0",
           "2",
           ethers.BigNumber.from(tokenFrom).toBigInt().toString(),
           ethers.BigNumber.from(tokenTo).toBigInt().toString(),
           ethers.BigNumber.from(receiver).toBigInt().toString(),
-          Math.floor((Date.now() / 1000) + 3600) // default timeout is 1 hour
+          Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
         ]
       }
     ];
