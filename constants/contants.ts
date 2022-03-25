@@ -129,3 +129,32 @@ export const SELECTABLE_TOKENS = [
     symbol: 'DAO',
   },
 ];
+
+export const JEDI_TOKENS = [
+  {
+    name: 'J23FEB0',
+    address: '0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c',
+    decimals: 18,
+    symbol: 'J23FEB0',
+  },
+  {
+    name: 'J23FEB1',
+    address: '0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756',
+    decimals: 18,
+    symbol: 'J23FEB1',
+  },
+  {
+    name: 'J23FEB2',
+    address: '0x024da028e8176afd3219fbeafb17c49624af9b86dcbe81007ae40d93f741617d',
+    decimals: 18,
+    symbol: 'J23FEB2',
+  },
+  {
+    name: 'J23FEB3',
+    address: '0x01ca5dedf1612b1ffb035e838ac09d70e500d22cf9cd0de4bebcef8553506fdb',
+    decimals: 18,
+    symbol: 'J23FEB3',
+  },
+];
+
+export const JEDI_ROUTER_ADDRESS = '0x01ea2f12a70ad6a052f99a49dace349996a8e968a0d6d4e9ec34e0991e6d5e5e';
