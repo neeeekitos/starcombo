@@ -1,14 +1,15 @@
 import {DexCombo} from "../constants/interfaces";
 import {JEDI_ROUTER_ADDRESS, MY_SWAP_ROUTER_ADDRESS} from "../constants/contants";
 import {ethers} from "ethers";
-import {Abi, Contract} from "starknet";
+import {Abi, AccountInterface, Contract, Provider} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
 
 export class MySwap implements DexCombo {
 
   protected static instance: MySwap;
 
-  protected constructor() { }
+  protected constructor() {
+  }
 
   public static getInstance(): MySwap {
     if (!MySwap.instance) {
@@ -18,21 +19,29 @@ export class MySwap implements DexCombo {
     return MySwap.instance;
   }
 
-  public swap(tokenFrom: string, tokenTo: string, amountIn: string, amountOut: string): Promise<any> {
+  public async swap(account: AccountInterface, provider: Provider, tokenFrom: string, tokenTo: string, amountIn: string, amountOut: string): Promise<any> {
+    //TODO calculate amountOut manually?
     const tokenFromDec = ethers.BigNumber.from(tokenFrom).toBigInt().toString();
     const tokenToDec = ethers.BigNumber.from(tokenTo).toBigInt().toString();
-    return this.findPool(tokenFromDec, tokenToDec).then(poolId => ({
-      contractAddress: MY_SWAP_ROUTER_ADDRESS,
-      entrypoint: "swap",
-      calldata: [
-        poolId,
-        tokenToDec,
-        amountIn,
-        "0",
-        amountOut,
-        "0"
-      ]
-    }));
+    const poolId = await this.findPool(tokenFromDec, tokenToDec);
+    console.log(poolId)
+
+    const tx = [
+      {
+        contractAddress: MY_SWAP_ROUTER_ADDRESS,
+        entrypoint: "swap",
+        calldata: [
+          poolId,
+          tokenToDec,
+          amountIn,
+          "0",
+          amountOut,
+          "0"
+        ]
+      }
+    ]
+    return await account.execute(tx);
+
   }
 
   addLiquidity(): void {
