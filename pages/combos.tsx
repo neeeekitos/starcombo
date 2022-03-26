@@ -27,6 +27,7 @@ import ActionBlock from "./action-block";
 import styles from "./combos.module.css";
 import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../constants/contants";
 import Invocations from "../components/Invocations";
+import Navbar from "../components/Navbar";
 
 export const COUNTER_ADDRESS = '0x04d57c28ba8985ce952e5346bb0a63f64f8ac23884d341d2273ffbeeaf74c68b'
 
@@ -128,6 +129,7 @@ const Combos: NextPage = () => {
 
   return (
     <div className={styles.container}>
+      <Navbar/>
       <DemoAccount/>
       <DemoContractCall/>
       <DemoContractInvoke/>
