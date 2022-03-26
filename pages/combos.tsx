@@ -12,16 +12,18 @@ import {getStarknet} from "@argent/get-starknet";
 import {StarknetWindowObject} from "@argent/get-starknet/dist/extension.model";
 import {useEffect, useState} from "react";
 import ActionBlock from "./action-block";
+import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
 import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../constants/contants";
 import Invocations from "../components/Invocations";
 
 
-
 const Combos: NextPage = () => {
 
   const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
+  const [items, setItems] = useState([0, 1, 2, 3])
+
 
   const renderDisconnected = () => {
     return (
@@ -38,24 +40,45 @@ const Combos: NextPage = () => {
     return (
       <div className={styles.container}>
         <Invocations/>
-        <div className={styles.blockWrapper}>
 
-          <ActionBlock
-            action={ACTIONS[ActionTypes.SWAP]}
-            protocol={PROTOCOLS[ProtocolNames.JEDISWAP]}
-          />
 
-          <ActionBlock
-            action={ACTIONS[ActionTypes.ADD_LIQUIDITY]}
-            protocol={PROTOCOLS[ProtocolNames.AAVE]}
-          />
-        </div>
+        <Reorder.Group
+          as="ul"
+          className={styles.actionsWrapper}
+          axis="x"
+          values={items}
+          onReorder={setItems}
+          layoutScroll
+          style={{overflowX: "scroll"}}
+        >
+          {items.map((item) => (
+            <Reorder.Item key={item} value={item}>
+              <div className={styles.blockWrapper}>
+                <ActionBlock
+                  action={ACTIONS[ActionTypes.SWAP]}
+                  protocol={PROTOCOLS[ProtocolNames.JEDISWAP]}
+                  item={item}
+                />
+              </div>
+            </Reorder.Item>
+          ))}
+        </Reorder.Group>
+
+        {/*<ActionBlock*/}
+        {/*  action={ACTIONS[ActionTypes.SWAP]}*/}
+        {/*  protocol={PROTOCOLS[ProtocolNames.JEDISWAP]}*/}
+        {/*/>*/}
+
+        {/*<ActionBlock*/}
+        {/*  action={ACTIONS[ActionTypes.ADD_LIQUIDITY]}*/}
+        {/*  protocol={PROTOCOLS[ProtocolNames.AAVE]}*/}
+        {/*/>*/}
       </div>
 
     )
   }
 
-  return(
+  return (
     <>
       {account && renderConnected()}
       {!account && renderDisconnected()}

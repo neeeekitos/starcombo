@@ -25,18 +25,18 @@ const ActionBlock = (props: any) => {
   }, [x]);
 
   return (
-    <motion.div
-      drag
-      whileHover={{ scale: 1.05 }}
-      animate={{
-        x: 100
-      }}
-      dragDirectionLock
-      dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
-      dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-      dragElastic={0.5}
-      whileTap={{ cursor: "grabbing" }}
-    >
+    // <motion.div
+    //   drag
+    //   whileHover={{ scale: 1.05 }}
+    //   animate={{
+    //     x: 100
+    //   }}
+    //   dragDirectionLock
+    //   dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
+    //   dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+    //   dragElastic={0.5}
+    //   whileTap={{ cursor: "grabbing" }}
+    // >
       <div className={styles.block}>
         <div className={styles.actionNameWrapper}>
           <h3 className={styles.actionName}>{props.action.name}</h3>
@@ -84,7 +84,7 @@ const ActionBlock = (props: any) => {
           </div>
         </div>
       </div>
-    </motion.div>
+    // </motion.div>
   )
 }
 export default ActionBlock;
