@@ -1,4 +1,4 @@
-import type { NextPage } from 'next'
+import type {NextPage} from 'next'
 import {Box, Flex, Text, chakra, ButtonGroup, Button, Heading} from "@chakra-ui/react";
 import Link from 'next/link'
 
@@ -20,7 +20,7 @@ const Home: NextPage = () => {
             fontWeight='extrabold'
             isTruncated
           >
-           StarCombo
+            StarCombo
           </Heading>
         </Flex>
         <Flex
@@ -52,7 +52,7 @@ const Home: NextPage = () => {
               bgGradient='linear(to-r, #F0C3EC, #7F6AFF)'
               bgClip='text'
             >
-             Starknet
+              Starknet
             </chakra.span>
             ’s zk-rollup technology
           </Text>

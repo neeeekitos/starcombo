@@ -2,8 +2,6 @@ import {useEffect, useState} from "react";
 import {Abi, AccountInterface, AddTransactionResponse, Contract, Provider} from "starknet";
 import BalancesAbi from "../contracts/artifacts/abis/balances.json";
 import {Button, Flex} from "@chakra-ui/react";
-import {COUNTER_ADDRESS} from "../pages/combos";
-import {getStarknet} from "@argent/get-starknet/dist";
 
 
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json"
@@ -20,73 +18,12 @@ const getPoolInfo = async (poolNumber: string) => {
   const mySwapRouterContract = new Contract(mySwapRouter.abi as Abi, "0x071faa7d6c3ddb081395574c5a6904f4458ff648b66e2123b877555d9ae0260e");
   return await mySwapRouterContract.call("get_pool", [poolNumber]);
 }
-
-const getLiquidityPoolAddress = async (provider: Provider, tokenFrom: string, tokenTo: string) => {
-  const liquidityPoolForTokens = await provider.callContract({
-    contractAddress: JEDI_REGISTRY_ADDRESS,
-    entrypoint: "get_pair_for",
-    calldata: [
-      ethers.BigNumber.from(tokenFrom).toBigInt().toString(),
-      ethers.BigNumber.from(tokenTo).toBigInt().toString()
-    ]
-  }).then((res) => res.result[0])
-  return liquidityPoolForTokens;
-}
-
 const Invocations = () => {
 
   const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
 
   const [hash, setHash] = useState<string>();
 
-  useEffect(() => {
-    setup();
-  }, [])
-
-  const setup = async () => {
-    const starknet = getStarknet();
-    await starknet.enable();
-    if (!starknet.isConnected) {
-      alert("starknet is not connected");
-      return;
-    }
-    console.log(starknet)
-    setProvider(starknet.provider)
-    const account = starknet.account;
-    console.log(account);
-    setAccount(account);
-  }
-
-  const makeTransaction = async () => {
-    console.log(account)
-    try {
-      const transac: AddTransactionResponse = await account!.execute(
-        [
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          },
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          },
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          },
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          }
-        ],
-        [BalancesAbi as Abi, BalancesAbi as Abi, BalancesAbi as Abi, BalancesAbi as Abi]
-      )
-      console.log(transac);
-      setHash(transac.transaction_hash);
-    } catch (e) {
-      console.log(e);
-    }
-  }
 
   const jediMint = async () => {
     // example of minting tokens
@@ -122,7 +59,6 @@ const Invocations = () => {
       }
     ));
     const result = await account!.execute(txs);
-    console.log(result);
     setHash(result.transaction_hash);
   }
 
@@ -176,7 +112,6 @@ const Invocations = () => {
 
     const testErc20Adress = "0x7394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10"
     const testErc20Dec = ethers.BigNumber.from(testErc20Adress).toBigInt().toString()
-    console.log(testErc20Dec)
     const poolNumber = "4";
     // const poolInfo = await getPoolInfo(poolNumber); //4 is for test to tUSDC
     //TODO compute output amt here from pool values
@@ -186,13 +121,13 @@ const Invocations = () => {
     const tokenFromDec = "3267429884791031784129188059026496191501564961518175231747906707757621165072";
     const txSwap = await MySwap.getInstance().swap(account!,provider!,tokenToDec, tokenFromDec, amountIn, "0");
     console.log(`txSwap: ${JSON.stringify(txSwap)}`);
+    setHash(txSwap.transaction_hash);
   }
 
 
   return (
     <Flex
       marginTop={"50px"}>
-      <Button onClick={() => makeTransaction()}>update balance</Button>
       <Button onClick={() => mySwap()}>mySwap</Button>
       <Button onClick={() => jediSwap()}>jediSwap</Button>
 

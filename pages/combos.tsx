@@ -1,16 +1,5 @@
 import {NextPage} from "next";
-import {
-  StarknetProvider,
-  useContract,
-  useStarknetBlock,
-  useStarknetCall,
-  useStarknetInvoke,
-  useStarknetTransactionManager,
-  Transaction,
-  useStarknet,
-  InjectedConnector,
-} from '@starknet-react/core'
-
+import {useStarknet} from "../hooks/useStarknet";
 
 import {Button, Flex, Heading} from "@chakra-ui/react"
 import {Abi, AccountInterface, AddTransactionResponse, Contract} from 'starknet'
@@ -28,124 +17,50 @@ import styles from "./combos.module.css";
 import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../constants/contants";
 import Invocations from "../components/Invocations";
 
-export const COUNTER_ADDRESS = '0x04d57c28ba8985ce952e5346bb0a63f64f8ac23884d341d2273ffbeeaf74c68b'
 
-function useBalanceContract() {
-  return useContract({abi: BalancesAbi as Abi, address: COUNTER_ADDRESS})
-}
-
-function DemoContractCall() {
-  const {contract} = useBalanceContract()
-  const {data: balance, error} = useStarknetCall({
-    contract: contract,
-    method: 'get_balance',
-    args: [],
-  })
-
-  console.log(balance)
-
-  return (
-    <Flex
-      marginTop={"50px"}
-      flexDir={"column"}
-    >
-      <Heading> Contract Call</Heading>
-      {balance ? (
-        <div>
-          <p>Contract Balance : {toBN(balance[0]).toString()}</p>
-        </div>
-      ) : error ? (
-        <p>'Error loading counter'</p>
-      ) : (
-        <p>'Loading'</p>
-      )}
-    </Flex>
-  )
-}
-
-function DemoContractInvoke() {
-  const {contract} = useBalanceContract()
-  // Use type parameter to enforce type and number of arguments
-  const {data, loading, error, reset, invoke} = useStarknetInvoke<[]>({
-    contract,
-    method: 'increase_balance',
-  })
-
-
-  return (
-    <Flex
-      marginTop={"50px"}
-      flexDir={"column"}
-    >
-      <Heading>Invoke Contract Method</Heading>
-      <div>
-        {data && (
-          <div>
-            <p>Transaction Hash: {data}</p>
-          </div>
-        )}
-      </div>
-      <div>
-        <p>Submitting: {loading ? 'Submitting' : 'Not Submitting'}</p>
-        <p>Error: {error || 'No error'}</p>
-      </div>
-      <div>
-        <Button onClick={() => invoke({args: []})}>Invoke Method</Button>
-        <Button onClick={() => reset()}>Reset State</Button>
-      </div>
-    </Flex>
-  )
-}
-
-
-function DemoAccount() {
-  const {account, connect} = useStarknet()
-  return (
-    <Flex
-      marginTop={"50px"}
-      flexDir={"column"}
-    >
-      <Heading>Account</Heading>
-      <div>
-        <p>Connected Account: {account}</p>
-      </div>
-      {InjectedConnector.ready ? (
-        <div>
-          <Button onClick={() => connect(new InjectedConnector())}>Connect Argent-X</Button>
-        </div>
-      ) : (
-        <div>
-          <p>
-            <a href="https://github.com/argentlabs/argent-x">Download Argent-X</a>
-          </p>
-        </div>
-      )}
-    </Flex>
-  )
-}
 
 const Combos: NextPage = () => {
 
-  return (
-    <div className={styles.container}>
-      <DemoAccount/>
-      <DemoContractCall/>
-      <DemoContractInvoke/>
-      <Invocations/>
-      <div className={styles.blockWrapper}>
+  const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
 
-        <ActionBlock
-          action={ACTIONS[ActionTypes.SWAP]}
-          protocol={PROTOCOLS[ProtocolNames.JEDISWAP]}
-        />
+  const renderDisconnected = () => {
+    return (
+      <Flex
+        marginTop={"50px"}>
+        Connect your Wallet to start
+        <Button onClick={() => connectWallet()}>Connect Wallet</Button>
+      </Flex>
+    )
+  }
 
-        <ActionBlock
-          action={ACTIONS[ActionTypes.ADD_LIQUIDITY]}
-          protocol={PROTOCOLS[ProtocolNames.AAVE]}
-        />
+
+  const renderConnected = () => {
+    return (
+      <div className={styles.container}>
+        <Invocations/>
+        <div className={styles.blockWrapper}>
+
+          <ActionBlock
+            action={ACTIONS[ActionTypes.SWAP]}
+            protocol={PROTOCOLS[ProtocolNames.JEDISWAP]}
+          />
+
+          <ActionBlock
+            action={ACTIONS[ActionTypes.ADD_LIQUIDITY]}
+            protocol={PROTOCOLS[ProtocolNames.AAVE]}
+          />
+        </div>
       </div>
-    </div>
 
+    )
+  }
+
+  return(
+    <>
+      {account && renderConnected()}
+      {!account && renderDisconnected()}
+    </>
   )
+
 }
 export default Combos;
