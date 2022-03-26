@@ -55,24 +55,14 @@ const Combos: NextPage = () => {
             <Reorder.Item key={item} value={item}>
               <div className={styles.blockWrapper}>
                 <ActionBlock
-                  action={ACTIONS[ActionTypes.SWAP]}
-                  protocol={PROTOCOLS[ProtocolNames.JEDISWAP]}
+                  actionName={ACTIONS[ActionTypes.SWAP].name}
+                  protocolName={PROTOCOLS[ProtocolNames.JEDISWAP].name}
                   item={item}
                 />
               </div>
             </Reorder.Item>
           ))}
         </Reorder.Group>
-
-        {/*<ActionBlock*/}
-        {/*  action={ACTIONS[ActionTypes.SWAP]}*/}
-        {/*  protocol={PROTOCOLS[ProtocolNames.JEDISWAP]}*/}
-        {/*/>*/}
-
-        {/*<ActionBlock*/}
-        {/*  action={ACTIONS[ActionTypes.ADD_LIQUIDITY]}*/}
-        {/*  protocol={PROTOCOLS[ProtocolNames.AAVE]}*/}
-        {/*/>*/}
       </div>
 
     )

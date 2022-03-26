@@ -39,9 +39,9 @@ const ActionBlock = (props: any) => {
     // >
       <div className={styles.block}>
         <div className={styles.actionNameWrapper}>
-          <h3 className={styles.actionName}>{props.action.name}</h3>
+          <h3 className={styles.actionName}>{props.actionName}</h3>
         </div>
-        <p className={styles.protocolName}>{props.protocol.name}</p>
+        <p className={styles.protocolName}>{props.protocolName}</p>
 
         <div className={styles.actionInputsWrapper}>
           <div className={styles.actionInputField}>

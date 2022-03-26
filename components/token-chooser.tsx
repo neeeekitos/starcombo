@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 
 const TokenChooser = (props: any) => {
 
-  const DynamicIconComponent = dynamic(() => import(`react-cryptocoins/dist/icons/${props.selectedToken.symbol}`))
+  const DynamicIconComponent: any = dynamic(() => import(`react-cryptocoins/dist/icons/${props.selectedToken.symbol}`))
 
 
 
@@ -24,7 +24,8 @@ const TokenChooser = (props: any) => {
         {
           props.selectableTokens.map((token: any) => {
             if (token.symbol === props.selectedToken.symbol) return null;
-            const DynamicIconOptionComponent = dynamic(() => import(`react-cryptocoins/dist/icons/${token.symbol}`))
+
+            const DynamicIconOptionComponent: any = dynamic(() => import(`react-cryptocoins/dist/icons/${token.symbol}`))
             return(
               <MenuItem key={token.symbol} onClick={() => props.setSelectedToken(token)}>
                 <div className={styles.optionWrapper}>
