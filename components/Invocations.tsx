@@ -1,9 +1,6 @@
 import {useEffect, useState} from "react";
 import {Abi, AccountInterface, AddTransactionResponse, Contract} from "starknet";
-import BalancesAbi from "../contracts/artifacts/abis/balances.json";
 import {Button, Flex} from "@chakra-ui/react";
-import {COUNTER_ADDRESS} from "../pages/combos";
-import {getStarknet} from "@argent/get-starknet/dist";
 
 
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json"
@@ -11,6 +8,7 @@ import ERC20Abi from "../contracts/artifacts/abis/ERC20_Mintable.json";
 
 import {ethers} from "ethers";
 import {JEDI_ROUTER_ADDRESS, JEDI_TOKENS} from "../constants/contants";
+import {useStarknet} from "../hooks/useStarknet";
 
 
 const getPoolInfo = async (poolNumber: string) => {
@@ -20,56 +18,10 @@ const getPoolInfo = async (poolNumber: string) => {
 }
 const Invocations = () => {
 
-  const [acc, setAcc] = useState<AccountInterface>();
+  const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
+
   const [hash, setHash] = useState<string>();
 
-  useEffect(() => {
-    setup();
-  }, [])
-
-  const setup = async () => {
-    const starknet = getStarknet();
-    await starknet.enable();
-    if (!starknet.isConnected) {
-      alert("starknet is not connected");
-      return;
-    }
-    console.log(starknet)
-    const account = starknet.account;
-    console.log(account);
-    setAcc(account);
-  }
-
-  const makeTransaction = async () => {
-    console.log(acc)
-    try {
-      const transac: AddTransactionResponse = await acc!.execute(
-        [
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          },
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          },
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          },
-          {
-            contractAddress: COUNTER_ADDRESS,
-            entrypoint: 'increase_balance'
-          }
-        ],
-        [BalancesAbi as Abi, BalancesAbi as Abi, BalancesAbi as Abi, BalancesAbi as Abi]
-      )
-      console.log(transac);
-      setHash(transac.transaction_hash);
-    } catch (e) {
-      console.log(e);
-    }
-  }
 
   const jediMint = async () => {
     // example of minting tokens
@@ -104,8 +56,7 @@ const Invocations = () => {
         ]
       }
     ));
-    const result = await acc!.execute(txs);
-    console.log(result);
+    const result = await account!.execute(txs);
     setHash(result.transaction_hash);
   }
 
@@ -141,7 +92,7 @@ const Invocations = () => {
     const amountTo = "3316";
     const tokenFrom = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c";
     const tokenTo = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756";
-    const receiver = acc!.address;
+    const receiver = account!.address;
     console.log(`receiver: ${receiver}`);
     console.log(Math.floor(Date.now() / 1000));
     const tx = [
@@ -170,7 +121,7 @@ const Invocations = () => {
         ]
       }
     ];
-    const result = await acc!.execute(tx);
+    const result = await account!.execute(tx);
     console.log(`[jediSwap result] : ${result}`);
     setHash(result.transaction_hash);
   }
@@ -206,14 +157,13 @@ const Invocations = () => {
 
     const testErc20Adress = "0x7394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10"
     const testErc20Dec = ethers.BigNumber.from(testErc20Adress).toBigInt().toString()
-    console.log(testErc20Dec)
     const poolNumber = "4";
     const poolInfo = await getPoolInfo(poolNumber); //4 is for test to tUSDC
     //TODO compute output amt here from pool values
     const minOutputAmt = "302379469743"
     const tokenAmt = (100 * 10 ** 18).toString();
     try {
-      const transac: AddTransactionResponse = await acc!.execute(
+      const transac: AddTransactionResponse = await account!.execute(
             [
               {
                 contractAddress: testErc20Adress, //address for test token
@@ -238,7 +188,6 @@ const Invocations = () => {
               }
             ],
       )
-      console.log(transac);
       setHash(transac.transaction_hash);
     } catch (e) {
       console.log(e);
@@ -246,10 +195,11 @@ const Invocations = () => {
   }
 
 
+
+
   return (
     <Flex
       marginTop={"50px"}>
-      <Button onClick={() => makeTransaction()}>update balance</Button>
       <Button onClick={() => mySwap()}>mySwap</Button>
       <Button onClick={() => jediSwap()}>jediSwap</Button>
 

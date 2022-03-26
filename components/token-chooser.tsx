@@ -20,7 +20,7 @@ const TokenChooser = (props: any) => {
       <MenuList>
 
         {
-          props.selectableTokens.map((token: string) => {
+          props.selectableTokens.map((token: any) => {
             if (token.symbol === props.selectedToken.symbol) return null;
             const DynamicIconOptionComponent = dynamic(() => import(`react-cryptocoins/dist/icons/${token.symbol}`))
             return(
