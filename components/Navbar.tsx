@@ -1,13 +1,11 @@
-import {useStarknet} from "../hooks/useStarknet";
+// import {useStarknet} from "../hooks/useStarknet";
 import {getStarknet} from "@argent/get-starknet/dist";
-
 import {ReactNode} from 'react';
 import {
   Box,
   Flex,
   Avatar,
   HStack,
-  Link,
   IconButton,
   Button,
   Menu,
@@ -20,6 +18,8 @@ import {
   Stack, Heading,
 } from '@chakra-ui/react';
 import {HamburgerIcon, CloseIcon} from '@chakra-ui/icons';
+import Link from "next/link"
+import {useStarknet} from "../hooks/useStarknet";
 
 const Links = [
   {
@@ -32,29 +32,25 @@ const Links = [
   }
 ];
 
-const NavLink = ({children, target}: { children: ReactNode, target: string }) => (
-  <Link
-    px={2}
-    py={1}
-    rounded={'md'}
-    _hover={{
-      textDecoration: 'none',
-      bg: useColorModeValue('gray.200', 'gray.700'),
-    }}
-    href={target}>
-    {children}
+const NavLink = ({children, target, name}: { children: ReactNode, target: string, name: string }) => (
+  <Link href={target} passHref>
+    <Button
+      py={1}
+      rounded={'md'}
+      _hover={{
+        textDecoration: 'none',
+        bg: useColorModeValue('gray.200', 'gray.700'),
+      }}
+    >
+      {name}
+    </Button>
   </Link>
 );
 
 const Navbar = () => {
 
-  const {account, setAccount, setProvider, connectWallet, disconnect} = useStarknet((state) => ({
-    account: state.account,
-    setAccount: state.setAccount,
-    setProvider: state.setProvider,
-    connectWallet: state.connectWallet,
-    disconnect: state.disconnect
-  }));
+  const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
+
 
   const {isOpen, onOpen, onClose} = useDisclosure();
 
@@ -85,7 +81,7 @@ const Navbar = () => {
               spacing={4}
               display={{base: 'none', md: 'flex'}}>
               {Links.map((link) => (
-                <NavLink key={link.name} target={link.target}>{link.name}</NavLink>
+                <NavLink key={link.name} target={link.target} name={link.name}/>
               ))}
             </HStack>
           </HStack>
@@ -121,7 +117,7 @@ const Navbar = () => {
           <Box pb={4} display={{md: 'none'}}>
             <Stack as={'nav'} spacing={4}>
               {Links.map((link) => (
-                <NavLink key={link.name} target={link.target}>{link.name}</NavLink>
+                <NavLink key={link.name} target={link.target} name={link.name}/>
               ))}
             </Stack>
           </Box>
@@ -129,35 +125,6 @@ const Navbar = () => {
       </Box>
     </>
   );
-
-  // return (
-  //   <>
-  //     <Flex
-  //       w="100%"
-  //       px="6"
-  //       py="5"
-  //       align="left"
-  //       justify="space-between"
-  //       borderBottom={"1px solid white"}
-  //     >
-  //       <HStack as="nav" spacing="5">
-  //         {account &&
-  //         <div>
-  //           {account.address}
-  //           <Button onClick={() => disconnect()}>Disconnect</Button>
-  //
-  //         </div>
-  //         }
-  //         {!account &&
-  //         <div>
-  //           <Button onClick={() => connectWallet()}>Connect Wallet</Button>
-  //         </div>}
-  //       </HStack>
-  //
-  //
-  //     </Flex>
-  //   </>
-  // )
 }
 
 export default Navbar
