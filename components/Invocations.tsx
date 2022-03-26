@@ -9,8 +9,9 @@ import {getStarknet} from "@argent/get-starknet/dist";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json"
 
 import {ethers} from "ethers";
-import {JEDI_ROUTER_ADDRESS, JEDI_TOKENS,JEDI_REGISTRY_ADDRESS} from "../constants/contants";
+import {JEDI_ROUTER_ADDRESS, JEDI_TOKENS, JEDI_REGISTRY_ADDRESS} from "../constants/contants";
 import {ChainId, Fetcher, Pair, Percent, Route, Token, TokenAmount, Trade} from "@jediswap/sdk";
+import {MySwap} from "../hooks/mySwap";
 
 
 const getPoolInfo = async (poolNumber: string) => {
@@ -18,11 +19,11 @@ const getPoolInfo = async (poolNumber: string) => {
   return await mySwapRouterContract.call("get_pool", [poolNumber]);
 }
 
-const getLiquidityPoolAddress = async (provider:Provider,tokenFrom:string,tokenTo:string) => {
+const getLiquidityPoolAddress = async (provider: Provider, tokenFrom: string, tokenTo: string) => {
   const liquidityPoolForTokens = await provider.callContract({
-    contractAddress:JEDI_REGISTRY_ADDRESS,
-    entrypoint:"get_pair_for",
-    calldata:[
+    contractAddress: JEDI_REGISTRY_ADDRESS,
+    entrypoint: "get_pair_for",
+    calldata: [
       ethers.BigNumber.from(tokenFrom).toBigInt().toString(),
       ethers.BigNumber.from(tokenTo).toBigInt().toString()
     ]
@@ -34,7 +35,7 @@ const Invocations = () => {
 
   const [acc, setAcc] = useState<AccountInterface>();
   const [hash, setHash] = useState<string>();
-  const [provider, setProvider]=useState<Provider>()
+  const [provider, setProvider] = useState<Provider>()
 
   useEffect(() => {
     setup();
@@ -125,7 +126,7 @@ const Invocations = () => {
 
   const jediSwap = async () => {
 
-    if(!provider || !acc) return;
+    if (!provider || !acc) return;
     const amountFrom = "100000000000000000000";
     const amountTo = "3316"; //not necessary anymore for exact_tokens_for_tokens
     const tokenFrom = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c"; //jedifeb0
@@ -147,35 +148,35 @@ const Invocations = () => {
     )
 
     //Fetches liq pool address for tokenA and tokenB
-    const liquidityPoolForTokens = await getLiquidityPoolAddress(provider,tokenFrom,tokenTo);
+    const liquidityPoolForTokens = await getLiquidityPoolAddress(provider, tokenFrom, tokenTo);
 
 
     //TODO throw error for frontend if couldn't find pool
-    if(!liquidityPoolForTokens) return;
+    if (!liquidityPoolForTokens) return;
     console.log(liquidityPoolForTokens)
 
     //Returns token0 address
-    const liqPoolToken0 =await provider.callContract({
-      contractAddress:liquidityPoolForTokens!,
-      entrypoint:"token0",
+    const liqPoolToken0 = await provider.callContract({
+      contractAddress: liquidityPoolForTokens!,
+      entrypoint: "token0",
     }).then((res) => ethers.BigNumber.from(res.result[0]).toString())
 
-    if(!liqPoolToken0) return;
+    if (!liqPoolToken0) return;
     console.log(liqPoolToken0);
 
     // get reserves for the tokenA tokenB liq pool
-    const liqReserves =await provider.callContract({
-      contractAddress:liquidityPoolForTokens!,
-      entrypoint:"get_reserves",
+    const liqReserves = await provider.callContract({
+      contractAddress: liquidityPoolForTokens!,
+      entrypoint: "get_reserves",
     }).then((res) => res.result);
 
-    if(!liqReserves) return;
+    if (!liqReserves) return;
     console.log(liqReserves)
     //TODO throw error for frontend
 
     // TODO figure out why I had to do the inverse here
-    let liqReserveTokenFrom = liqPoolToken0===tokenFrom? liqReserves[2] : liqReserves[0];
-    let liqReserveTokenTo = liqPoolToken0===tokenFrom? liqReserves[0] : liqReserves[2];
+    let liqReserveTokenFrom = liqPoolToken0 === tokenFrom ? liqReserves[2] : liqReserves[0];
+    let liqReserveTokenTo = liqPoolToken0 === tokenFrom ? liqReserves[0] : liqReserves[2];
 
     console.log(liqReserveTokenFrom)
     console.log(liqReserveTokenTo)
@@ -184,7 +185,7 @@ const Invocations = () => {
     const pair_0_1 = new Pair(new TokenAmount(from, liqReserveTokenFrom), new TokenAmount(to, liqReserveTokenTo))
 
     console.log(pair_0_1)
-    const trade = Trade.bestTradeExactIn([pair_0_1],new TokenAmount(from,amountFrom),to)[0];
+    const trade = Trade.bestTradeExactIn([pair_0_1], new TokenAmount(from, amountFrom), to)[0];
     console.log(trade)
     console.log("execution price: $" + trade.executionPrice.toSignificant(6));
     console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
@@ -272,41 +273,45 @@ const Invocations = () => {
     const testErc20Dec = ethers.BigNumber.from(testErc20Adress).toBigInt().toString()
     console.log(testErc20Dec)
     const poolNumber = "4";
-    const poolInfo = await getPoolInfo(poolNumber); //4 is for test to tUSDC
+    // const poolInfo = await getPoolInfo(poolNumber); //4 is for test to tUSDC
     //TODO compute output amt here from pool values
     const minOutputAmt = "302379469743"
-    const tokenAmt = (100 * 10 ** 18).toString();
-    try {
-      const transac: AddTransactionResponse = await acc!.execute(
-            [
-              {
-                contractAddress: testErc20Adress, //address for test token
-                entrypoint: "approve",
-                calldata: [
-                  "3222138877362455837336203414511899549532510795732583806035105711862644221454",
-                  tokenAmt,
-                  "0"
-                ]
-              },
-              {
-                contractAddress: "0x71faa7d6c3ddb081395574c5a6904f4458ff648b66e2123b877555d9ae0260e",
-                entrypoint: "swap",
-                calldata: [
-                  poolNumber,
-                  testErc20Dec,
-                  tokenAmt,
-                  "0",
-                  minOutputAmt,
-                  "0"
-                ]
-              }
-            ],
-      )
-      console.log(transac);
-      setHash(transac.transaction_hash);
-    } catch (e) {
-      console.log(e);
-    }
+    const amountIn = (100 * 10 ** 18).toString();
+    const tokenToDec = "1244282282488805475571988418073899266274761011798937057331700042103679053837";
+    const tokenFromDec = "3267429884791031784129188059026496191501564961518175231747906707757621165072";
+    const txSwap = await MySwap.getInstance().swap(tokenToDec, tokenFromDec, amountIn, "0");
+    console.log(`txSwap: ${JSON.stringify(txSwap)}`);
+    // try {
+    //   const transac: AddTransactionResponse = await acc!.execute(
+    //     [
+    //       {
+    //         contractAddress: testErc20Adress, //address for test token
+    //         entrypoint: "approve",
+    //         calldata: [
+    //           "3222138877362455837336203414511899549532510795732583806035105711862644221454",
+    //           tokenAmt,
+    //           "0"
+    //         ]
+    //       },
+    //       {
+    //         contractAddress: "0x71faa7d6c3ddb081395574c5a6904f4458ff648b66e2123b877555d9ae0260e",
+    //         entrypoint: "swap",
+    //         calldata: [
+    //           poolNumber,
+    //           testErc20Dec,
+    //           tokenAmt,
+    //           "0",
+    //           minOutputAmt,
+    //           "0"
+    //         ]
+    //       }
+    //     ],
+    //   )
+    //   console.log(transac);
+    //   setHash(transac.transaction_hash);
+    // } catch (e) {
+    //   console.log(e);
+    // }
   }
 
 
