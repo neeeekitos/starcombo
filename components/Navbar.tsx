@@ -32,7 +32,7 @@ const Links = [
   }
 ];
 
-const NavLink = ({children, target, name}: { children: ReactNode, target: string, name: string }) => (
+const NavLink = ({ target, name}: { target: string, name: string }) => (
   <Link href={target} passHref>
     <Button
       py={1}
