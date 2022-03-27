@@ -11,11 +11,11 @@ import {transformCallsToMulticallArrays} from "starknet/src/utils/transaction";
 import {getStarknet} from "@argent/get-starknet";
 import {StarknetWindowObject} from "@argent/get-starknet/dist/extension.model";
 import {useEffect, useState} from "react";
-import ActionBlock from "./action-block";
+import ActionBlock from "../components/action-block";
 import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
-import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../constants/contants";
+import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../utils/constants/contants";
 import Invocations from "../components/Invocations";
 
 
