@@ -3,11 +3,11 @@ import {
   findPoolRes,
   LiquidityPoolInfo,
   LiquidityPoolInputs,
-  StarknetConnector, TradeInfo
+  StarknetConnector, SwapParameters, TradeInfo
 } from "../utils/constants/interfaces";
 import {Abi, AccountInterface, Call, Contract, Provider, stark} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
-import {JEDI_REGISTRY_ADDRESS, JEDI_ROUTER_ADDRESS} from "../utils/constants/constants";
+import {JEDI_REGISTRY_ADDRESS, JEDI_ROUTER_ADDRESS, SLIPPAGE} from "../utils/constants/constants";
 import {ethers} from "ethers";
 import {useStarknet} from "./useStarknet";
 import {BigintIsh, ChainId, Pair, Percent, Token, TokenAmount, Trade} from "@jediswap/sdk";
@@ -30,8 +30,13 @@ export class JediSwap implements DexCombo {
     return JediSwap.instance;
   }
 
+  /**
+   * Given two tokens, finds the liquidity pool and returns the Pair associated.
+   * @param provider
+   * @param tokenFrom
+   * @param tokenTo
+   */
   async getPair(provider: Provider, tokenFrom: Token, tokenTo: Token) {
-    //format input according to decimals
 
     const tokenFromDec = number.toBN(tokenFrom.address)
     const tokenToDec = number.toBN(tokenTo.address)
@@ -41,9 +46,9 @@ export class JediSwap implements DexCombo {
 
     const poolToken0 = new TokenAmount(tokenFrom, liquidityPool.liqReservesTokenFrom);
     const poolToken1 = new TokenAmount(tokenTo, liquidityPool.liqReservesTokenTo);
-    const pair_0_1 = new Pair(poolToken0, poolToken1);
+    const poolPair = new Pair(poolToken0, poolToken1,liquidityPool.liqPoolAddress);
 
-    return pair_0_1;
+    return poolPair;
   }
 
   /**
@@ -91,25 +96,50 @@ export class JediSwap implements DexCombo {
 
   }
 
-  async addLiquidity(starknetConnector: StarknetConnector, pair_0_1: Pair, slippage: Percent, amountToken0: string): Promise<Call | Call[]> {
+  /**
+   * Adds liquidity to the liquidity pool associated to the pair.
+   * @param starknetConnector
+   * @param poolPair
+   * @param slippage
+   * @param tokenAmountFrom
+   */
+  async addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Call | Call[]> {
 
-    amountToken0 = ethers.utils.parseUnits(amountToken0, pair_0_1.token0.decimals).toString();
+    //TODO check if it's ok if amtToken0 corresponds to pool token 1
+    //TODO check if there's another way to add fixed amountToken1 ? This works only if amountTokenFrom refers to Token0.
+
+    //Add liquidity to pool with poolPair 0 and poolPair 1.
+    //We provide tokenAmountFrom:TokenAmount.
+    //so if token0 == tokenFrom we're gucci otherwise we must invert the values.
+    const tokenFromIsToken0 = tokenAmountFrom.token.address === poolPair.token0.address;
+    const tokenFromDec = ethers.BigNumber.from(poolPair.token0.address).toBigInt().toString()
+    const tokenToDec = ethers.BigNumber.from(poolPair.token1.address).toBigInt().toString()
+    const token0Dec = tokenFromIsToken0 ? tokenFromDec:tokenToDec;
+    const token1Dec = tokenFromIsToken0 ? tokenToDec:tokenFromDec
+
 
     //get output amt for token input
-    const outputAmt = pair_0_1.getOutputAmount(new TokenAmount(pair_0_1.token0, amountToken0));
-    const rawOutputAmt = ethers.BigNumber.from(outputAmt[0].raw.toString());
+    let outputAmt, desiredAmount0, rawOutputAmt, minAmount0, desiredAmount1, minAmount1;
+    if (tokenFromIsToken0) {
+      outputAmt = poolPair.getOutputAmount(new TokenAmount(poolPair.token0, tokenAmountFrom.raw.toString()));
+      desiredAmount0 = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
+      rawOutputAmt = ethers.BigNumber.from(outputAmt[0].raw.toString());
+      minAmount0 = desiredAmount0.sub(slippage.multiply(desiredAmount0.toBigInt()).toFixed(0)).toString()
+      desiredAmount1 = rawOutputAmt;
+      minAmount1 = desiredAmount1.sub(slippage.multiply(desiredAmount1.toBigInt()).toFixed(0)).toString()
 
-    const desiredAmount0 = ethers.BigNumber.from(amountToken0);
-    const minAmount0 = desiredAmount0.sub(slippage.multiply(desiredAmount0.toBigInt()).toFixed(0)).toString()
-    const desiredAmount1 = rawOutputAmt;
-    const minAmount1 = desiredAmount1.sub(slippage.multiply(desiredAmount1.toBigInt()).toFixed(0)).toString()
-
-    const token0Dec = ethers.BigNumber.from(pair_0_1.token0.address).toBigInt().toString()
-    const token1Dec = ethers.BigNumber.from(pair_0_1.token1.address).toBigInt().toString()
+    } else {
+      outputAmt = poolPair.getOutputAmount(new TokenAmount(poolPair.token1, tokenAmountFrom.raw.toString()));
+      desiredAmount1 = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
+      rawOutputAmt = ethers.BigNumber.from(outputAmt[0].raw.toString());
+      minAmount1 = desiredAmount1.sub(slippage.multiply(desiredAmount1.toBigInt()).toFixed(0)).toString()
+      desiredAmount0 = rawOutputAmt;
+      minAmount0 = desiredAmount1.sub(slippage.multiply(desiredAmount0.toBigInt()).toFixed(0)).toString()
+    }
 
     const tx = [
       {
-        contractAddress: pair_0_1.token0.address,
+        contractAddress: poolPair.token0.address,
         entrypoint: 'approve',
         calldata: [
           ethers.BigNumber.from(JEDI_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
@@ -118,7 +148,7 @@ export class JediSwap implements DexCombo {
         ]
       },
       {
-        contractAddress: pair_0_1.token1.address,
+        contractAddress: poolPair.token1.address,
         entrypoint: 'approve',
         calldata: [
           ethers.BigNumber.from(JEDI_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
@@ -160,27 +190,23 @@ export class JediSwap implements DexCombo {
   revoke(): void {
   }
 
-  public async swap(starknetConnector: StarknetConnector, tokenFrom: Token, tokenTo: Token, amountIn: string, amountOut: string, pair?: Pair): Promise<any> {
+  /**
+   * Returns the transaction details to perform a swap between two tokens
+   * @param starknetConnector
+   * @param swapParameters
+   * @param poolId
+   */
+  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters): Promise<any> {
+    let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
     //TODO handle when user specifies amountOut
-
     //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
     amountIn = ethers.utils.parseUnits(amountIn, tokenFrom.decimals).toString();
     amountOut = ethers.utils.parseUnits(amountOut, tokenTo.decimals).toString();
 
-    //We need these for liquidity calculations
-
-    const tokenFromDec = ethers.BigNumber.from(tokenFrom.address).toBigInt().toString()
-    const tokenToDec = ethers.BigNumber.from(tokenTo.address).toBigInt().toString()
-
-    const liquidityPool = await this.findPool(starknetConnector.provider, tokenFromDec, tokenToDec);
-    if (!liquidityPool) return undefined;
-
-    const slippageTolerance = new Percent('50', '10000'); // 0.5%
-
-    const trade = await this.findBestTrade(tokenFrom, tokenTo, pair, amountIn, amountOut, slippageTolerance)
+    const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountIn, amountOut, SLIPPAGE)
     if (!trade) return undefined;
 
-    //flatten the array because traade.pathAddresses is a subarray
+    //flatten the array because trade.pathAddresses is a subarray
     const swapCallData = [
       amountIn,
       "0",
@@ -212,6 +238,12 @@ export class JediSwap implements DexCombo {
 
   }
 
+  /**
+   * Given two decimal tokens addresses, finds the associated pool and returns details about the liquidity pool (address, token0, reserves).
+   * @param provider
+   * @param tokenFromDecAddress
+   * @param tokenToDecAddress
+   */
   async findPool(provider: Provider, tokenFromDecAddress: string, tokenToDecAddress: string): Promise<findPoolRes | undefined> {
 
     //Gets liq pool address for tokenFrom - tokenTo pool
@@ -252,7 +284,7 @@ export class JediSwap implements DexCombo {
   }
 
   async findBestTrade(from: Token, to: Token, pairFromTo: Pair, amountFrom: string, amountTo: string, slippageTolerance: Percent): Promise<TradeInfo | undefined> {
-    //Create pair to find the best trade for this pair. Use liq reserves as pair amounts
+    //Create poolPair to find the best trade for this poolPair. Use liq reserves as poolPair amounts
     let trade: Trade;
     console.log(pairFromTo, from, amountFrom, to)
     if (amountTo === "0") {

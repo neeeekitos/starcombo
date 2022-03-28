@@ -1,17 +1,30 @@
 import {AccountInterface} from "starknet";
 import {Provider} from "starknet";
-import {BigintIsh, Pair, Percent, Token} from "@jediswap/sdk";
+import {BigintIsh, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
 
 export interface DexCombo {
   mint(): void;
 
   approve(): void
 
-  swap(starknetConnector: StarknetConnector, tokenFrom: Token, tokenTo: Token, amountIn: string, amountOut: string, pair?: Pair, poolId?: string): Promise<any>;
+  /**
+   * Returns the transaction for a swap operation
+   * @param starknetConnector
+   * @param swapParameters
+   * @param poolId
+   */
+  swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters, poolId?: string): Promise<any>;
 
   revoke(): void
 
-  addLiquidity(starknetConnector: StarknetConnector, pair_0_1: Pair, slippage: Percent, amountToken0: string): Promise<any>
+  /**
+   * Returns the transaction for an add liquidity opeartion
+   * @param starknetConnector
+   * @param poolPair
+   * @param slippage
+   * @param tokenAmountFrom
+   */
+  addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<any>
 
   removeLiquidity(): void
 }
@@ -57,4 +70,12 @@ export interface TradeInfo {
   pathLength?: string,
   pathAddresses?: Array<string>,
 
+}
+
+export interface SwapParameters {
+  tokenFrom: Token,
+  tokenTo: Token,
+  amountIn: string,
+  amountOut: string,
+  poolPair: Pair
 }

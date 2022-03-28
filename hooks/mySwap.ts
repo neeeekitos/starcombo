@@ -1,4 +1,4 @@
-import {DexCombo, StarknetConnector, TradeInfo} from "../utils/constants/interfaces";
+import {DexCombo, StarknetConnector, SwapParameters, TradeInfo} from "../utils/constants/interfaces";
 import {ethers} from "ethers";
 
 import {Abi, AccountInterface, Call, Contract, number, Provider} from "starknet";
@@ -6,7 +6,7 @@ import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
 import {Pair, Percent, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import BN from "bn.js";
 import {fromEntries} from "@chakra-ui/utils";
-import {MY_SWAP_ROUTER_ADDRESS} from "../utils/constants/constants";
+import {JEDI_ROUTER_ADDRESS, MY_SWAP_ROUTER_ADDRESS, SLIPPAGE} from "../utils/constants/constants";
 
 export class MySwap implements DexCombo {
 
@@ -23,6 +23,12 @@ export class MySwap implements DexCombo {
     return MySwap.instance;
   }
 
+  /**
+   * Given two tokens, finds the liquidity pool and return the associated pair as well as the poolId.
+   * The pool.liauiquidityToken is incorrect.
+   * @param tokenFrom
+   * @param tokenTo
+   */
   async getPoolDetails(tokenFrom: Token, tokenTo: Token) {
     //format input according to decimals
 
@@ -38,8 +44,18 @@ export class MySwap implements DexCombo {
     return {poolId: poolDetails.poolId, poolPair: pair_0_1};
   }
 
+  /**
+   * Given a from and two token and the pair associated to the liquidity pool, returns the execution price of the trade
+   * and the minimum amount out.
+   * @param from
+   * @param to
+   * @param pairFromTo
+   * @param amountFrom
+   * @param amountTo
+   * @param slippageTolerance
+   */
   async findBestTrade(from: Token, to: Token, pairFromTo: Pair, amountFrom: string, amountTo: string, slippageTolerance: Percent): Promise<TradeInfo | undefined> {
-    //Create pair to find the best trade for this pair. Use liq reserves as pair amounts
+    //Create poolPair to find the best trade for this poolPair. Use liq reserves as poolPair amounts
     console.log(pairFromTo, from, amountFrom, to)
     let trade = Trade.bestTradeExactIn([pairFromTo], new TokenAmount(from, amountFrom), to)[0];
 
@@ -58,13 +74,12 @@ export class MySwap implements DexCombo {
 
   }
 
-
-  public async swap(starknetConnector: StarknetConnector, tokenFrom: Token, tokenTo: Token, amountIn: string, amountOut: string, pairFromTo?: Pair, poolId?: string): Promise<any> {
+  public async swap(starknetConnector: StarknetConnector, swapParameters:SwapParameters, poolId: string): Promise<any> {
+    let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
     const tokenFromDec = ethers.BigNumber.from(tokenFrom.address).toBigInt().toString();
     //parse amount in with correct decimals
     amountIn = ethers.utils.parseUnits(amountIn, tokenFrom.decimals).toString()
-    const slippageTolerance = new Percent('50', '10000');
-    const trade = await this.findBestTrade(tokenFrom, tokenTo, pairFromTo, amountIn, "0", slippageTolerance)
+    const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountIn, "0", SLIPPAGE)
     if (!trade) return undefined;
     const tx = [
       {
@@ -93,8 +108,76 @@ export class MySwap implements DexCombo {
 
   }
 
-  addLiquidity(starknetConnector: StarknetConnector, pair_0_1: Pair, slippage: Percent, amountToken0: string): Promise<Call | Call[]> {
-    return
+  async addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Call | Call[]> {
+
+    //TODO check if it's ok if amtToken0 corresponds to pool token 1
+    //TODO check if there's another way to add fixed amountToken1 ? This works only if amountTokenFrom refers to Token0.
+
+    //Add liquidity to pool with poolPair 0 and poolPair 1.
+    //We provide tokenAmountFrom:TokenAmount.
+    //so if token0 == tokenFrom we're gucci otherwise we must invert the values.
+    const tokenFromIsToken0 = tokenAmountFrom.token.address === poolPair.token0.address;
+    const tokenFromDec = ethers.BigNumber.from(poolPair.token0.address).toBigInt().toString()
+    const tokenToDec = ethers.BigNumber.from(poolPair.token1.address).toBigInt().toString()
+    const token0Dec = tokenFromIsToken0 ? tokenFromDec:tokenToDec;
+    const token1Dec = tokenFromIsToken0 ? tokenToDec:tokenFromDec
+
+      //get output amt for token input
+    let outputAmt, desiredAmount0, rawOutputAmt, minAmount0, desiredAmount1, minAmount1;
+    if (tokenFromIsToken0) {
+      desiredAmount0 = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
+      minAmount0 = desiredAmount0.sub(slippage.multiply(desiredAmount0.toBigInt()).toFixed(0)).toString()
+      outputAmt = poolPair.getOutputAmount(new TokenAmount(poolPair.token0, tokenAmountFrom.raw.toString()));
+      desiredAmount1 = ethers.BigNumber.from(outputAmt[0].raw.toString());
+      minAmount1 = desiredAmount1.sub(slippage.multiply(desiredAmount1.toBigInt()).toFixed(0)).toString()
+
+    } else {
+      desiredAmount1 = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
+      minAmount1 = desiredAmount1.sub(slippage.multiply(desiredAmount1.toBigInt()).toFixed(0)).toString()
+      outputAmt = poolPair.getOutputAmount(new TokenAmount(poolPair.token1, tokenAmountFrom.raw.toString()));
+      desiredAmount0 = ethers.BigNumber.from(outputAmt[0].raw.toString());
+      minAmount0 = desiredAmount0.sub(slippage.multiply(desiredAmount0.toBigInt()).toFixed(0)).toString()
+    }
+
+
+
+    const tx = [
+      {
+        contractAddress: poolPair.token0.address,
+        entrypoint: 'approve',
+        calldata: [
+          ethers.BigNumber.from(MY_SWAP_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+          desiredAmount0.toString(),
+          "0"
+        ]
+      },
+      {
+        contractAddress: poolPair.token1.address,
+        entrypoint: 'approve',
+        calldata: [
+          ethers.BigNumber.from(MY_SWAP_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+          desiredAmount1.toString(),
+          "0"
+        ]
+      },
+      {
+        contractAddress: MY_SWAP_ROUTER_ADDRESS,
+        entrypoint: 'add_liquidity',
+        calldata: [
+          token0Dec,
+          desiredAmount0.toString(),
+          "0", //this is bcause desiredAmount is a uint256 with 2 members: low and high. we set high to 0.
+          minAmount0,
+          "0",
+          token1Dec,
+          desiredAmount1.toString(),
+          "0",
+          minAmount1,
+          "0"
+        ]
+      }
+    ];
+    return tx;
   }
 
   approve(): void {
@@ -115,7 +198,7 @@ export class MySwap implements DexCombo {
    * @param tokenToDecAddress
    */
   async findPool(tokenFromDecAddress: string, tokenToDecAddress: string): Promise<any> {
-    const mySwapRouterContract = new Contract(mySwapRouter.abi as Abi, "0x071faa7d6c3ddb081395574c5a6904f4458ff648b66e2123b877555d9ae0260e");
+    const mySwapRouterContract = new Contract(mySwapRouter.abi as Abi, MY_SWAP_ROUTER_ADDRESS);
     const numberOfPools = await mySwapRouterContract.call("get_total_number_of_pools");
     console.log(`Number of pools: ${numberOfPools}`);
     for (let i = 1; i <= Number(numberOfPools[0]); i++) {
