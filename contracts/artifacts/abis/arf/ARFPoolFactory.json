@@ -1,0 +1,93 @@
+[
+    {
+        "members": [
+            {
+                "name": "token_0_address",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "token_1_address",
+                "offset": 1,
+                "type": "felt"
+            }
+        ],
+        "name": "PoolPair",
+        "size": 2,
+        "type": "struct"
+    },
+    {
+        "inputs": [
+            {
+                "name": "pair",
+                "type": "PoolPair"
+            }
+        ],
+        "name": "getPool",
+        "outputs": [
+            {
+                "name": "pool_address",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "pool_address",
+                "type": "felt"
+            }
+        ],
+        "name": "getPair",
+        "outputs": [
+            {
+                "name": "pair",
+                "type": "PoolPair"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getPools",
+        "outputs": [
+            {
+                "name": "pools_len",
+                "type": "felt"
+            },
+            {
+                "name": "pools",
+                "type": "felt*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "new_pool_address",
+                "type": "felt"
+            },
+            {
+                "name": "token_0_address",
+                "type": "felt"
+            },
+            {
+                "name": "token_1_address",
+                "type": "felt"
+            }
+        ],
+        "name": "addManualPool",
+        "outputs": [
+            {
+                "name": "success",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    }
+]

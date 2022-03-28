@@ -1,0 +1,376 @@
+[
+    {
+        "members": [
+            {
+                "name": "low",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "high",
+                "offset": 1,
+                "type": "felt"
+            }
+        ],
+        "name": "Uint256",
+        "size": 2,
+        "type": "struct"
+    },
+    {
+        "inputs": [
+            {
+                "name": "name",
+                "type": "felt"
+            },
+            {
+                "name": "symbol",
+                "type": "felt"
+            },
+            {
+                "name": "factory_address",
+                "type": "felt"
+            },
+            {
+                "name": "token_0_address",
+                "type": "felt"
+            },
+            {
+                "name": "token_1_address",
+                "type": "felt"
+            }
+        ],
+        "name": "constructor",
+        "outputs": [],
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "name",
+        "outputs": [
+            {
+                "name": "name",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "symbol",
+        "outputs": [
+            {
+                "name": "symbol",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalSupply",
+        "outputs": [
+            {
+                "name": "totalSupply",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "decimals",
+        "outputs": [
+            {
+                "name": "decimals",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "account_address",
+                "type": "felt"
+            }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+            {
+                "name": "balance",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "owner_address",
+                "type": "felt"
+            },
+            {
+                "name": "spender_address",
+                "type": "felt"
+            }
+        ],
+        "name": "allowance",
+        "outputs": [
+            {
+                "name": "remaining",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getToken0",
+        "outputs": [
+            {
+                "name": "token_address",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getToken1",
+        "outputs": [
+            {
+                "name": "token_address",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getReserves",
+        "outputs": [
+            {
+                "name": "reserve_token_0",
+                "type": "Uint256"
+            },
+            {
+                "name": "reserve_token_1",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getBatchInfos",
+        "outputs": [
+            {
+                "name": "name",
+                "type": "felt"
+            },
+            {
+                "name": "symbol",
+                "type": "felt"
+            },
+            {
+                "name": "decimals",
+                "type": "felt"
+            },
+            {
+                "name": "total_supply",
+                "type": "Uint256"
+            },
+            {
+                "name": "token_0_address",
+                "type": "felt"
+            },
+            {
+                "name": "token_1_address",
+                "type": "felt"
+            },
+            {
+                "name": "reserve_token_0",
+                "type": "Uint256"
+            },
+            {
+                "name": "reserve_token_1",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "recipient_address",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ],
+        "name": "transfer",
+        "outputs": [
+            {
+                "name": "success",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "sender_address",
+                "type": "felt"
+            },
+            {
+                "name": "recipient_address",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ],
+        "name": "transferFrom",
+        "outputs": [
+            {
+                "name": "success",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "spender_address",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ],
+        "name": "approve",
+        "outputs": [
+            {
+                "name": "success",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "spender_address",
+                "type": "felt"
+            },
+            {
+                "name": "added_value",
+                "type": "Uint256"
+            }
+        ],
+        "name": "increaseAllowance",
+        "outputs": [
+            {
+                "name": "success",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "spender_address",
+                "type": "felt"
+            },
+            {
+                "name": "subtracted_value",
+                "type": "Uint256"
+            }
+        ],
+        "name": "decreaseAllowance",
+        "outputs": [
+            {
+                "name": "success",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "to_address",
+                "type": "felt"
+            }
+        ],
+        "name": "mint",
+        "outputs": [
+            {
+                "name": "liquidity_minted",
+                "type": "Uint256"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "to_address",
+                "type": "felt"
+            }
+        ],
+        "name": "burn",
+        "outputs": [
+            {
+                "name": "amount_token_0",
+                "type": "Uint256"
+            },
+            {
+                "name": "amount_token_1",
+                "type": "Uint256"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "amount_out_token_0",
+                "type": "Uint256"
+            },
+            {
+                "name": "amount_out_token_1",
+                "type": "Uint256"
+            },
+            {
+                "name": "recipient_address",
+                "type": "felt"
+            }
+        ],
+        "name": "swap",
+        "outputs": [
+            {
+                "name": "amount_out_received",
+                "type": "Uint256"
+            }
+        ],
+        "type": "function"
+    }
+]
