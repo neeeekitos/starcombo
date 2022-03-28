@@ -2,9 +2,9 @@ import styles from "./action-block.module.css";
 import {Input} from "@chakra-ui/input";
 // @ts-ignore
 import {Btc, Usdt} from 'react-cryptocoins';
-import TokenChooser from "../components/token-chooser";
+import TokenChooser from "./token-chooser";
 import {ArrowDownIcon} from "@chakra-ui/icons";
-import {SELECTABLE_TOKENS} from "../constants/contants";
+import {SELECTABLE_TOKENS} from "../utils/constants/contants";
 import {useEffect, useState} from "react";
 import {motion, useMotionValue} from "framer-motion"
 

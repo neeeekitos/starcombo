@@ -15,7 +15,6 @@
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@jediswap/sdk": "^1.5.1",
-    "@starknet-react/core": "^0.6.1",
     "ethers": "^5.6.1",
     "framer-motion": "^6",
     "next": "12.1.0",

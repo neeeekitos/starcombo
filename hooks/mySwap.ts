@@ -1,8 +1,9 @@
-import {DexCombo} from "../constants/interfaces";
-import {JEDI_ROUTER_ADDRESS, MY_SWAP_ROUTER_ADDRESS} from "../constants/contants";
+import {DexCombo, StarknetConnector} from "../utils/constants/interfaces";
+import {JEDI_ROUTER_ADDRESS, MY_SWAP_ROUTER_ADDRESS} from "../utils/constants/contants";
 import {ethers} from "ethers";
-import {Abi, AccountInterface, Contract, Provider} from "starknet";
+import {Abi, AccountInterface, Call, Contract, Provider} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
+import {Pair, Percent, Token} from "@jediswap/sdk";
 
 export class MySwap implements DexCombo {
 
@@ -19,10 +20,10 @@ export class MySwap implements DexCombo {
     return MySwap.instance;
   }
 
-  public async swap(account: AccountInterface, provider: Provider, tokenFrom: string, tokenTo: string, amountIn: string, amountOut: string): Promise<any> {
+  public async swap(starknetConnector: StarknetConnector, tokenFrom: Token, tokenTo: Token, amountIn: string, amountOut: string): Promise<any> {
     //TODO calculate amountOut manually?
-    const tokenFromDec = ethers.BigNumber.from(tokenFrom).toBigInt().toString();
-    const tokenToDec = ethers.BigNumber.from(tokenTo).toBigInt().toString();
+    const tokenFromDec = ethers.BigNumber.from(tokenFrom.address).toBigInt().toString();
+    const tokenToDec = ethers.BigNumber.from(tokenTo.address).toBigInt().toString();
     const poolId = await this.findPool(tokenFromDec, tokenToDec);
     console.log(poolId)
 
@@ -40,11 +41,12 @@ export class MySwap implements DexCombo {
         ]
       }
     ]
-    return await account.execute(tx);
+    return tx;
 
   }
 
-  addLiquidity(): void {
+  addLiquidity(starknetConnector: StarknetConnector, pair_0_1: Pair,slippage:Percent,amountToken0:string): Promise<Call | Call[]> {
+    return
   }
 
   approve(): void {
