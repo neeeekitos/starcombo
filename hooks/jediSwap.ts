@@ -1,27 +1,19 @@
-import {DexCombo, LiquidityPoolInfo, LiquidityPoolInputs, StarknetConnector} from "../utils/constants/interfaces";
+import {
+  DexCombo,
+  findPoolRes,
+  LiquidityPoolInfo,
+  LiquidityPoolInputs,
+  StarknetConnector, TradeInfo
+} from "../utils/constants/interfaces";
 import {Abi, AccountInterface, Call, Contract, Provider, stark} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
-import {JEDI_REGISTRY_ADDRESS, JEDI_ROUTER_ADDRESS} from "../utils/constants/contants";
+import {JEDI_REGISTRY_ADDRESS, JEDI_ROUTER_ADDRESS} from "../utils/constants/constants";
 import {ethers} from "ethers";
 import {useStarknet} from "./useStarknet";
 import {BigintIsh, ChainId, Pair, Percent, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {loadGetInitialProps} from "next/dist/shared/lib/utils";
 import {number} from "starknet";
 
-
-interface findPoolRes {
-  liqPoolAddress: string,
-  liqPoolToken0: string,
-  liqReservesToken0: BigintIsh,
-  liqReservesToken1: BigintIsh
-}
-
-interface TradeInfo {
-  pathLength: string,
-  pathAddresses: Array<string>,
-  executionPrice: string,
-  amountOutMin: string
-}
 
 export class JediSwap implements DexCombo {
 
@@ -38,18 +30,17 @@ export class JediSwap implements DexCombo {
     return JediSwap.instance;
   }
 
-  async getPair(provider:Provider, liquidityPoolInputs:LiquidityPoolInputs){
-    let {token0, token1 } = liquidityPoolInputs
+  async getPair(provider: Provider, tokenFrom: Token, tokenTo: Token) {
     //format input according to decimals
 
-    const tokenFromDec = number.toBN(token0.address)
-    const tokenToDec = number.toBN(token1.address)
+    const tokenFromDec = number.toBN(tokenFrom.address)
+    const tokenToDec = number.toBN(tokenTo.address)
 
     const liquidityPool = await this.findPool(provider, tokenFromDec.toString(), tokenToDec.toString());
     if (!liquidityPool) return undefined;
 
-    const poolToken0 = new TokenAmount(token0, liquidityPool.liqReservesToken0);
-    const poolToken1 = new TokenAmount(token1, liquidityPool.liqReservesToken1);
+    const poolToken0 = new TokenAmount(tokenFrom, liquidityPool.liqReservesTokenFrom);
+    const poolToken1 = new TokenAmount(tokenTo, liquidityPool.liqReservesTokenTo);
     const pair_0_1 = new Pair(poolToken0, poolToken1);
 
     return pair_0_1;
@@ -65,7 +56,7 @@ export class JediSwap implements DexCombo {
    * @param amount1 amount of token0 we want to provide liquidity for.
    * @param slippage
    */
-  async getLiquidityDetails(provider: Provider, liquidityPoolInputs: LiquidityPoolInputs, pair_0_1:Pair): Promise<LiquidityPoolInfo> {
+  async getLiquidityDetails(provider: Provider, liquidityPoolInputs: LiquidityPoolInputs, pair_0_1: Pair): Promise<LiquidityPoolInfo> {
 
     let {token0, token1, amountToken0, amountToken1, slippage} = liquidityPoolInputs
     //format input according to decimals
@@ -80,17 +71,16 @@ export class JediSwap implements DexCombo {
     const desiredAmount1 = rawOutputAmt;
     const minAmount1 = desiredAmount1.sub(slippage.multiply(desiredAmount1.toBigInt()).toFixed(0)).toString()
 
-    console.log(token0,token1)
+    console.log(token0, token1)
 
-    const price0to1 =pair_0_1.token0Price.toSignificant();
-    const price1to0 =pair_0_1.token1Price.toSignificant()
-    console.log(price1to0,price0to1)
-
+    const price0to1 = pair_0_1.token0Price.toSignificant();
+    const price1to0 = pair_0_1.token1Price.toSignificant()
+    console.log(price1to0, price0to1)
 
 
     return {
-      liqReservesToken0:pair_0_1.reserve0.raw.toString(),
-      liqReservesToken1:pair_0_1.reserve1.raw.toString(),
+      liqReservesToken0: pair_0_1.reserve0.raw.toString(),
+      liqReservesToken1: pair_0_1.reserve1.raw.toString(),
       desiredAmount0: desiredAmount0.toString(),
       desiredAmount1: desiredAmount1.toString(),
       minAmount0: minAmount0,
@@ -101,7 +91,7 @@ export class JediSwap implements DexCombo {
 
   }
 
-  async addLiquidity(starknetConnector: StarknetConnector, pair_0_1: Pair,slippage:Percent,amountToken0:string): Promise<Call | Call[]> {
+  async addLiquidity(starknetConnector: StarknetConnector, pair_0_1: Pair, slippage: Percent, amountToken0: string): Promise<Call | Call[]> {
 
     amountToken0 = ethers.utils.parseUnits(amountToken0, pair_0_1.token0.decimals).toString();
 
@@ -170,7 +160,7 @@ export class JediSwap implements DexCombo {
   revoke(): void {
   }
 
-  public async swap(starknetConnector:StarknetConnector, tokenFrom: Token, tokenTo: Token, amountIn: string, amountOut: string, pair?:Pair): Promise<any> {
+  public async swap(starknetConnector: StarknetConnector, tokenFrom: Token, tokenTo: Token, amountIn: string, amountOut: string, pair?: Pair): Promise<any> {
     //TODO handle when user specifies amountOut
 
     //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
@@ -222,15 +212,15 @@ export class JediSwap implements DexCombo {
 
   }
 
-  async findPool(provider: Provider, token0DecAdress: string, token1DecAddress: string): Promise<findPoolRes | undefined> {
+  async findPool(provider: Provider, tokenFromDecAddress: string, tokenToDecAddress: string): Promise<findPoolRes | undefined> {
 
     //Gets liq pool address for tokenFrom - tokenTo pool
     const liquidityPoolForTokens = await provider.callContract({
       contractAddress: JEDI_REGISTRY_ADDRESS,
       entrypoint: "get_pair_for",
       calldata: [
-        token0DecAdress,
-        token1DecAddress
+        tokenFromDecAddress,
+        tokenToDecAddress
       ]
     }).then((res) => res.result[0])
     if (!liquidityPoolForTokens) return undefined
@@ -250,14 +240,14 @@ export class JediSwap implements DexCombo {
     if (!liqPoolToken0) return undefined
 
     //Correctly map our token0 (tokenFrom) to the pool's token0
-    let liqReservesToken0 = liqPoolToken0 === token0DecAdress ? liqReserves[0] : liqReserves[2];
-    let liqReservesToken1 = liqPoolToken0 === token0DecAdress ? liqReserves[2] : liqReserves[0];
+    let liqReservesTokenFrom = liqPoolToken0 === tokenFromDecAddress ? liqReserves[0] : liqReserves[2];
+    let liqReservesTokenTo = liqPoolToken0 === tokenFromDecAddress ? liqReserves[2] : liqReserves[0];
 
     return {
       liqPoolAddress: liquidityPoolForTokens,
       liqPoolToken0: liqPoolToken0,
-      liqReservesToken0: liqReservesToken0,
-      liqReservesToken1: liqReservesToken1
+      liqReservesTokenFrom: liqReservesTokenFrom,
+      liqReservesTokenTo: liqReservesTokenTo
     }
   }
 

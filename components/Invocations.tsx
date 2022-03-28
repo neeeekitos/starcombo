@@ -7,7 +7,7 @@ import {Button, Flex} from "@chakra-ui/react";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json"
 
 import {ethers} from "ethers";
-import {JEDI_ROUTER_ADDRESS, JEDI_TOKENS, JEDI_REGISTRY_ADDRESS} from "../utils/constants/contants";
+import {JEDI_ROUTER_ADDRESS, JEDI_TOKENS, JEDI_REGISTRY_ADDRESS} from "../utils/constants/constants";
 import {ChainId, Fetcher, Pair, Percent, Route, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {MySwap} from "../hooks/mySwap";
 import {JediSwap} from "../hooks/jediSwap";
@@ -22,7 +22,7 @@ const Invocations = () => {
   const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
 
   const [hash, setHash] = useState<string>();
-
+  const [pair, setPair] = useState<Pair>();
 
   const jediMint = async () => {
     // example of minting tokens
@@ -86,10 +86,8 @@ const Invocations = () => {
 
     const jediSwap: JediSwap = JediSwap.getInstance();
     const slippage = new Percent('50', '10000'); // 0.5%
-    const pair = await jediSwap.getPair(provider, {
-      token0,
-      token1,
-    })
+    const jediPair = await jediSwap.getPair(provider, token0, token1)
+    setPair(jediPair)
 
     const starknetConnector: StarknetConnector = {
       account: account,
@@ -97,7 +95,7 @@ const Invocations = () => {
     }
 
     //Fetches liq pool address for tokenA and tokenB
-    const swapTx = await jediSwap.swap(starknetConnector, token0, token1, amountFrom, amountTo, pair)
+    const swapTx = await jediSwap.swap(starknetConnector, token0, token1, amountFrom, amountTo, jediPair)
     const txResult = await account.execute(swapTx)
     setHash(txResult.transaction_hash);
   }
@@ -126,10 +124,7 @@ const Invocations = () => {
       parseInt(token1Decimals),
     )
     const jediSwap: JediSwap = JediSwap.getInstance();
-    const pair = await jediSwap.getPair(provider, {
-      token0,
-      token1,
-    })
+    const pair = await jediSwap.getPair(provider, token0, token1)
     //TODO save pool in state
 
     const starknetConnector: StarknetConnector = {
@@ -137,7 +132,7 @@ const Invocations = () => {
       provider: provider
     }
 
-    const addLiquidityTx = await jediSwap.addLiquidity(starknetConnector, pair,slippage,amountToken0)
+    const addLiquidityTx = await jediSwap.addLiquidity(starknetConnector, pair, slippage, amountToken0)
     const hash = await account.execute(addLiquidityTx);
     console.log(`[jediSwap liq result] : ${hash}`);
   }
@@ -146,44 +141,19 @@ const Invocations = () => {
     //TODO use right values here for the swap
     //TODO calculate output of swap and use it as transaction value
 
-    //EXAMPLE for approve plus swap
-    //   [
-    //   {
-    //     "contractAddress": "0x7394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10", //address for test token
-    //     "entrypoint": "approve",
-    //     "calldata": [
-    //       "3222138877362455837336203414511899549532510795732583806035105711862644221454",
-    //       "100000000000000000000",
-    //       "0"
-    //     ]
-    //   },
-    //     {
-    //       "contractAddress": "0x71faa7d6c3ddb081395574c5a6904f4458ff648b66e2123b877555d9ae0260e",
-    //       "entrypoint": "swap",
-    //       "calldata": [
-    //         "4", pool id
-    //         "3267429884791031784129188059026496191501564961518175231747906707757621165072", token to swap
-    //         "100000000000000000000", min amt to swap
-    //         "0", max
-    //         "302379469743", min output
-    //         "0" max
-    //       ]
-    //     }
-    //   ]
-
-    const amountIn = (100 * 10 ** 18).toString();
+    const amountIn = "100" //as specified by frontend
     const tokenFromAddress = "0x07394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10"
     const tokenToAddress = "0x02c03d22f43898f146e026a72f4cf37b9e898b70a11c4731665e0d75ce87700d";
 
     const tokenFromDecimals = await getErc20Decimals(provider, tokenFromAddress);
     const tokenToDecimals = await getErc20Decimals(provider, tokenToAddress)
 
-    const token0 = new Token(
+    const tokenFrom = new Token(
       ChainId.GÖRLI,
       tokenFromAddress,
       parseInt(tokenFromDecimals),
     )
-    const token1 = new Token(
+    const tokenTo = new Token(
       ChainId.GÖRLI,
       tokenToAddress,
       parseInt(tokenToDecimals),
@@ -194,9 +164,14 @@ const Invocations = () => {
       provider: provider
     }
 
-    const txSwap = await MySwap.getInstance().swap(starknetConnector, token0, token1, amountIn, "0");
-    console.log(`txSwap: ${JSON.stringify(txSwap)}`);
-    setHash(txSwap.transaction_hash);
+    const {poolId, poolPair} = await MySwap.getInstance().getPoolDetails(tokenFrom, tokenTo);
+    console.log(poolPair.token0Price.raw.toSignificant(6))
+    console.log(poolPair.token1Price.raw.toSignificant(6))
+
+    const txSwap = await MySwap.getInstance().swap(starknetConnector, tokenFrom, tokenTo, amountIn, "0", poolPair,poolId);
+    const hash = await account.execute(txSwap);
+    console.log(`txSwap: ${JSON.stringify(hash)}`);
+    setHash(hash.transaction_hash);
   }
 
 
@@ -205,6 +180,9 @@ const Invocations = () => {
       marginTop={"50px"}>
       <Button onClick={() => mySwap()}>mySwap</Button>
       <Button onClick={() => jediSwap()}>jediSwap</Button>
+      {pair && <div>
+        {`${pair.token0Price.raw.toSignificant(6)} token0 = ${pair.token1Price.raw.toSignificant(6)}`}
+      </div>}
       <Button onClick={() => jediSwapLiq()}>jediswapLiquidity</Button>
 
 

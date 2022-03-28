@@ -7,11 +7,11 @@ export interface DexCombo {
 
   approve(): void
 
-  swap(starknetConnector:StarknetConnector, tokenFrom: Token, tokenTo: Token, amountIn: string, amountOut: string, pair?:Pair): Promise<any>;
+  swap(starknetConnector: StarknetConnector, tokenFrom: Token, tokenTo: Token, amountIn: string, amountOut: string, pair?: Pair, poolId?: string): Promise<any>;
 
   revoke(): void
 
-  addLiquidity(starknetConnector: StarknetConnector, pair_0_1: Pair,slippage:Percent,amountToken0:string): Promise<any>
+  addLiquidity(starknetConnector: StarknetConnector, pair_0_1: Pair, slippage: Percent, amountToken0: string): Promise<any>
 
   removeLiquidity(): void
 }
@@ -31,12 +31,30 @@ export interface LiquidityPoolInputs {
 
 export interface LiquidityPoolInfo {
   liquidityPool?: string,
-  liqReservesToken0:BigintIsh,
-  liqReservesToken1:BigintIsh,
+  liqReservesToken0: BigintIsh,
+  liqReservesToken1: BigintIsh,
   desiredAmount0: string,
   desiredAmount1: string,
   minAmount0: string,
   minAmount1: string,
   price0to1: string,
   price1to0: string,
+}
+
+
+export interface findPoolRes {
+  liqReservesTokenFrom: BigintIsh,
+  liqReservesTokenTo: BigintIsh
+  liqPoolAddress?: string,
+  liqPoolToken0?: string,
+  poolId?: string
+
+}
+
+export interface TradeInfo {
+  executionPrice: string,
+  amountOutMin: string
+  pathLength?: string,
+  pathAddresses?: Array<string>,
+
 }

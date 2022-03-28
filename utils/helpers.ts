@@ -1,5 +1,5 @@
 import {Provider} from "starknet";
-import {JEDI_REGISTRY_ADDRESS} from "./constants/contants";
+import {JEDI_REGISTRY_ADDRESS} from "./constants/constants";
 
 export async function getErc20Decimals(provider:Provider,address:string){
   return await provider.callContract({

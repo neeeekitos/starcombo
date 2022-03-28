@@ -4,7 +4,7 @@ import {Input} from "@chakra-ui/input";
 import {Btc, Usdt} from 'react-cryptocoins';
 import TokenChooser from "./token-chooser";
 import {ArrowDownIcon} from "@chakra-ui/icons";
-import {SELECTABLE_TOKENS} from "../utils/constants/contants";
+import {SELECTABLE_TOKENS} from "../utils/constants/constants";
 import {useEffect, useState} from "react";
 import {motion, useMotionValue} from "framer-motion"
 
