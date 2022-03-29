@@ -1,6 +1,7 @@
 import {AccountInterface} from "starknet";
 import {Provider} from "starknet";
 import {BigintIsh, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
+import {PoolPosition} from "../../hooks/jediSwap";
 
 export interface DexCombo {
   mint(): void;
@@ -26,7 +27,7 @@ export interface DexCombo {
    */
   addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<any>
 
-  removeLiquidity(): void
+  removeLiquidity(starknetConnector:StarknetConnector,poolPosition:PoolPosition,liqToRemove:TokenAmount): any
 }
 
 export interface StarknetConnector {

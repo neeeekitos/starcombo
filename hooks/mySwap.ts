@@ -1,12 +1,11 @@
 import {DexCombo, StarknetConnector, SwapParameters, TradeInfo} from "../utils/constants/interfaces";
 import {ethers} from "ethers";
 
-import {Abi, AccountInterface, Call, Contract, number, Provider} from "starknet";
+import {Abi, Call, Contract, number} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
-import {Pair, Percent, Token, TokenAmount, Trade} from "@jediswap/sdk";
-import BN from "bn.js";
-import {fromEntries} from "@chakra-ui/utils";
+import {ChainId, Pair, Percent, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {JEDI_ROUTER_ADDRESS, MY_SWAP_ROUTER_ADDRESS, SLIPPAGE} from "../utils/constants/constants";
+import {PoolPosition} from "./jediSwap";
 
 export class MySwap implements DexCombo {
 
@@ -40,7 +39,8 @@ export class MySwap implements DexCombo {
 
     const poolTokenFrom = new TokenAmount(tokenFrom, poolDetails.liqReservesTokenFrom);
     const poolTokenTo = new TokenAmount(tokenTo, poolDetails.liqReservesTokenTo);
-    const pair_0_1 = new Pair(poolTokenFrom, poolTokenTo);
+    //I'm cheating here and setting poolId inside the poolAddress field :)
+    const pair_0_1 = new Pair(poolTokenFrom, poolTokenTo,poolDetails.poolId);
     return {poolId: poolDetails.poolId, poolPair: pair_0_1};
   }
 
@@ -186,11 +186,79 @@ export class MySwap implements DexCombo {
   mint(): void {
   }
 
-  removeLiquidity(): void {
+  removeLiquidity(starknetConnector:StarknetConnector,poolPosition:PoolPosition,liqToRemove:TokenAmount): Call | Call[] {
+
+    const poolPair: Pair = poolPosition.poolPair;
+
+    console.log(poolPosition.poolSupply.raw.toString())
+    console.log(liqToRemove.raw.toString())
+    console.log(poolPair.reserve0.raw.toString())
+    console.log(poolPair.reserve1.raw.toString())
+    let token0Amount = poolPair.getLiquidityValue(poolPair.token0, poolPosition.poolSupply, liqToRemove);
+    let token1Amount = poolPair.getLiquidityValue(poolPair.token1, poolPosition.poolSupply, liqToRemove);
+    console.log(token0Amount.raw.toString())
+    console.log(token1Amount.raw.toString())
+
+    const tx = {
+      contractAddress:MY_SWAP_ROUTER_ADDRESS,
+      entrypoint:"withdraw_liquidity",
+      calldata:[
+        poolPosition.poolPair.pairAddress,
+        liqToRemove.raw.toString(),
+        "0",
+        token0Amount.raw.toString(),
+        "0",
+        token1Amount.raw.toString(),
+        "0"
+      ]
+    }
+    return tx;
+
+
+
+
   }
 
   revoke(): void {
   }
+
+  async getLiquidityPosition(starknetConnector: StarknetConnector, tokenFrom:Token,tokenTo:Token) : Promise<PoolPosition>{
+    const {account, provider} = starknetConnector;
+
+    const tokenFromDec = ethers.BigNumber.from(tokenFrom.address).toBigInt().toString()
+    const tokenToDec = ethers.BigNumber.from(tokenTo.address).toBigInt().toString()
+
+    const poolDetails = await this.getPoolDetails(tokenFrom, tokenTo);
+
+    const poolId = poolDetails.poolPair.pairAddress;
+
+    const userBalance = await provider.callContract({
+      contractAddress:MY_SWAP_ROUTER_ADDRESS,
+      entrypoint: "get_lp_balance",
+      calldata: [
+        poolId,
+        ethers.BigNumber.from(starknetConnector.account.address).toBigInt().toString(),
+      ]
+    }).then((res) => res.result[0]);
+
+    const totalSupply = await provider.callContract({
+      contractAddress: MY_SWAP_ROUTER_ADDRESS,
+      entrypoint: "get_total_shares",
+      calldata:[poolId]
+    }).then((res) => res.result[0]);
+    console.log("heh")
+
+    const supply = new TokenAmount(new Token(ChainId.GÖRLI, "0",18), totalSupply);
+    const userLiquidity= new TokenAmount(new Token(ChainId.GÖRLI, "0",18), userBalance);
+
+    return {
+      poolSupply: supply,
+      userLiquidity: userLiquidity,
+      poolPair: poolDetails.poolPair,
+    }
+
+  }
+
 
   /**
    * Returns all of a pool's detail
@@ -217,8 +285,10 @@ export class MySwap implements DexCombo {
         }
         return Promise.resolve({
           poolId: i.toString(),
+          poolName:pool[0].name,
           liqReservesTokenFrom: liqReservesTokenFrom,
-          liqReservesTokenTo: liqReservesTokenTo
+          liqReservesTokenTo: liqReservesTokenTo,
+          feePercentage:pool[0].fee_percentage.toString()
         });
 
       }

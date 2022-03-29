@@ -92,6 +92,25 @@ const Invocations = () => {
     console.log(`[jediSwap liq result] : ${hash}`);
   }
 
+  const jediSwapRemoveLiq = async () => {
+    const liqPoolAddress = "0x04b05cce270364e2e4bf65bde3e9429b50c97ea3443b133442f838045f41e733";
+    const token0Address = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c"; //jedifeb0
+    const token1Address = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756"; //jedifeb1
+    const starknetConnector: StarknetConnector = {
+      account: account,
+      provider: provider
+    }
+
+    const {tokenFrom:token0, tokenTo:token1} = await createTokenObjects(starknetConnector, token0Address, token1Address);
+    const liqPoolToken = new Token(ChainId.GÖRLI, liqPoolAddress, 18);
+
+    const poolPosition = await JediSwap.getInstance().getLiquidityPosition(starknetConnector,liqPoolToken,token0,token1);
+    console.log(poolPosition)
+    const tx = JediSwap.getInstance().removeLiquidity(starknetConnector,poolPosition,poolPosition.userLiquidity);
+    const txResult = await account.execute(tx)
+    setHash(txResult.transaction_hash);
+  }
+
   const mySwap = async () => {
     //TODO use right values here for the swap
     const amountIn = "100" //as specified by frontend
@@ -146,18 +165,42 @@ const Invocations = () => {
     setHash(hash.transaction_hash);
   }
 
+  const mySwapRemoveLiq = async () => {
+    //TODO use right values here for the swap
+    //TODO calculate output of swap and use it as transaction value
+
+    const starknetConnector: StarknetConnector = {
+      account: account,
+      provider: provider
+    }
+
+    let amountTokenFrom = "100" //as specified by frontend - tokenFrom is the one on the top
+    const tokenFromAddress = "0x07394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10" //tst token
+    const tokenToAddress = "0x044e592375a34fb4fdd3a5e2694cd2cbbcd61305b95cfac9d40c1f02ac64aa66";
+
+    const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, tokenFromAddress, tokenToAddress);
+    const poolPosition = await MySwap.getInstance().getLiquidityPosition(starknetConnector,tokenFrom, tokenTo);
+
+    console.log(poolPosition)
+    const tx = MySwap.getInstance().removeLiquidity(starknetConnector,poolPosition,poolPosition.userLiquidity);
+    const txResult = await account.execute(tx)
+    setHash(txResult.transaction_hash);
+  }
+
 
   return (
     <Flex
       marginTop={"50px"}>
       <Button onClick={() => mySwap()}>mySwap</Button>
       <Button onClick={() => mySwapLiq()}>mySwapLiquidity</Button>
+      <Button onClick={() => mySwapRemoveLiq()}>myswap remove liq</Button>
 
       <Button onClick={() => jediSwap()}>jediSwap</Button>
       {pair && <div>
         {`${pair.token0Price.raw.toSignificant(6)} token0 = ${pair.token1Price.raw.toSignificant(6)}`}
       </div>}
       <Button onClick={() => jediSwapLiq()}>jediswapLiquidity</Button>
+      <Button onClick={() => jediSwapRemoveLiq()}>jedisawp remove liq</Button>
 
 
       {hash && <div>

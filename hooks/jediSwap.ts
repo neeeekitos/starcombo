@@ -8,12 +8,18 @@ import {
 import {Abi, AccountInterface, Call, Contract, Provider, stark} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
 import {JEDI_REGISTRY_ADDRESS, JEDI_ROUTER_ADDRESS, SLIPPAGE} from "../utils/constants/constants";
-import {ethers} from "ethers";
+import {BigNumber, ethers} from "ethers";
 import {useStarknet} from "./useStarknet";
-import {BigintIsh, ChainId, Pair, Percent, Token, TokenAmount, Trade} from "@jediswap/sdk";
+import {BigintIsh, ChainId, JSBI, Pair, Percent, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {loadGetInitialProps} from "next/dist/shared/lib/utils";
 import {number} from "starknet";
+import {createTokenObjects} from "../utils/helpers";
 
+export interface PoolPosition {
+  poolSupply: TokenAmount,
+  userLiquidity: TokenAmount,
+  poolPair: Pair,
+}
 
 export class JediSwap implements DexCombo {
 
@@ -46,53 +52,38 @@ export class JediSwap implements DexCombo {
 
     const poolToken0 = new TokenAmount(tokenFrom, liquidityPool.liqReservesTokenFrom);
     const poolToken1 = new TokenAmount(tokenTo, liquidityPool.liqReservesTokenTo);
-    const poolPair = new Pair(poolToken0, poolToken1,liquidityPool.liqPoolAddress);
+    const poolPair = new Pair(poolToken0, poolToken1, liquidityPool.liqPoolAddress);
 
     return poolPair;
   }
 
-  /**
-   * Given 2 tokens and amounts aswell as a specified slippage, returns the address of the liquidity pool, the desired and minimum amounts for each tokens according
-   * to slippage, as well as the prices of token0<>token1.
-   * @param provider Starknet Provider
-   * @param token0 Token0 object
-   * @param token1 Token1 object
-   * @param amount0 amount of token0 we want to provide liquidity for. 0 if we
-   * @param amount1 amount of token0 we want to provide liquidity for.
-   * @param slippage
-   */
-  async getLiquidityDetails(provider: Provider, liquidityPoolInputs: LiquidityPoolInputs, pair_0_1: Pair): Promise<LiquidityPoolInfo> {
+  async getLiquidityPosition(starknetConnector: StarknetConnector, liqPoolToken: Token, token0: Token, token1: Token) {
+    const {account, provider} = starknetConnector;
+    const userBalance = await provider.callContract({
+      contractAddress: liqPoolToken.address,
+      entrypoint: "balanceOf",
+      calldata: [number.toBN(account.address).toString()]
+    }).then((res) => res.result[0]);
 
-    let {token0, token1, amountToken0, amountToken1, slippage} = liquidityPoolInputs
-    //format input according to decimals
-    amountToken0 = ethers.utils.parseUnits(amountToken0, token0.decimals).toString();
+    const totalSupply = await provider.callContract({
+      contractAddress: liqPoolToken.address,
+      entrypoint: "totalSupply",
+    }).then((res) => res.result[0]);
+    console.log("heh")
 
-    //get output amt for token input
-    const outputAmt = pair_0_1.getOutputAmount(new TokenAmount(token0, amountToken0));
-    const rawOutputAmt = ethers.BigNumber.from(outputAmt[0].raw.toString());
+    const token0Address = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c"; //jedifeb0
+    const token1Address = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756"; //jedifeb1
+    const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, token0Address, token1Address);
 
-    const desiredAmount0 = ethers.BigNumber.from(amountToken0);
-    const minAmount0 = desiredAmount0.sub(slippage.multiply(desiredAmount0.toBigInt()).toFixed(0)).toString()
-    const desiredAmount1 = rawOutputAmt;
-    const minAmount1 = desiredAmount1.sub(slippage.multiply(desiredAmount1.toBigInt()).toFixed(0)).toString()
-
-    console.log(token0, token1)
-
-    const price0to1 = pair_0_1.token0Price.toSignificant();
-    const price1to0 = pair_0_1.token1Price.toSignificant()
-    console.log(price1to0, price0to1)
-
+    const supply = new TokenAmount(liqPoolToken, totalSupply);
+    const liquidity = new TokenAmount(liqPoolToken, userBalance);
+    const poolPair = await this.getPair(provider, tokenFrom, tokenTo);
 
     return {
-      liqReservesToken0: pair_0_1.reserve0.raw.toString(),
-      liqReservesToken1: pair_0_1.reserve1.raw.toString(),
-      desiredAmount0: desiredAmount0.toString(),
-      desiredAmount1: desiredAmount1.toString(),
-      minAmount0: minAmount0,
-      minAmount1: minAmount1,
-      price0to1: price0to1,
-      price1to0: price1to0
-    };
+      poolSupply: supply,
+      userLiquidity: liquidity,
+      poolPair: poolPair,
+    }
 
   }
 
@@ -114,8 +105,8 @@ export class JediSwap implements DexCombo {
     const tokenFromIsToken0 = tokenAmountFrom.token.address === poolPair.token0.address;
     const tokenFromDec = ethers.BigNumber.from(poolPair.token0.address).toBigInt().toString()
     const tokenToDec = ethers.BigNumber.from(poolPair.token1.address).toBigInt().toString()
-    const token0Dec = tokenFromIsToken0 ? tokenFromDec:tokenToDec;
-    const token1Dec = tokenFromIsToken0 ? tokenToDec:tokenFromDec
+    const token0Dec = tokenFromIsToken0 ? tokenFromDec : tokenToDec;
+    const token1Dec = tokenFromIsToken0 ? tokenToDec : tokenFromDec
 
 
     //get output amt for token input
@@ -184,7 +175,43 @@ export class JediSwap implements DexCombo {
   mint(): void {
   }
 
-  removeLiquidity(): void {
+  removeLiquidity(starknetConnector:StarknetConnector,poolPosition:PoolPosition, liqToRemove:TokenAmount): any {
+
+    const poolPair: Pair = poolPosition.poolPair;
+    let token0Amount = poolPair.getLiquidityValue(poolPair.token0, poolPosition.poolSupply, liqToRemove);
+    let token1Amount = poolPair.getLiquidityValue(poolPair.token1, poolPosition.poolSupply, liqToRemove);
+    console.log(token0Amount.raw.toString())
+    console.log(token1Amount.raw.toString())
+
+    const approval = {
+      contractAddress: poolPair.pairAddress,
+      entrypoint: 'approve',
+      calldata: [
+        ethers.BigNumber.from(JEDI_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+        liqToRemove.raw.toString(),
+        "0"
+      ]
+    }
+
+    const remove_liq = {
+      contractAddress: JEDI_ROUTER_ADDRESS,
+      entrypoint: 'remove_liquidity',
+      calldata: [
+        ethers.BigNumber.from(poolPair.token0.address).toBigInt().toString(),
+        ethers.BigNumber.from(poolPair.token1.address).toBigInt().toString(),
+        liqToRemove.raw.toString(),
+        "0",
+        token0Amount.raw.toString(),
+        "0",
+        token1Amount.raw.toString(),
+        "0",
+        ethers.BigNumber.from(starknetConnector.account.address).toBigInt().toString(),
+        Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
+      ]
+    }
+    console.log(approval)
+
+    return [approval,remove_liq];
   }
 
   revoke(): void {
@@ -235,6 +262,10 @@ export class JediSwap implements DexCombo {
       }
     ];
     return tx;
+
+  }
+
+  async getPoolDetails(liqPoolAddress: string) {
 
   }
 
