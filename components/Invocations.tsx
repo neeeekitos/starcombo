@@ -93,20 +93,24 @@ const Invocations = () => {
   }
 
   const jediSwapRemoveLiq = async () => {
-    const liqPoolAddress = "0x04b05cce270364e2e4bf65bde3e9429b50c97ea3443b133442f838045f41e733";
+    const liqPoolAddress = "0x04b05cce270364e2e4bf65bde3e9429b50c97ea3443b133442f838045f41e733"; //jedifeb0/1
     const token0Address = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c"; //jedifeb0
     const token1Address = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756"; //jedifeb1
     const starknetConnector: StarknetConnector = {
       account: account,
       provider: provider
-    }
+    };
 
-    const {tokenFrom:token0, tokenTo:token1} = await createTokenObjects(starknetConnector, token0Address, token1Address);
-    const liqPoolToken = new Token(ChainId.GÖRLI, liqPoolAddress, 18);
+    const {
+      tokenFrom: token0,
+      tokenTo: token1
+    } = await createTokenObjects(starknetConnector, token0Address, token1Address);
+    const liqPoolTokenDec = await getErc20Decimals(provider, liqPoolAddress);
+    const liqPoolToken = new Token(ChainId.GÖRLI, liqPoolAddress, parseInt(liqPoolTokenDec));
 
-    const poolPosition = await JediSwap.getInstance().getLiquidityPosition(starknetConnector,liqPoolToken,token0,token1);
+    const poolPosition = await JediSwap.getInstance().getLiquidityPosition(starknetConnector, liqPoolToken, token0, token1);
     console.log(poolPosition)
-    const tx = JediSwap.getInstance().removeLiquidity(starknetConnector,poolPosition,poolPosition.userLiquidity);
+    const tx = JediSwap.getInstance().removeLiquidity(starknetConnector, poolPosition, poolPosition.userLiquidity);
     const txResult = await account.execute(tx)
     setHash(txResult.transaction_hash);
   }
@@ -122,8 +126,6 @@ const Invocations = () => {
     }
     const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, tokenFromAddress, tokenToAddress);
     const {poolId, poolPair} = await MySwap.getInstance().getPoolDetails(tokenFrom, tokenTo);
-    console.log(poolPair.token0Price.raw.toSignificant(6))
-    console.log(poolPair.token1Price.raw.toSignificant(6))
     const swapParameters: SwapParameters = {
       tokenFrom: tokenFrom,
       tokenTo: tokenTo,
@@ -179,10 +181,10 @@ const Invocations = () => {
     const tokenToAddress = "0x044e592375a34fb4fdd3a5e2694cd2cbbcd61305b95cfac9d40c1f02ac64aa66";
 
     const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, tokenFromAddress, tokenToAddress);
-    const poolPosition = await MySwap.getInstance().getLiquidityPosition(starknetConnector,tokenFrom, tokenTo);
+    const poolPosition = await MySwap.getInstance().getLiquidityPosition(starknetConnector, tokenFrom, tokenTo);
 
     console.log(poolPosition)
-    const tx = MySwap.getInstance().removeLiquidity(starknetConnector,poolPosition,poolPosition.userLiquidity);
+    const tx = MySwap.getInstance().removeLiquidity(starknetConnector, poolPosition, poolPosition.userLiquidity);
     const txResult = await account.execute(tx)
     setHash(txResult.transaction_hash);
   }

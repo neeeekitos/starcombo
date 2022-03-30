@@ -25,7 +25,5 @@ export async function createTokenObjects(starknetConnector:StarknetConnector,tok
     parseInt(tokenToDecimals),
   )
 
-  console.log("heh")
-
   return {tokenFrom,tokenTo}
 }

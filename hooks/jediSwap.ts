@@ -69,15 +69,11 @@ export class JediSwap implements DexCombo {
       contractAddress: liqPoolToken.address,
       entrypoint: "totalSupply",
     }).then((res) => res.result[0]);
-    console.log("heh")
 
-    const token0Address = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c"; //jedifeb0
-    const token1Address = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756"; //jedifeb1
-    const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, token0Address, token1Address);
 
     const supply = new TokenAmount(liqPoolToken, totalSupply);
     const liquidity = new TokenAmount(liqPoolToken, userBalance);
-    const poolPair = await this.getPair(provider, tokenFrom, tokenTo);
+    const poolPair = await this.getPair(provider, token0, token1);
 
     return {
       poolSupply: supply,
@@ -103,8 +99,8 @@ export class JediSwap implements DexCombo {
     //We provide tokenAmountFrom:TokenAmount.
     //so if token0 == tokenFrom we're gucci otherwise we must invert the values.
     const tokenFromIsToken0 = tokenAmountFrom.token.address === poolPair.token0.address;
-    const tokenFromDec = ethers.BigNumber.from(poolPair.token0.address).toBigInt().toString()
-    const tokenToDec = ethers.BigNumber.from(poolPair.token1.address).toBigInt().toString()
+    const tokenFromDec = number.toBN(poolPair.token0.address).toString();
+    const tokenToDec =  number.toBN(poolPair.token1.address).toString();
     const token0Dec = tokenFromIsToken0 ? tokenFromDec : tokenToDec;
     const token1Dec = tokenFromIsToken0 ? tokenToDec : tokenFromDec
 
@@ -133,7 +129,7 @@ export class JediSwap implements DexCombo {
         contractAddress: poolPair.token0.address,
         entrypoint: 'approve',
         calldata: [
-          ethers.BigNumber.from(JEDI_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+          number.toBN(JEDI_ROUTER_ADDRESS).toString(), // router address decimal
           desiredAmount0.toString(),
           "0"
         ]
@@ -142,7 +138,7 @@ export class JediSwap implements DexCombo {
         contractAddress: poolPair.token1.address,
         entrypoint: 'approve',
         calldata: [
-          ethers.BigNumber.from(JEDI_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+          number.toBN(JEDI_ROUTER_ADDRESS).toString(), // router address decimal
           desiredAmount1.toString(),
           "0"
         ]
@@ -161,7 +157,7 @@ export class JediSwap implements DexCombo {
           "0",
           minAmount1,
           "0",
-          ethers.BigNumber.from(starknetConnector.account.address).toBigInt().toString(),
+          number.toBN(starknetConnector.account.address).toString(),
           Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
         ]
       }
@@ -187,7 +183,7 @@ export class JediSwap implements DexCombo {
       contractAddress: poolPair.pairAddress,
       entrypoint: 'approve',
       calldata: [
-        ethers.BigNumber.from(JEDI_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+        number.toBN(JEDI_ROUTER_ADDRESS).toString(), // router address decimal
         liqToRemove.raw.toString(),
         "0"
       ]
@@ -197,15 +193,15 @@ export class JediSwap implements DexCombo {
       contractAddress: JEDI_ROUTER_ADDRESS,
       entrypoint: 'remove_liquidity',
       calldata: [
-        ethers.BigNumber.from(poolPair.token0.address).toBigInt().toString(),
-        ethers.BigNumber.from(poolPair.token1.address).toBigInt().toString(),
+        number.toBN(poolPair.token0.address).toString(),
+        number.toBN(poolPair.token1.address).toString(),
         liqToRemove.raw.toString(),
         "0",
         token0Amount.raw.toString(),
         "0",
         token1Amount.raw.toString(),
         "0",
-        ethers.BigNumber.from(starknetConnector.account.address).toBigInt().toString(),
+        number.toBN(starknetConnector.account.address).toString(),
         Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
       ]
     }
@@ -241,7 +237,7 @@ export class JediSwap implements DexCombo {
       "0",
       trade.pathLength,
       trade.pathAddresses,
-      ethers.BigNumber.from(starknetConnector.account.address).toBigInt().toString(),
+      number.toBN(starknetConnector.account.address).toString(),
       Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
     ].flatMap((x) => x);
 
@@ -250,7 +246,7 @@ export class JediSwap implements DexCombo {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
         calldata: [
-          ethers.BigNumber.from(JEDI_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+          number.toBN(JEDI_ROUTER_ADDRESS).toString(), // router address decimal
           amountIn,
           "0"
         ]
@@ -292,7 +288,7 @@ export class JediSwap implements DexCombo {
     const liqPoolToken0 = await provider.callContract({
       contractAddress: liquidityPoolForTokens,
       entrypoint: "token0",
-    }).then((res) => ethers.BigNumber.from(res.result[0]).toString())
+    }).then((res) => number.toBN(res.result[0]).toString())
     if (!liqPoolToken0) return undefined
 
     // Gets reserves for the tokenA tokenB liq pool

@@ -40,8 +40,8 @@ export class MySwap implements DexCombo {
     const poolTokenFrom = new TokenAmount(tokenFrom, poolDetails.liqReservesTokenFrom);
     const poolTokenTo = new TokenAmount(tokenTo, poolDetails.liqReservesTokenTo);
     //I'm cheating here and setting poolId inside the poolAddress field :)
-    const pair_0_1 = new Pair(poolTokenFrom, poolTokenTo,poolDetails.poolId);
-    return {poolId: poolDetails.poolId, poolPair: pair_0_1};
+    const poolPair = new Pair(poolTokenFrom, poolTokenTo, poolDetails.poolId);
+    return {poolId: poolDetails.poolId, poolPair: poolPair};
   }
 
   /**
@@ -65,7 +65,7 @@ export class MySwap implements DexCombo {
 
     //TODO dynamic slippage value here
     const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;
-    const amountOutMinDec = ethers.BigNumber.from(amountOutMin.toString()).toBigInt()
+    const amountOutMinDec = number.toBN(amountOutMin.toString());
 
     return {
       executionPrice: trade.executionPrice.toSignificant(6),
@@ -74,9 +74,9 @@ export class MySwap implements DexCombo {
 
   }
 
-  public async swap(starknetConnector: StarknetConnector, swapParameters:SwapParameters, poolId: string): Promise<any> {
+  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters, poolId: string): Promise<any> {
     let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
-    const tokenFromDec = ethers.BigNumber.from(tokenFrom.address).toBigInt().toString();
+    const tokenFromDec = number.toBN(tokenFrom.address).toString();
     //parse amount in with correct decimals
     amountIn = ethers.utils.parseUnits(amountIn, tokenFrom.decimals).toString()
     const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountIn, "0", SLIPPAGE)
@@ -86,7 +86,7 @@ export class MySwap implements DexCombo {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
         calldata: [
-          ethers.BigNumber.from(MY_SWAP_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+          number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
           amountIn,
           "0"
         ]
@@ -117,12 +117,12 @@ export class MySwap implements DexCombo {
     //We provide tokenAmountFrom:TokenAmount.
     //so if token0 == tokenFrom we're gucci otherwise we must invert the values.
     const tokenFromIsToken0 = tokenAmountFrom.token.address === poolPair.token0.address;
-    const tokenFromDec = ethers.BigNumber.from(poolPair.token0.address).toBigInt().toString()
-    const tokenToDec = ethers.BigNumber.from(poolPair.token1.address).toBigInt().toString()
-    const token0Dec = tokenFromIsToken0 ? tokenFromDec:tokenToDec;
-    const token1Dec = tokenFromIsToken0 ? tokenToDec:tokenFromDec
+    const tokenFromDec = number.toBN(poolPair.token0.address).toString();
+    const tokenToDec = number.toBN(poolPair.token1.address).toString();
+    const token0Dec = tokenFromIsToken0 ? tokenFromDec : tokenToDec;
+    const token1Dec = tokenFromIsToken0 ? tokenToDec : tokenFromDec
 
-      //get output amt for token input
+    //get output amt for token input
     let outputAmt, desiredAmount0, rawOutputAmt, minAmount0, desiredAmount1, minAmount1;
     if (tokenFromIsToken0) {
       desiredAmount0 = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
@@ -140,13 +140,12 @@ export class MySwap implements DexCombo {
     }
 
 
-
     const tx = [
       {
         contractAddress: poolPair.token0.address,
         entrypoint: 'approve',
         calldata: [
-          ethers.BigNumber.from(MY_SWAP_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+          number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
           desiredAmount0.toString(),
           "0"
         ]
@@ -155,7 +154,7 @@ export class MySwap implements DexCombo {
         contractAddress: poolPair.token1.address,
         entrypoint: 'approve',
         calldata: [
-          ethers.BigNumber.from(MY_SWAP_ROUTER_ADDRESS).toBigInt().toString(), // router address decimal
+          number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
           desiredAmount1.toString(),
           "0"
         ]
@@ -186,7 +185,7 @@ export class MySwap implements DexCombo {
   mint(): void {
   }
 
-  removeLiquidity(starknetConnector:StarknetConnector,poolPosition:PoolPosition,liqToRemove:TokenAmount): Call | Call[] {
+  removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Call | Call[] {
 
     const poolPair: Pair = poolPosition.poolPair;
 
@@ -200,9 +199,9 @@ export class MySwap implements DexCombo {
     console.log(token1Amount.raw.toString())
 
     const tx = {
-      contractAddress:MY_SWAP_ROUTER_ADDRESS,
-      entrypoint:"withdraw_liquidity",
-      calldata:[
+      contractAddress: MY_SWAP_ROUTER_ADDRESS,
+      entrypoint: "withdraw_liquidity",
+      calldata: [
         poolPosition.poolPair.pairAddress,
         liqToRemove.raw.toString(),
         "0",
@@ -215,25 +214,19 @@ export class MySwap implements DexCombo {
     return tx;
 
 
-
-
   }
 
   revoke(): void {
   }
 
-  async getLiquidityPosition(starknetConnector: StarknetConnector, tokenFrom:Token,tokenTo:Token) : Promise<PoolPosition>{
+  async getLiquidityPosition(starknetConnector: StarknetConnector, tokenFrom: Token, tokenTo: Token): Promise<PoolPosition> {
     const {account, provider} = starknetConnector;
 
-    const tokenFromDec = ethers.BigNumber.from(tokenFrom.address).toBigInt().toString()
-    const tokenToDec = ethers.BigNumber.from(tokenTo.address).toBigInt().toString()
-
     const poolDetails = await this.getPoolDetails(tokenFrom, tokenTo);
-
     const poolId = poolDetails.poolPair.pairAddress;
 
     const userBalance = await provider.callContract({
-      contractAddress:MY_SWAP_ROUTER_ADDRESS,
+      contractAddress: MY_SWAP_ROUTER_ADDRESS,
       entrypoint: "get_lp_balance",
       calldata: [
         poolId,
@@ -244,12 +237,11 @@ export class MySwap implements DexCombo {
     const totalSupply = await provider.callContract({
       contractAddress: MY_SWAP_ROUTER_ADDRESS,
       entrypoint: "get_total_shares",
-      calldata:[poolId]
+      calldata: [poolId]
     }).then((res) => res.result[0]);
-    console.log("heh")
 
-    const supply = new TokenAmount(new Token(ChainId.GÖRLI, "0",18), totalSupply);
-    const userLiquidity= new TokenAmount(new Token(ChainId.GÖRLI, "0",18), userBalance);
+    const supply = new TokenAmount(new Token(ChainId.GÖRLI, "0", 18), totalSupply);
+    const userLiquidity = new TokenAmount(new Token(ChainId.GÖRLI, "0", 18), userBalance);
 
     return {
       poolSupply: supply,
@@ -285,10 +277,10 @@ export class MySwap implements DexCombo {
         }
         return Promise.resolve({
           poolId: i.toString(),
-          poolName:pool[0].name,
+          poolName: pool[0].name,
           liqReservesTokenFrom: liqReservesTokenFrom,
           liqReservesTokenTo: liqReservesTokenTo,
-          feePercentage:pool[0].fee_percentage.toString()
+          feePercentage: pool[0].fee_percentage.toString()
         });
 
       }
