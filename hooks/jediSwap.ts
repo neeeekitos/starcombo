@@ -7,10 +7,15 @@ import {
 } from "../utils/constants/interfaces";
 import {Abi, AccountInterface, Call, Contract, Provider, stark} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
-import {JEDI_REGISTRY_ADDRESS, JEDI_ROUTER_ADDRESS, SLIPPAGE} from "../utils/constants/constants";
+import {
+  JEDI_REGISTRY_ADDRESS,
+  JEDI_ROUTER_ADDRESS,
+  MY_SWAP_ROUTER_ADDRESS,
+  SLIPPAGE
+} from "../utils/constants/constants";
 import {BigNumber, ethers} from "ethers";
 import {useStarknet} from "./useStarknet";
-import {BigintIsh, ChainId, JSBI, Pair, Percent, Token, TokenAmount, Trade} from "@jediswap/sdk";
+import {BigintIsh, ChainId, Fraction, JSBI, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {loadGetInitialProps} from "next/dist/shared/lib/utils";
 import {number} from "starknet";
 import {createTokenObjects} from "../utils/helpers";
@@ -95,71 +100,71 @@ export class JediSwap implements DexCombo {
     //TODO check if it's ok if amtToken0 corresponds to pool token 1
     //TODO check if there's another way to add fixed amountToken1 ? This works only if amountTokenFrom refers to Token0.
 
-    //Add liquidity to pool with poolPair 0 and poolPair 1.
-    //We provide tokenAmountFrom:TokenAmount.
-    //so if token0 == tokenFrom we're gucci otherwise we must invert the values.
-    const tokenFromIsToken0 = tokenAmountFrom.token.address === poolPair.token0.address;
-    const tokenFromDec = number.toBN(poolPair.token0.address).toString();
-    const tokenToDec =  number.toBN(poolPair.token1.address).toString();
-    const token0Dec = tokenFromIsToken0 ? tokenFromDec : tokenToDec;
-    const token1Dec = tokenFromIsToken0 ? tokenToDec : tokenFromDec
+    let tokenFrom, tokenTo, tokenFromIsToken0, tokenFromPrice: Price;
+    console.log(tokenAmountFrom.token.address, poolPair.token0.address)
+    tokenAmountFrom.token.address === poolPair.token0.address ?
+      [tokenFrom, tokenTo, tokenFromPrice, tokenFromIsToken0] = [poolPair.token0, poolPair.token1, poolPair.token0Price, true] :
+      [tokenFrom, tokenTo, tokenFromPrice, tokenFromIsToken0] = [poolPair.token1, poolPair.token0, poolPair.token1Price, false];
+
+    const tokenFromDec = number.toBN(tokenFrom.address);
+    const tokenToDec = number.toBN(tokenTo.address);
+
+    let desiredAmountFrom: ethers.BigNumber, minAmountFrom: string, desiredAmountTo: Fraction, minAmountTo: string;
 
 
-    //get output amt for token input
-    let outputAmt, desiredAmount0, rawOutputAmt, minAmount0, desiredAmount1, minAmount1;
-    if (tokenFromIsToken0) {
-      outputAmt = poolPair.getOutputAmount(new TokenAmount(poolPair.token0, tokenAmountFrom.raw.toString()));
-      desiredAmount0 = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
-      rawOutputAmt = ethers.BigNumber.from(outputAmt[0].raw.toString());
-      minAmount0 = desiredAmount0.sub(slippage.multiply(desiredAmount0.toBigInt()).toFixed(0)).toString()
-      desiredAmount1 = rawOutputAmt;
-      minAmount1 = desiredAmount1.sub(slippage.multiply(desiredAmount1.toBigInt()).toFixed(0)).toString()
+    // from
+    desiredAmountFrom = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
+    console.log(desiredAmountFrom)
+    minAmountFrom = desiredAmountFrom.sub(SLIPPAGE.multiply(desiredAmountFrom.toBigInt()).toFixed(0)).toString()
 
-    } else {
-      outputAmt = poolPair.getOutputAmount(new TokenAmount(poolPair.token1, tokenAmountFrom.raw.toString()));
-      desiredAmount1 = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
-      rawOutputAmt = ethers.BigNumber.from(outputAmt[0].raw.toString());
-      minAmount1 = desiredAmount1.sub(slippage.multiply(desiredAmount1.toBigInt()).toFixed(0)).toString()
-      desiredAmount0 = rawOutputAmt;
-      minAmount0 = desiredAmount1.sub(slippage.multiply(desiredAmount0.toBigInt()).toFixed(0)).toString()
-    }
+    // to
+    desiredAmountTo = tokenFromPrice.raw.multiply(desiredAmountFrom.toString());
+    console.log(desiredAmountTo)
+    minAmountTo = desiredAmountTo.subtract(SLIPPAGE.multiply(desiredAmountTo).toFixed(0)).toFixed(0)
+
+    console.log(desiredAmountFrom.toString(), desiredAmountTo.toFixed(0), minAmountFrom, minAmountTo)
+    console.log(tokenFromIsToken0)
+
+    const callData: Array<string> = [
+        tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),
+        tokenFromIsToken0 ? tokenToDec.toString() : tokenFromDec.toString(),
+        tokenFromIsToken0 ? desiredAmountFrom.toString() : desiredAmountTo.toFixed(0),
+        "0",
+        tokenFromIsToken0 ? desiredAmountTo.toFixed(0) : desiredAmountFrom.toString(),
+        "0",
+        tokenFromIsToken0 ? minAmountFrom : minAmountTo,
+        "0",
+        tokenFromIsToken0 ? minAmountTo : minAmountFrom,
+        "0",
+        number.toBN(starknetConnector.account.address).toString(),
+        Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
+      ]
+    ;
+
 
     const tx = [
       {
-        contractAddress: poolPair.token0.address,
+        contractAddress: tokenFrom.address,
         entrypoint: 'approve',
         calldata: [
           number.toBN(JEDI_ROUTER_ADDRESS).toString(), // router address decimal
-          desiredAmount0.toString(),
+          desiredAmountFrom.toBigInt().toString(),
           "0"
         ]
       },
       {
-        contractAddress: poolPair.token1.address,
+        contractAddress: tokenTo.address,
         entrypoint: 'approve',
         calldata: [
           number.toBN(JEDI_ROUTER_ADDRESS).toString(), // router address decimal
-          desiredAmount1.toString(),
+          desiredAmountTo.toFixed(0),
           "0"
         ]
       },
       {
         contractAddress: JEDI_ROUTER_ADDRESS,
         entrypoint: 'add_liquidity',
-        calldata: [
-          token0Dec,
-          token1Dec,
-          desiredAmount0.toString(),
-          "0",
-          desiredAmount1.toString(),
-          "0",
-          minAmount0,
-          "0",
-          minAmount1,
-          "0",
-          number.toBN(starknetConnector.account.address).toString(),
-          Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
-        ]
+        calldata: callData
       }
     ];
     return tx;
@@ -171,7 +176,7 @@ export class JediSwap implements DexCombo {
   mint(): void {
   }
 
-  removeLiquidity(starknetConnector:StarknetConnector,poolPosition:PoolPosition, liqToRemove:TokenAmount): any {
+  removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): any {
 
     const poolPair: Pair = poolPosition.poolPair;
     let token0Amount = poolPair.getLiquidityValue(poolPair.token0, poolPosition.poolSupply, liqToRemove);
@@ -207,7 +212,7 @@ export class JediSwap implements DexCombo {
     }
     console.log(approval)
 
-    return [approval,remove_liq];
+    return [approval, remove_liq];
   }
 
   revoke(): void {

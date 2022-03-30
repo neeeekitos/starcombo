@@ -85,6 +85,8 @@ const Invocations = () => {
     const jediSwap: JediSwap = JediSwap.getInstance();
     const poolPair = await jediSwap.getPair(provider, tokenFrom, tokenTo)
     //TODO save pool prices in state
+    console.log(poolPair.token0Price.raw.toSignificant(6))
+    console.log(poolPair.token1Price.raw.toSignificant(6))
     amountTokenFrom = ethers.utils.parseUnits(amountTokenFrom, tokenFrom.decimals).toString()
     const tokenAmountFrom = new TokenAmount(tokenFrom, amountTokenFrom)
     const addLiquidityTx = await jediSwap.addLiquidity(starknetConnector, poolPair, SLIPPAGE, tokenAmountFrom)
@@ -182,8 +184,6 @@ const Invocations = () => {
 
     const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, tokenFromAddress, tokenToAddress);
     const poolPosition = await MySwap.getInstance().getLiquidityPosition(starknetConnector, tokenFrom, tokenTo);
-
-    console.log(poolPosition)
     const tx = MySwap.getInstance().removeLiquidity(starknetConnector, poolPosition, poolPosition.userLiquidity);
     const txResult = await account.execute(tx)
     setHash(txResult.transaction_hash);
