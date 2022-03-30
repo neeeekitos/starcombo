@@ -15,7 +15,7 @@ import ActionBlock from "../components/action-block";
 import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
-import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../utils/constants/contants";
+import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../utils/constants/constants";
 import Invocations from "../components/Invocations";
 
 
