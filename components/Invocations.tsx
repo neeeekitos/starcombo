@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {Abi, AccountInterface, AddTransactionResponse, Contract, number, Provider} from "starknet";
+import {Abi, AccountInterface, AddTransactionResponse, Contract, Provider} from "starknet";
 import BalancesAbi from "../contracts/artifacts/abis/balances.json";
 import {Button, Flex} from "@chakra-ui/react";
 
@@ -15,6 +15,8 @@ import {useStarknet} from "../hooks/useStarknet";
 import {add} from "@noble/hashes/_u64";
 import {createTokenObjects, getErc20Decimals} from "../utils/helpers";
 import {LiquidityPoolInputs, StarknetConnector, SwapParameters} from "../utils/constants/interfaces";
+import {ArfSwap} from "../hooks/arfSwap";
+import {getPair} from "../hooks/dexTools";
 
 
 const Invocations = () => {
@@ -38,6 +40,83 @@ const Invocations = () => {
     ));
     const result = await account!.execute(txs);
     setHash(result.transaction_hash);
+  }
+
+  const arfSwap = async () => {
+
+    const amountFrom = "100.10";
+    const amountTo = "0";
+    const tokenFromAddress = "0x3dd7b0db7cca8e8468d06d27b40ca9368754c30d76900fcd19a65736fab9084";
+    const tokenToAddress = "0x4b60f66889f5d3d96022bfb9d761b73baeefe7f46070a1d33ed71ea4e837b75";
+
+    const tokenFromDecimals = await getErc20Decimals(provider, tokenFromAddress);
+    const tokenToDecimals = await getErc20Decimals(provider, tokenToAddress);
+
+    const tokenFrom = new Token(
+      ChainId.GÖRLI,
+      tokenFromAddress,
+      parseInt(tokenFromDecimals),
+    )
+    const tokenTo = new Token(
+      ChainId.GÖRLI,
+      tokenToAddress,
+      parseInt(tokenToDecimals),
+    )
+
+    const arfSwap: ArfSwap = ArfSwap.getInstance();
+    const arfPair = await getPair(provider, {
+      token0: tokenFrom,
+      token1 : tokenTo,
+    }, arfSwap.findPool);
+
+    console.log(`pair: ${pair.token0.address} ${pair.token1.address}`);
+
+    const starknetConnector: StarknetConnector = {
+      account: account,
+      provider: provider
+    }
+
+    const swapParameters: SwapParameters = {
+      tokenFrom: tokenFrom,
+      tokenTo: tokenTo,
+      amountIn: amountFrom,
+      amountOut: amountTo,
+      poolPair: arfPair
+    }
+
+    const txSwap = await arfSwap.swap(starknetConnector, swapParameters);
+    console.log(`txSwap: ${JSON.stringify(txSwap)}`);
+    const txResult = await account.execute(txSwap)
+    setHash(txResult.transaction_hash);
+  }
+
+  const arfAddLiquidity = async () => {
+    let amountTokenFrom = "100"; //TODO user defined
+    const amountTokenTo = "0"; //not necessary anymore for exact_tokens_for_tokens
+    const token0Address = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c";
+    const token1Address = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756";
+
+    const starknetConnector: StarknetConnector = {
+      account: account,
+      provider: provider
+    }
+    const tokenFrom = new Token(
+      ChainId.GÖRLI,
+      token0Address,
+      parseInt("18"),
+    )
+    const tokenTo = new Token(
+      ChainId.GÖRLI,
+      token1Address,
+      parseInt("18"),
+    )
+
+    const arfSwap: ArfSwap = ArfSwap.getInstance();
+    const poolPair = await arfSwap.getPair(provider, tokenFrom, tokenTo)
+    amountTokenFrom = ethers.utils.parseUnits(amountTokenFrom, tokenFrom.decimals).toString()
+    const tokenAmountFrom = new TokenAmount(tokenFrom, amountTokenFrom)
+    const addLiquidityTx = await arfSwap.addLiquidity(starknetConnector, poolPair, new Percent('50', '10000'), tokenAmountFrom); // 0.5%, tokenAmountFrom)
+    console.log(`[ARF Add Liquidity result] : ${hash}`);
   }
 
   const jediSwap = async () => {
@@ -202,7 +281,9 @@ const Invocations = () => {
         {`${pair.token0Price.raw.toSignificant(6)} token0 = ${pair.token1Price.raw.toSignificant(6)}`}
       </div>}
       <Button onClick={() => jediSwapLiq()}>jediswapLiquidity</Button>
+      <Button onClick={() => arfSwap()}>arfSwap</Button>
       <Button onClick={() => jediSwapRemoveLiq()}>jedisawp remove liq</Button>
+      <Button onClick={() => arfAddLiquidity()}>arfLiquidity</Button>
 
 
       {hash && <div>

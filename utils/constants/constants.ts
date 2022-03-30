@@ -164,3 +164,5 @@ export const JEDI_ROUTER_ADDRESS = '0x01ea2f12a70ad6a052f99a49dace349996a8e968a0
 export const JEDI_REGISTRY_ADDRESS = '0x0413ba8d51ec05be863eb82314f0cf0ffceff949e76c87cae0a4bd7f89cfc2b1'
 export const SLIPPAGE = new Percent('50', '10000'); // 0.5%
 
+export const ARF_ROUTER_ADDRESS = "0x5e4aa85e37de2cd11dcce42968055a2eff1eb090de736595ae0d299001335e0";
+export const ARF_FACTORY_ADDRESS = "0x0346118a027dd3bdc54ac8ac0c2b581715a6f981904542030f76eeb0e2caf8be";

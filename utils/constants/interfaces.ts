@@ -1,4 +1,4 @@
-import {AccountInterface} from "starknet";
+import {AccountInterface, Call} from "starknet";
 import {Provider} from "starknet";
 import {BigintIsh, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
 import {PoolPosition} from "../../hooks/jediSwap";
@@ -18,6 +18,7 @@ export interface DexCombo {
 
   revoke(): void
 
+  addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Call | Call[]>
   /**
    * Returns the transaction for an add liquidity opeartion
    * @param starknetConnector
@@ -45,8 +46,8 @@ export interface LiquidityPoolInputs {
 
 export interface LiquidityPoolInfo {
   liquidityPool?: string,
-  liqReservesToken0: BigintIsh,
-  liqReservesToken1: BigintIsh,
+  liqReservesToken0:BigintIsh,
+  liqReservesToken1:BigintIsh,
   desiredAmount0: string,
   desiredAmount1: string,
   minAmount0: string,
