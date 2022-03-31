@@ -2,7 +2,6 @@
     padding: 20px;
     margin: 20px;
     width: 400px;
-    float: left;
     cursor: grab;
     transition: all .2s ease-in-out;
 }
@@ -23,12 +22,13 @@
 .actionsWrapper {
     flex-grow: 1;
     display: flex;
+    flex-direction: column;
     justify-content: flex-start;
-    align-items: flex-end;
+    align-items: center;
     flex-wrap: nowrap;
     width: 100%;
-    overflow: scroll;
-    padding-right: 10px;
+    /*overflow: scroll;*/
+    /*padding-right: 10px;*/
     height: 100%;
 }
 

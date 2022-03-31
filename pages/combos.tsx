@@ -45,11 +45,11 @@ const Combos: NextPage = () => {
         <Reorder.Group
           as="ul"
           className={styles.actionsWrapper}
-          axis="x"
+          axis="y"
           values={items}
           onReorder={setItems}
           layoutScroll
-          style={{overflowX: "scroll"}}
+          style={{overflowY: "scroll"}}
         >
           {items.map((item) => (
             <Reorder.Item key={item} value={item}>
@@ -63,14 +63,6 @@ const Combos: NextPage = () => {
             </Reorder.Item>
           ))}
         </Reorder.Group>
-        <div className={styles.blockWrapper}>
-
-          <ActionBlock
-            actionName={ACTIONS[ActionTypes.SWAP].name}
-            protocolName={PROTOCOLS[ProtocolNames.JEDISWAP].name}
-            item={4}
-          />
-        </div>
       </div>
 
     )
