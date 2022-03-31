@@ -11,7 +11,7 @@ import {transformCallsToMulticallArrays} from "starknet/src/utils/transaction";
 import {getStarknet} from "@argent/get-starknet";
 import {StarknetWindowObject} from "@argent/get-starknet/dist/extension.model";
 import {useEffect, useState} from "react";
-import ActionBlock from "../components/action-block";
+import ActionBlock from "../components/action-block/action-block";
 import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
@@ -63,6 +63,14 @@ const Combos: NextPage = () => {
             </Reorder.Item>
           ))}
         </Reorder.Group>
+        <div className={styles.blockWrapper}>
+
+          <ActionBlock
+            actionName={ACTIONS[ActionTypes.SWAP].name}
+            protocolName={PROTOCOLS[ProtocolNames.JEDISWAP].name}
+            item={4}
+          />
+        </div>
       </div>
 
     )
