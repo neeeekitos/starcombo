@@ -39,3 +39,5 @@ yarn-error.log*
 
 #packages
 yarn.lock
+
+.idea
