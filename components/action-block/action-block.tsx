@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import styles from "./action-block.module.css";
 import Image from "next/image";
 import EtherLogo from "../../public/img/tokens/ether.svg";
@@ -8,24 +8,27 @@ import { SELECTABLE_TOKENS } from "../../utils/constants/constants";
 
 import { Input } from "@chakra-ui/react";
 import TokenChooser from "../token-chooser";
+import useComponentVisible from "../../hooks/UseComponentVisible";
 
 
-const ActionBlock = () => {
+const ActionBlock = (props: any) => {
 
   const [amountSend, setAmountSend] = useState("");
   const [tokenSend, setTokenSend] = useState(SELECTABLE_TOKENS[0]);
   const [tokenRecevied, setTokenRecevied] = useState(SELECTABLE_TOKENS[1]);
   const [amountRecevied, setAmountRecevied] = useState("");
-  const [modal, setModal] = useState(false);
+
+  const { ref, isComponentVisible, setIsComponentVisible } =
+    useComponentVisible(false);
 
   console.log(SELECTABLE_TOKENS[0]);
 
   return(
     <div className={styles.wrapperComponent}>
-      <div className={styles.actionBlockWrapper} onClick={() => setModal(true)}>
+      <div className={styles.actionBlockWrapper} onClick={() => setIsComponentVisible(true)}>
         <div className={styles.actionBlockHead}>
           <div>
-            <h3>Swap</h3>
+            <h3>{props.actionName}</h3>
             <div className={styles.underlineTitle}/>
           </div>
         </div>
@@ -49,8 +52,8 @@ const ActionBlock = () => {
       </div>
 
       {
-        modal ?
-        <div className={styles.modalWrapper}>
+        isComponentVisible ?
+        <div className={styles.modalWrapper} ref={ref}>
           <div className={styles.modalHead}>
             <div>
               <h3>Swap</h3>
@@ -104,7 +107,7 @@ const ActionBlock = () => {
               />
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.sumbitButton} onClick={() => setModal(!modal)}>Submit</button>
+              <button className={styles.sumbitButton} onClick={() => setIsComponentVisible(!isComponentVisible)}>Submit</button>
             </div>
 
           </div>
