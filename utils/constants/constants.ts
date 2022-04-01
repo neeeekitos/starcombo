@@ -1,10 +1,13 @@
 import {Percent} from "@jediswap/sdk";
+import {Call} from "starknet/src/types/lib";
 
 export enum ActionTypes {
   ADD_LIQUIDITY,
   REMOVE_LIQUIDITY,
   APPROVE,
   SWAP,
+  APPROVE_AND_SWAP,
+  APPROVE_AND_ADD_LIQUIDITY,
   REVOKE_APPROVAL,
   TRANSFER,
   WITHDRAW,
@@ -18,91 +21,108 @@ export enum ProtocolNames {
   STARK_SWAP,
   ZIG_ZAG,
   MY_SWAP,
-  AKROPOLIS
+  AKROPOLIS,
+  ARF
 }
 
-export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any} = {
+export interface Action {
+  id?: number;
+  actionType: ActionTypes;
+  protocolName: ProtocolNames;
+  call?: Call | Call[];
+}
+
+export interface Transaction {
+  contractAddress: string,
+  entrypoint: string,
+  calldata: string[]
+}
+
+export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
   [ProtocolNames.JEDISWAP]: {
     name: 'Jediswap',
     address: '0x818e6fecd516ecc3849daf6845e3ec868087b755',
-    abi: []
+    abi: [],
+    type: ProtocolNames.JEDISWAP
   },
-  [ProtocolNames.AAVE]: {
-    name: 'Aave',
+  [ProtocolNames.MY_SWAP]: {
+    name: 'MySwap',
     address: '0x9B11EFD69332A98D3C2cCb8e4a8a57160D9F6A0E',
-    abi: []
+    abi: [],
+    type: ProtocolNames.MY_SWAP
   },
   [ProtocolNames.ZK_LEND]: {
     name: 'ZkLend',
     address: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
-    abi: []
+    abi: [],
+    type: ProtocolNames.ZK_LEND
   },
-  [ProtocolNames.MAKER]: {
+  [ProtocolNames.ARF]: {
     name: 'Maker',
     address: '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2',
-    abi: []
+    abi: [],
+    type: ProtocolNames.ARF
   },
 }
 
 
-export const ACTIONS: { [key in keyof typeof ActionTypes]?: any} = {
+export const ACTIONS: { [key in keyof typeof ActionTypes]?: any } = {
   [ActionTypes.ADD_LIQUIDITY]: {
-    type: ActionTypes.ADD_LIQUIDITY,
+    type: ActionTypes.APPROVE_AND_ADD_LIQUIDITY,
     name: 'Add Liquidity',
     availableProtocols: [
-      ProtocolNames.AAVE,
+      ProtocolNames.MY_SWAP,
       ProtocolNames.JEDISWAP,
-      ProtocolNames.ZK_LEND
+      ProtocolNames.ARF,
     ],
   },
   [ActionTypes.REMOVE_LIQUIDITY]: {
     type: ActionTypes.REMOVE_LIQUIDITY,
     name: 'Remove Liquidity',
     availableProtocols: [
-      ProtocolNames.AAVE,
+      ProtocolNames.MY_SWAP,
       ProtocolNames.JEDISWAP,
-      ProtocolNames.ZK_LEND
+      ProtocolNames.ARF,
     ],
   },
-  [ActionTypes.APPROVE]: {
-    type: ActionTypes.APPROVE,
-    name: 'Approve',
+  [ActionTypes.APPROVE_AND_SWAP]: {
+    type: ActionTypes.APPROVE_AND_SWAP,
+    name: 'Approve and Swap',
     availableProtocols: [
-      ProtocolNames.AAVE,
+      ProtocolNames.MY_SWAP,
       ProtocolNames.JEDISWAP,
-      ProtocolNames.ZK_LEND
+      ProtocolNames.ARF,
     ],
   },
-  [ActionTypes.SWAP]: {
-    type: ActionTypes.SWAP,
-    name: 'Swap',
-    availableProtocols: [
-      ProtocolNames.AAVE,
-      ProtocolNames.JEDISWAP,
-      ProtocolNames.ZK_LEND
-    ],
-  },
-  [ActionTypes.REVOKE_APPROVAL]: {
-    type: ActionTypes.REVOKE_APPROVAL,
-    availableProtocols: [
-      ProtocolNames.AAVE,
-      ProtocolNames.JEDISWAP,
-      ProtocolNames.ZK_LEND
-    ],
-  },
-  [ActionTypes.TRANSFER]: {
-    type: ActionTypes.TRANSFER,
-    name: 'Transfer',
-    availableProtocols: [
-    ],
-  },
-  [ActionTypes.WITHDRAW]: {
-    type: ActionTypes.WITHDRAW,
-    name: 'Withdraw',
-    availableProtocols: [
-      ProtocolNames.AAVE,
-    ],
-  },
+  // [ActionTypes.SWAP]: {
+  //   type: ActionTypes.SWAP,
+  //   name: 'Swap',
+  //   availableProtocols: [
+  //     ProtocolNames.AAVE,
+  //     ProtocolNames.JEDISWAP,
+  //     ProtocolNames.ZK_LEND
+  //   ],
+  // },
+  // [ActionTypes.REVOKE_APPROVAL]: {
+  //   type: ActionTypes.REVOKE_APPROVAL,
+  //   availableProtocols: [
+  //     ProtocolNames.AAVE,
+  //     ProtocolNames.JEDISWAP,
+  //     ProtocolNames.ZK_LEND
+  //   ],
+  // },
+  // [ActionTypes.TRANSFER]: {
+  //   type: ActionTypes.TRANSFER,
+  //   name: 'Transfer',
+  //   availableProtocols: [],
+  // },
+  // [ActionTypes.WITHDRAW]: {
+  //   type: ActionTypes.WITHDRAW,
+  //   name: 'Withdraw',
+  //   availableProtocols: [
+  //     ProtocolNames.AAVE,
+  //   ],
+  // },
 };
 
 export const SELECTABLE_TOKENS = [

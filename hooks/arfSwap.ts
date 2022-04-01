@@ -2,7 +2,14 @@ import {DexCombo, StarknetConnector, SwapParameters} from "../utils/constants/in
 import {Call, number, Provider} from "starknet";
 import {ethers} from "ethers";
 import {BigintIsh, Pair, Percent, Price, TokenAmount, Trade} from "@jediswap/sdk";
-import {ARF_FACTORY_ADDRESS, ARF_ROUTER_ADDRESS} from "../utils/constants/constants";
+import {
+  Action,
+  ActionTypes,
+  ARF_FACTORY_ADDRESS,
+  ARF_ROUTER_ADDRESS,
+  ProtocolNames
+} from "../utils/constants/constants";
+import {PoolPosition} from "./jediSwap";
 
 
 interface findPoolRes {
@@ -41,7 +48,7 @@ export class ArfSwap implements DexCombo {
    * @param slippage
    * @param tokenAmountFrom
    */
-  async addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Call | Call[]> {
+  async addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Action> {
 
     let tokenFrom, tokenTo, tokenFromIsToken0, tokenFromPrice: Price;
     tokenAmountFrom.token.address === poolPair.token0.address ?
@@ -76,7 +83,7 @@ export class ArfSwap implements DexCombo {
       "0"
     ];
 
-    const tx = [
+    const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
@@ -101,7 +108,11 @@ export class ArfSwap implements DexCombo {
         calldata: callData
       }
     ];
-    return tx;
+    return Promise.resolve({
+      actionType: ActionTypes.APPROVE_AND_ADD_LIQUIDITY,
+      protocolName: ProtocolNames.ARF,
+      call: tx
+    });
   }
 
   approve(): void {
@@ -110,7 +121,12 @@ export class ArfSwap implements DexCombo {
   mint(): void {
   }
 
-  removeLiquidity(): void {
+  removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Promise<Action> {
+    return Promise.resolve({
+      actionType: ActionTypes.REMOVE_LIQUIDITY,
+      protocolName: ProtocolNames.ARF,
+      call: []
+    });
   }
 
   revoke(): void {
@@ -121,7 +137,7 @@ export class ArfSwap implements DexCombo {
    * @param starknetConnector
    * @param swapParameters
    */
-  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters): Promise<any> {
+  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters): Promise<Action> {
 
     //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
     const amountIn = ethers.utils.parseUnits(swapParameters.amountIn, swapParameters.tokenFrom.decimals).toString();
@@ -142,7 +158,7 @@ export class ArfSwap implements DexCombo {
       amountOutMinDec.toString()
     ];
 
-    const tx = [
+    const tx: Call | Call[] = [
       {
         contractAddress: swapParameters.tokenFrom.address,
         entrypoint: 'approve',
@@ -158,7 +174,11 @@ export class ArfSwap implements DexCombo {
         calldata: swapCallData
       }
     ];
-    return tx;
+    return Promise.resolve({
+      actionType: ActionTypes.APPROVE_AND_SWAP,
+      protocolName: ProtocolNames.ARF,
+      call: tx
+    });
   }
 
   async findPool(provider: Provider, token0DecAdress: string, token1DecAddress: string): Promise<findPoolRes | undefined> {

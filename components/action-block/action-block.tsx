@@ -28,7 +28,7 @@ const ActionBlock = (props: any) => {
       <div className={styles.actionBlockWrapper} onClick={() => setIsComponentVisible(true)}>
         <div className={styles.actionBlockHead}>
           <div>
-            <h3>{props.actionName}</h3>
+            <h3>{props.actionName} on {props.protocolName}</h3>
             <div className={styles.underlineTitle}/>
           </div>
         </div>

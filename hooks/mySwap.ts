@@ -3,8 +3,8 @@ import {ethers} from "ethers";
 
 import {Abi, Call, Contract, number} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
-import {BigintIsh, ChainId, Fraction, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
-import {JEDI_ROUTER_ADDRESS, MY_SWAP_ROUTER_ADDRESS, SLIPPAGE} from "../utils/constants/constants";
+import {ChainId, Fraction, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
+import {Action, ActionTypes, MY_SWAP_ROUTER_ADDRESS, ProtocolNames, SLIPPAGE} from "../utils/constants/constants";
 import {PoolPosition} from "./jediSwap";
 
 export class MySwap implements DexCombo {
@@ -72,14 +72,14 @@ export class MySwap implements DexCombo {
 
   }
 
-  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters, poolId: string): Promise<any> {
+  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters, poolId: string): Promise<Action> {
     let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
     const tokenFromDec = number.toBN(tokenFrom.address).toString();
     //parse amount in with correct decimals
     amountIn = ethers.utils.parseUnits(amountIn, tokenFrom.decimals).toString()
     const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountIn, "0", SLIPPAGE)
     if (!trade) return undefined;
-    const tx = [
+    const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
@@ -102,11 +102,16 @@ export class MySwap implements DexCombo {
         ]
       }
     ]
-    return tx;
+
+    return Promise.resolve({
+      actionType: ActionTypes.APPROVE_AND_SWAP,
+      protocolName: ProtocolNames.MY_SWAP,
+      call: tx
+    });
 
   }
 
-  async addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Call | Call[]> {
+  async addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Action> {
 
     //TODO check if it's ok if amtToken0 corresponds to pool token 1
     //TODO check if there's another way to add fixed amountToken1 ? This works only if amountTokenFrom refers to Token0.
@@ -147,11 +152,9 @@ export class MySwap implements DexCombo {
         "0",
         tokenFromIsToken0 ? minAmountTo : minAmountFrom,
         "0"
-      ]
-    ;
+      ];
 
-
-    const tx = [
+    const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
@@ -176,7 +179,11 @@ export class MySwap implements DexCombo {
         calldata: callData
       }
     ];
-    return tx;
+    return Promise.resolve({
+      actionType: ActionTypes.APPROVE_AND_ADD_LIQUIDITY,
+      protocolName: ProtocolNames.MY_SWAP,
+      call: tx
+    });
   }
 
   approve(): void {
@@ -185,7 +192,7 @@ export class MySwap implements DexCombo {
   mint(): void {
   }
 
-  removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Call | Call[] {
+  removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Promise<Action> {
 
     const poolPair = poolPosition.poolPair;
     let poolShare = poolPosition.userLiquidity.divide(poolPosition.poolSupply); // represents the %of the pool the user owns.
@@ -197,7 +204,7 @@ export class MySwap implements DexCombo {
     // Inside this, we're calculating tokenAmount(1-slippage). Note that this result is in unit and not wei terms so we need to parseUnit all of this :)
     let token0min = ethers.utils.parseUnits(token0Amount.subtract(token0Amount.multiply(SLIPPAGE)).toFixed(poolPair.token0.decimals), poolPair.token0.decimals);
     let token1min = ethers.utils.parseUnits(token1Amount.subtract(token1Amount.multiply(SLIPPAGE)).toFixed(poolPair.token1.decimals), poolPair.token1.decimals);
-    const tx = {
+    const tx: Call | Call[] = {
       contractAddress: MY_SWAP_ROUTER_ADDRESS,
       entrypoint: "withdraw_liquidity",
       calldata: [
@@ -210,7 +217,11 @@ export class MySwap implements DexCombo {
         "0"
       ]
     }
-    return tx;
+    return Promise.resolve({
+      actionType: ActionTypes.REMOVE_LIQUIDITY,
+      protocolName: ProtocolNames.MY_SWAP,
+      call: tx
+    });
   }
 
   revoke(): void {

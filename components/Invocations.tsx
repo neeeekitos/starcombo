@@ -86,7 +86,7 @@ const Invocations = () => {
 
     const txSwap = await arfSwap.swap(starknetConnector, swapParameters);
     console.log(`txSwap: ${JSON.stringify(txSwap)}`);
-    const txResult = await account.execute(txSwap)
+    const txResult = await account.execute(txSwap.call)
     setHash(txResult.transaction_hash);
   }
 
@@ -144,7 +144,7 @@ const Invocations = () => {
       poolPair: jediPair
     }
     const swapTx = await jediSwap.swap(starknetConnector, swapParameters)
-    const txResult = await account.execute(swapTx)
+    const txResult = await account.execute(swapTx.call)
     setHash(txResult.transaction_hash);
   }
 
@@ -169,7 +169,7 @@ const Invocations = () => {
     amountTokenFrom = ethers.utils.parseUnits(amountTokenFrom, tokenFrom.decimals).toString()
     const tokenAmountFrom = new TokenAmount(tokenFrom, amountTokenFrom)
     const addLiquidityTx = await jediSwap.addLiquidity(starknetConnector, poolPair, SLIPPAGE, tokenAmountFrom)
-    const hash = await account.execute(addLiquidityTx);
+    const hash = await account.execute(addLiquidityTx.call);
     console.log(`[jediSwap liq result] : ${hash}`);
   }
 
@@ -191,8 +191,8 @@ const Invocations = () => {
 
     const poolPosition = await JediSwap.getInstance().getLiquidityPosition(starknetConnector, liqPoolToken, token0, token1);
     console.log(poolPosition)
-    const tx = JediSwap.getInstance().removeLiquidity(starknetConnector, poolPosition, poolPosition.userLiquidity);
-    const txResult = await account.execute(tx)
+    const tx = await JediSwap.getInstance().removeLiquidity(starknetConnector, poolPosition, poolPosition.userLiquidity);
+    const txResult = await account.execute(tx.call)
     setHash(txResult.transaction_hash);
   }
 
@@ -216,7 +216,7 @@ const Invocations = () => {
     }
 
     const txSwap = await MySwap.getInstance().swap(starknetConnector, swapParameters, poolId);
-    const hash = await account.execute(txSwap);
+    const hash = await account.execute(txSwap.call);
     console.log(`txSwap: ${JSON.stringify(hash)}`);
     setHash(hash.transaction_hash);
   }
@@ -243,7 +243,7 @@ const Invocations = () => {
     const tokenAmountFrom = new TokenAmount(tokenFrom, amountTokenFrom)
 
     const txLiq = await MySwap.getInstance().addLiquidity(starknetConnector, poolPair, SLIPPAGE, tokenAmountFrom)
-    const hash = await account.execute(txLiq);
+    const hash = await account.execute(txLiq.call);
     console.log(`txSwap: ${JSON.stringify(hash)}`);
     setHash(hash.transaction_hash);
   }
@@ -263,8 +263,8 @@ const Invocations = () => {
 
     const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, tokenFromAddress, tokenToAddress);
     const poolPosition = await MySwap.getInstance().getLiquidityPosition(starknetConnector, tokenFrom, tokenTo);
-    const tx = MySwap.getInstance().removeLiquidity(starknetConnector, poolPosition, poolPosition.userLiquidity);
-    const txResult = await account.execute(tx)
+    const tx = await MySwap.getInstance().removeLiquidity(starknetConnector, poolPosition, poolPosition.userLiquidity);
+    const txResult = await account.execute(tx.call)
     setHash(txResult.transaction_hash);
   }
 
