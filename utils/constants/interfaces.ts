@@ -47,8 +47,8 @@ export interface LiquidityPoolInputs {
 
 export interface LiquidityPoolInfo {
   liquidityPool?: string,
-  liqReservesToken0:BigintIsh,
-  liqReservesToken1:BigintIsh,
+  liqReservesToken0: BigintIsh,
+  liqReservesToken1: BigintIsh,
   desiredAmount0: string,
   desiredAmount1: string,
   minAmount0: string,
@@ -81,4 +81,13 @@ export interface SwapParameters {
   amountIn: string,
   amountOut: string,
   poolPair: Pair
+}
+
+export interface OperationsState {
+  inputs: {
+    [key: string]: number
+  }
+  outputs: {
+    [key: string]: number
+  }
 }

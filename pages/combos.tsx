@@ -23,6 +23,7 @@ import {JediSwap} from "../hooks/jediSwap";
 import {Pair} from "@jediswap/sdk";
 import alert from "@chakra-ui/theme/src/components/alert";
 import AddAction from "../hooks/AddAction";
+import {useAmounts} from "../hooks/useAmounts";
 
 
 const Combos: NextPage = () => {
@@ -83,6 +84,8 @@ const Combos: NextPage = () => {
     return swapTx;
   }
 
+  const {initialFunds,receivedFunds} = useAmounts()
+
 
   const renderDisconnected = () => {
     return (
@@ -98,6 +101,8 @@ const Combos: NextPage = () => {
   const renderConnected = () => {
     return (
       <div className={styles.container}>
+        {JSON.stringify(initialFunds)}
+        {JSON.stringify(receivedFunds)}
         <Invocations/>
 
 
