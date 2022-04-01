@@ -11,7 +11,7 @@ import {transformCallsToMulticallArrays} from "starknet/src/utils/transaction";
 import {getStarknet} from "@argent/get-starknet";
 import {StarknetWindowObject} from "@argent/get-starknet/dist/extension.model";
 import {useEffect, useState} from "react";
-import ActionBlock from "../components/action-block";
+import ActionBlock from "../components/action-block/action-block";
 import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
@@ -45,11 +45,11 @@ const Combos: NextPage = () => {
         <Reorder.Group
           as="ul"
           className={styles.actionsWrapper}
-          axis="x"
+          axis="y"
           values={items}
           onReorder={setItems}
           layoutScroll
-          style={{overflowX: "scroll"}}
+          style={{overflowY: "scroll"}}
         >
           {items.map((item) => (
             <Reorder.Item key={item} value={item}>
