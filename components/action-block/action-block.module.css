@@ -30,7 +30,7 @@
 
 .actionBlockHead h3, .modalHead h3 {
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 500;
   background: linear-gradient(180deg, #ffffff, #ff89ab);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -45,7 +45,7 @@
 
 .underlineTitle {
   height: 2px;
-  width: 150%;
+  width: 100%;
   background: linear-gradient(90deg, #ffffff, #ff89ab);
   box-shadow: 4px 4px 8px #000000;
   opacity: 70%;

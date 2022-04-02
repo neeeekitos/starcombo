@@ -2,6 +2,7 @@ import {AccountInterface, Call} from "starknet";
 import {Provider} from "starknet";
 import {BigintIsh, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
 import {PoolPosition} from "../../hooks/jediSwap";
+import {Action} from "./constants";
 
 export interface DexCombo {
   mint(): void;
@@ -14,11 +15,11 @@ export interface DexCombo {
    * @param swapParameters
    * @param poolId
    */
-  swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters, poolId?: string): Promise<any>;
+  swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters, poolId?: string): Promise<Action>;
 
   revoke(): void
 
-  addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Call | Call[]>
+  addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Action>;
   /**
    * Returns the transaction for an add liquidity opeartion
    * @param starknetConnector
@@ -26,9 +27,9 @@ export interface DexCombo {
    * @param slippage
    * @param tokenAmountFrom
    */
-  addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<any>
+  addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Action>;
 
-  removeLiquidity(starknetConnector:StarknetConnector,poolPosition:PoolPosition,liqToRemove:TokenAmount): any
+  removeLiquidity(starknetConnector:StarknetConnector,poolPosition:PoolPosition,liqToRemove:TokenAmount): Promise<Action>;
 }
 
 export interface StarknetConnector {
@@ -46,8 +47,8 @@ export interface LiquidityPoolInputs {
 
 export interface LiquidityPoolInfo {
   liquidityPool?: string,
-  liqReservesToken0:BigintIsh,
-  liqReservesToken1:BigintIsh,
+  liqReservesToken0: BigintIsh,
+  liqReservesToken1: BigintIsh,
   desiredAmount0: string,
   desiredAmount1: string,
   minAmount0: string,
@@ -80,4 +81,13 @@ export interface SwapParameters {
   amountIn: string,
   amountOut: string,
   poolPair: Pair
+}
+
+export interface OperationsState {
+  inputs: {
+    [key: string]: number
+  }
+  outputs: {
+    [key: string]: number
+  }
 }

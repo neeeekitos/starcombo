@@ -8,9 +8,10 @@ import {
 import {Abi, AccountInterface, Call, Contract, Provider, stark} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
 import {
+  Action, ActionTypes,
   JEDI_REGISTRY_ADDRESS,
   JEDI_ROUTER_ADDRESS,
-  MY_SWAP_ROUTER_ADDRESS,
+  MY_SWAP_ROUTER_ADDRESS, ProtocolNames,
   SLIPPAGE
 } from "../utils/constants/constants";
 import {BigNumber, ethers} from "ethers";
@@ -95,7 +96,7 @@ export class JediSwap implements DexCombo {
    * @param slippage
    * @param tokenAmountFrom
    */
-  async addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Call | Call[]> {
+  async addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Action> {
 
     //TODO check if it's ok if amtToken0 corresponds to pool token 1
     //TODO check if there's another way to add fixed amountToken1 ? This works only if amountTokenFrom refers to Token0.
@@ -138,11 +139,9 @@ export class JediSwap implements DexCombo {
         "0",
         number.toBN(starknetConnector.account.address).toString(),
         Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
-      ]
-    ;
+      ];
 
-
-    const tx = [
+    const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
@@ -167,7 +166,11 @@ export class JediSwap implements DexCombo {
         calldata: callData
       }
     ];
-    return tx;
+    return Promise.resolve({
+      actionType: ActionTypes.APPROVE_AND_ADD_LIQUIDITY,
+      protocolName: ProtocolNames.JEDISWAP,
+      call: tx
+    });
   }
 
   approve(): void {
@@ -176,7 +179,7 @@ export class JediSwap implements DexCombo {
   mint(): void {
   }
 
-  removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): any {
+  removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Promise<Action> {
 
     const poolPair: Pair = poolPosition.poolPair;
     let token0Amount = poolPair.getLiquidityValue(poolPair.token0, poolPosition.poolSupply, liqToRemove);
@@ -184,7 +187,7 @@ export class JediSwap implements DexCombo {
     console.log(token0Amount.raw.toString())
     console.log(token1Amount.raw.toString())
 
-    const approval = {
+    const approval: Call | Call[] = {
       contractAddress: poolPair.pairAddress,
       entrypoint: 'approve',
       calldata: [
@@ -194,7 +197,7 @@ export class JediSwap implements DexCombo {
       ]
     }
 
-    const remove_liq = {
+    const remove_liq: Call | Call[] = {
       contractAddress: JEDI_ROUTER_ADDRESS,
       entrypoint: 'remove_liquidity',
       calldata: [
@@ -210,9 +213,12 @@ export class JediSwap implements DexCombo {
         Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
       ]
     }
-    console.log(approval)
 
-    return [approval, remove_liq];
+    return Promise.resolve({
+      actionType: ActionTypes.REMOVE_LIQUIDITY,
+      protocolName: ProtocolNames.JEDISWAP,
+      call: [approval, remove_liq]
+    });
   }
 
   revoke(): void {
@@ -224,7 +230,7 @@ export class JediSwap implements DexCombo {
    * @param swapParameters
    * @param poolId
    */
-  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters): Promise<any> {
+  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters): Promise<Action> {
     let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
     //TODO handle when user specifies amountOut
     //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
@@ -246,7 +252,7 @@ export class JediSwap implements DexCombo {
       Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
     ].flatMap((x) => x);
 
-    const tx = [
+    const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
@@ -262,8 +268,11 @@ export class JediSwap implements DexCombo {
         calldata: swapCallData
       }
     ];
-    return tx;
-
+    return Promise.resolve({
+      actionType: ActionTypes.APPROVE_AND_SWAP,
+      protocolName: ProtocolNames.JEDISWAP,
+      call: tx
+    });
   }
 
   async getPoolDetails(liqPoolAddress: string) {
@@ -342,8 +351,5 @@ export class JediSwap implements DexCombo {
       executionPrice: trade.executionPrice.toSignificant(6),
       amountOutMin: amountOutMinDec.toString(),
     }
-
   }
-
-
 }

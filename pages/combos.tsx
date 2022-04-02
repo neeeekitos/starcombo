@@ -1,7 +1,7 @@
 import {NextPage} from "next";
 import {useStarknet} from "../hooks/useStarknet";
 
-import {Button, Flex, Heading} from "@chakra-ui/react"
+import {Button, Flex, Heading, MenuItem} from "@chakra-ui/react"
 import {Abi, AccountInterface, AddTransactionResponse, Contract} from 'starknet'
 import {toBN} from 'starknet/utils/number'
 
@@ -15,15 +15,81 @@ import ActionBlock from "../components/action-block/action-block";
 import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
-import {ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../utils/constants/constants";
+import {Action, ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../utils/constants/constants";
 import Invocations from "../components/Invocations";
+import {StarknetConnector, SwapParameters} from "../utils/constants/interfaces";
+import {createTokenObjects} from "../utils/helpers";
+import {JediSwap} from "../hooks/jediSwap";
+import {Pair} from "@jediswap/sdk";
+import alert from "@chakra-ui/theme/src/components/alert";
+import AddAction from "../hooks/AddAction";
+import {useAmounts} from "../hooks/useAmounts";
+import {getBalanceOfErc20} from "../utils/helpers";
+import {NotificationContainer, NotificationManager} from 'react-notifications';
+import {useTransactions} from "../hooks/useTransactions";
 
 
 const Combos: NextPage = () => {
 
   const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
-  const [items, setItems] = useState([0, 1, 2, 3])
+  const {transactionItems} = useTransactions();
+  const [error, setError] = useState(false);
+  const [transactionHistory, setTransactionHistory] = useState([])
+  const {initialFunds, receivedFunds} = useAmounts()
+  const [actions, setActions] = useState<Action[]>([]);
 
+  const [hash, setHash] = useState<string>();
+  const [pair, setPair] = useState<Pair>();
+
+  const handleAddAction = (action: Action) => {
+    console.log(`Adding action: ${JSON.stringify(action)}`);
+    setActions([...actions, action]);
+  }
+
+  const handleRemoveAction = (action: Action) => {
+    setActions(actions.filter(a => a.id !== action.id))
+  }
+
+  // useEffect(() => {
+  //   if (account) {
+  //     jediSwap().then(txAction => {
+  //       console.log(`Jedi Swap: ${txAction} actions`)
+  //       handleAddAction(txAction)
+  //     });
+  //   } else {
+  //     setActions([]);
+  //   }
+  // }, [account]);
+
+  const jediSwap = async () => {
+
+    if (!provider || !account) return;
+
+    const amountFrom = "100"; //as given by frontend
+    const amountTo = "0"; //not necessary anymore for exact_tokens_for_tokens
+    const tokenFromAddress = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c"; //jedifeb0
+    const tokenToAddress = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756"; //jedifeb1
+    const starknetConnector: StarknetConnector = {
+      account: account,
+      provider: provider
+    }
+    const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, tokenFromAddress, tokenToAddress);
+    const jediSwap: JediSwap = JediSwap.getInstance();
+    const jediPair = await jediSwap.getPair(provider, tokenFrom, tokenTo)
+    setPair(jediPair)
+
+    const swapParameters: SwapParameters = {
+      tokenFrom: tokenFrom,
+      tokenTo: tokenTo,
+      amountIn: amountFrom,
+      amountOut: amountTo,
+      poolPair: jediPair
+    }
+    const swapTx = await jediSwap.swap(starknetConnector, swapParameters)
+    // const txResult = await account.execute(swapTx)
+    // setHash(txResult.transaction_hash);
+    return swapTx;
+  }
 
   const renderDisconnected = () => {
     return (
@@ -35,10 +101,37 @@ const Combos: NextPage = () => {
     )
   }
 
+  /**
+   * Sends the transactions. Verifies is the user has the initial funds required.
+   */
+  const send = async () => {
+    console.log(initialFunds);
+    let error = false
+
+    for (const [key, value] of Object.entries(initialFunds)) {
+      //TODO check if its w or w/o decimals
+      const userBalance = parseFloat(await getBalanceOfErc20(provider, key))
+      if (userBalance < value) {
+        NotificationManager.error(`Insufficient ${key} in your wallet`)
+        error = true;
+      }
+    }
+
+    if (!error) {
+      const transactions = Object.values(transactionItems);
+      console.log(transactions)
+      const hash = await account.execute(transactions);
+      console.log(hash)
+      setTransactionHistory([...transactionHistory, hash]);
+    }
+  }
+
 
   const renderConnected = () => {
     return (
       <div className={styles.container}>
+        {JSON.stringify(initialFunds)}
+        {JSON.stringify(receivedFunds)}
         <Invocations/>
 
 
@@ -46,23 +139,30 @@ const Combos: NextPage = () => {
           as="ul"
           className={styles.actionsWrapper}
           axis="y"
-          values={items}
-          onReorder={setItems}
+          values={actions}
+          onReorder={setActions}
           layoutScroll
           style={{overflowY: "scroll"}}
         >
-          {items.map((item) => (
-            <Reorder.Item key={item} value={item}>
+          {actions.map((action) => (
+            <Reorder.Item key={action.id} value={action}>
               <div className={styles.blockWrapper}>
                 <ActionBlock
-                  actionName={ACTIONS[ActionTypes.SWAP].name}
-                  protocolName={PROTOCOLS[ProtocolNames.JEDISWAP].name}
-                  item={item}
+                  actionName={ACTIONS[action.actionType].name}
+                  protocolName={PROTOCOLS[action.protocolName].name}
+                  action={action}
                 />
               </div>
             </Reorder.Item>
           ))}
         </Reorder.Group>
+        {
+          // TODO replace the droplist by the modal (furucombo example)
+        }
+        <AddAction
+          onAddAction={handleAddAction}
+        />
+
       </div>
 
     )

@@ -7,6 +7,7 @@ import {ArrowDownIcon} from "@chakra-ui/icons";
 import {SELECTABLE_TOKENS} from "../utils/constants/constants";
 import {useEffect, useState} from "react";
 import {motion, useMotionValue} from "framer-motion"
+import {useAmounts} from "../hooks/useAmounts";
 
 const ActionBlock = (props: any) => {
 
@@ -20,10 +21,10 @@ const ActionBlock = (props: any) => {
   const [amountFrom, setAmountFrom] = useState("");
   const [amountTo, setAmountTo] = useState("");
 
+
   useEffect(() => {
 
-  }, [x]);
-
+  }, [amountFrom, amountTo])
   return (
     // <motion.div
     //   drag
@@ -37,53 +38,53 @@ const ActionBlock = (props: any) => {
     //   dragElastic={0.5}
     //   whileTap={{ cursor: "grabbing" }}
     // >
-      <div className={styles.block}>
-        <div className={styles.actionNameWrapper}>
-          <h3 className={styles.actionName}>{props.actionName}</h3>
-        </div>
-        <p className={styles.protocolName}>{props.protocolName}</p>
+    <div className={styles.block}>
+      <div className={styles.actionNameWrapper}>
+        <h3 className={styles.actionName}>{props.actionName}</h3>
+      </div>
+      <p className={styles.protocolName}>{props.protocolName}</p>
 
-        <div className={styles.actionInputsWrapper}>
-          <div className={styles.actionInputField}>
-            <TokenChooser
-              selectedToken={selectedTokenFrom}
-              setSelectedToken={setSelectedTokenFrom}
-              selectableTokens={SELECTABLE_TOKENS}
-            />
-            <Input
-              placeholder="Input amount"
-              color="gray.300"
-              height={"3rem"}
-              borderRadius="md"
-              borderColor="gray.300"
-              _hover={{borderColor: "gray.500"}}
-              _focus={{borderColor: "gray.500"}}
-              value={amountFrom}
-              onChange={(e) => setAmountFrom(e.target.value)}
-            />
-          </div>
-          <ArrowDownIcon w={10} h={10} color={"#fff"}/>
-          
-          <div className={styles.actionInputField}>
-            <TokenChooser
-              selectedToken={selectedTokenTo}
-              setSelectedToken={setSelectedTokenTo}
-              selectableTokens={SELECTABLE_TOKENS}
-            />
-            <Input
-              placeholder="Output amount"
-              color="gray.300"
-              height={"3rem"}
-              borderRadius="md"
-              borderColor="gray.300"
-              _hover={{borderColor: "gray.500"}}
-              _focus={{borderColor: "gray.500"}}
-              value={amountTo}
-              onChange={(e: any) => setAmountTo(e.target.value)}
-            />
-          </div>
+      <div className={styles.actionInputsWrapper}>
+        <div className={styles.actionInputField}>
+          <TokenChooser
+            selectedToken={selectedTokenFrom}
+            setSelectedToken={setSelectedTokenFrom}
+            selectableTokens={SELECTABLE_TOKENS}
+          />
+          <Input
+            placeholder="Input amount"
+            color="gray.300"
+            height={"3rem"}
+            borderRadius="md"
+            borderColor="gray.300"
+            _hover={{borderColor: "gray.500"}}
+            _focus={{borderColor: "gray.500"}}
+            value={amountFrom}
+            onChange={(e) => setAmountFrom(e.target.value)}
+          />
+        </div>
+        <ArrowDownIcon w={10} h={10} color={"#fff"}/>
+
+        <div className={styles.actionInputField}>
+          <TokenChooser
+            selectedToken={selectedTokenTo}
+            setSelectedToken={setSelectedTokenTo}
+            selectableTokens={SELECTABLE_TOKENS}
+          />
+          <Input
+            placeholder="Output amount"
+            color="gray.300"
+            height={"3rem"}
+            borderRadius="md"
+            borderColor="gray.300"
+            _hover={{borderColor: "gray.500"}}
+            _focus={{borderColor: "gray.500"}}
+            value={amountTo}
+            onChange={(e: any) => setAmountTo(e.target.value)}
+          />
         </div>
       </div>
+    </div>
     // </motion.div>
   )
 }
