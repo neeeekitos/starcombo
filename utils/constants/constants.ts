@@ -43,32 +43,83 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
     name: 'Jediswap',
     address: '0x818e6fecd516ecc3849daf6845e3ec868087b755',
     abi: [],
-    type: ProtocolNames.JEDISWAP
+    type: ProtocolNames.JEDISWAP,
+    tokens: [
+      {
+        name: 'J23FEB0',
+        address: '0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c',
+        symbol: 'J23FEB0',
+      },
+      {
+        name: 'J23FEB1',
+        address: '0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756',
+        symbol: 'J23FEB1',
+      },
+      {
+        name: 'J23FEB2',
+        address: '0x024da028e8176afd3219fbeafb17c49624af9b86dcbe81007ae40d93f741617d',
+        symbol: 'J23FEB2',
+      },
+      {
+        name: 'J23FEB3',
+        address: '0x01ca5dedf1612b1ffb035e838ac09d70e500d22cf9cd0de4bebcef8553506fdb',
+        symbol: 'J23FEB3',
+      }
+    ]
+
+
   },
   [ProtocolNames.MY_SWAP]: {
     name: 'MySwap',
     address: '0x9B11EFD69332A98D3C2cCb8e4a8a57160D9F6A0E',
     abi: [],
-    type: ProtocolNames.MY_SWAP
+    type: ProtocolNames.MY_SWAP,
+    tokens: [
+      {
+        name: 'Test Token',
+        address: '0x07394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10',
+        symbol: 'TST',
+      },
+      {
+        name: 'Test USDC',
+        address: '0x44e592375a34fb4fdd3a5e2694cd2cbbcd61305b95cfac9d40c1f02ac64aa66',
+        symbol: 'tUSDC',
+      },
+      {
+        name: 'Test WETH',
+        address: '0x02c03d22f43898f146e026a72f4cf37b9e898b70a11c4731665e0d75ce87700d',
+        symbol: 'tWETH',
+      },
+      {
+        name: 'Test Compound',
+        address: '0x07f6e6a3b90ebe02190fba0269becaf8828b9219e92a7a041fa6da3ef11d0c6a',
+        symbol: 'tCOMP',
+      },
+
+
+    ]
   },
   [ProtocolNames.ZK_LEND]: {
     name: 'ZkLend',
     address: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     abi: [],
-    type: ProtocolNames.ZK_LEND
+    type: ProtocolNames.ZK_LEND,
+    tokens:[]
+
   },
   [ProtocolNames.ARF]: {
-    name: 'Maker',
+    name: 'AlphaRoad Finance',
     address: '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2',
     abi: [],
-    type: ProtocolNames.ARF
+    type: ProtocolNames.ARF,
+    tokens:[]
   },
 }
 
 
 export const ACTIONS: { [key in keyof typeof ActionTypes]?: any } = {
-  [ActionTypes.APPROVE_AND_ADD_LIQUIDITY]: {
-    type: ActionTypes.APPROVE_AND_ADD_LIQUIDITY,
+  [ActionTypes.ADD_LIQUIDITY]: {
+    type: ActionTypes.ADD_LIQUIDITY,
     name: 'Add Liquidity',
     availableProtocols: [
       ProtocolNames.MY_SWAP,
@@ -85,13 +136,13 @@ export const ACTIONS: { [key in keyof typeof ActionTypes]?: any } = {
       ProtocolNames.ARF,
     ],
   },
-  [ActionTypes.APPROVE_AND_SWAP]: {
-    type: ActionTypes.APPROVE_AND_SWAP,
-    name: 'Approve and Swap',
+  [ActionTypes.SWAP]: {
+    type: ActionTypes.SWAP,
+    name: 'Swap',
     availableProtocols: [
       ProtocolNames.MY_SWAP,
       ProtocolNames.JEDISWAP,
-      ProtocolNames.ARF,
+      // ProtocolNames.ARF, //Not yet ?
     ],
   },
   // [ActionTypes.SWAP]: {

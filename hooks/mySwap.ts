@@ -104,7 +104,7 @@ export class MySwap implements DexCombo {
     ]
 
     return Promise.resolve({
-      actionType: ActionTypes.APPROVE_AND_SWAP,
+      actionType: ActionTypes.SWAP,
       protocolName: ProtocolNames.MY_SWAP,
       call: tx
     });
@@ -180,7 +180,7 @@ export class MySwap implements DexCombo {
       }
     ];
     return Promise.resolve({
-      actionType: ActionTypes.APPROVE_AND_ADD_LIQUIDITY,
+      actionType: ActionTypes.ADD_LIQUIDITY,
       protocolName: ProtocolNames.MY_SWAP,
       call: tx
     });

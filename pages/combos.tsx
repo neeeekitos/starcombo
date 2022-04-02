@@ -50,64 +50,12 @@ const Combos: NextPage = () => {
     setActions(actions.filter(a => a.id !== action.id))
   }
 
-  // useEffect(() => {
-  //   if (account) {
-  //     jediSwap().then(txAction => {
-  //       console.log(`Jedi Swap: ${txAction} actions`)
-  //       handleAddAction(txAction)
-  //     });
-  //   } else {
-  //     setActions([]);
-  //   }
-  // }, [account]);
-
-  const jediSwap = async () => {
-
-    if (!provider || !account) return;
-
-    const amountFrom = "100"; //as given by frontend
-    const amountTo = "0"; //not necessary anymore for exact_tokens_for_tokens
-    const tokenFromAddress = "0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c"; //jedifeb0
-    const tokenToAddress = "0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756"; //jedifeb1
-    const starknetConnector: StarknetConnector = {
-      account: account,
-      provider: provider
-    }
-    const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, tokenFromAddress, tokenToAddress);
-    const jediSwap: JediSwap = JediSwap.getInstance();
-    const jediPair = await jediSwap.getPair(provider, tokenFrom, tokenTo)
-    setPair(jediPair)
-
-    const swapParameters: SwapParameters = {
-      tokenFrom: tokenFrom,
-      tokenTo: tokenTo,
-      amountIn: amountFrom,
-      amountOut: amountTo,
-      poolPair: jediPair
-    }
-    const swapTx = await jediSwap.swap(starknetConnector, swapParameters)
-    // const txResult = await account.execute(swapTx)
-    // setHash(txResult.transaction_hash);
-    return swapTx;
-  }
-
-  const renderDisconnected = () => {
-    return (
-      <Flex
-        marginTop={"50px"}>
-        Connect your Wallet to start
-        <Button onClick={() => connectWallet()}>Connect Wallet</Button>
-      </Flex>
-    )
-  }
-
   /**
    * Sends the transactions. Verifies is the user has the initial funds required.
    */
+  //TODO theoritical and not working yet
   const send = async () => {
-    console.log(initialFunds);
     let error = false
-
     for (const [key, value] of Object.entries(initialFunds)) {
       //TODO check if its w or w/o decimals
       const userBalance = parseFloat(await getBalanceOfErc20(provider, key))
@@ -126,7 +74,16 @@ const Combos: NextPage = () => {
     }
   }
 
-
+  //Render functions
+  const renderDisconnected = () => {
+    return (
+      <Flex
+        marginTop={"50px"}>
+        Connect your Wallet to start
+        <Button onClick={() => connectWallet()}>Connect Wallet</Button>
+      </Flex>
+    )
+  }
   const renderConnected = () => {
     return (
       <div className={styles.container}>
@@ -135,6 +92,7 @@ const Combos: NextPage = () => {
         <Invocations/>
 
 
+        <div className={styles.container}>
         <Reorder.Group
           as="ul"
           className={styles.actionsWrapper}
@@ -162,6 +120,8 @@ const Combos: NextPage = () => {
         <AddAction
           onAddAction={handleAddAction}
         />
+        </div>
+        <Button onClick={()=>send()}>Send</Button>
 
       </div>
 

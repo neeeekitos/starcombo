@@ -4,20 +4,26 @@ import Image from "next/image";
 import EtherLogo from "../../public/img/tokens/ether.svg";
 import BatLogo from "../../public/img/tokens/bat.svg";
 
-import {SELECTABLE_TOKENS} from "../../utils/constants/constants";
+import {ACTIONS, PROTOCOLS, SELECTABLE_TOKENS} from "../../utils/constants/constants";
 
 import {Input} from "@chakra-ui/react";
 import TokenChooser from "../token-chooser";
 import useComponentVisible from "../../hooks/UseComponentVisible";
 import {useAmounts} from "../../hooks/useAmounts";
 
+interface ActionBlockProps {
+  actionName: string,
+  protocolName: string,
+  action: any
+}
 
-const ActionBlock = (props: any) => {
+const ActionBlock = (props: ActionBlockProps) => {
+  const protocolTokens = PROTOCOLS[props.action.protocolName].tokens;
 
   const [amountFrom, setAmountFrom] = useState("");
-  const [tokenFrom, setTokenFrom] = useState(SELECTABLE_TOKENS[0]);
-  const [tokenRecevied, setTokenRecevied] = useState(SELECTABLE_TOKENS[1]);
-  const [amountRecevied, setAmountRecevied] = useState("");
+  const [tokenFrom, setTokenFrom] = useState(protocolTokens[0]);
+  const [tokenTo, setTokenTo] = useState(protocolTokens[1]);
+  const [amountTo, setAmountTo] = useState("");
 
   const {ref, isComponentVisible, setIsComponentVisible} =
     useComponentVisible(false);
@@ -38,15 +44,24 @@ const ActionBlock = (props: any) => {
 
   }
 
+  const switchTokens = () =>{
+    const tempFrom = tokenFrom;
+    const tempAmtFrom = amountFrom;
+    setTokenFrom(tokenTo);
+    setTokenTo(tempFrom);
+    setAmountFrom(amountTo);
+    setAmountTo(tempAmtFrom);
+  }
+
   const submitAction = () => {
     //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
     // So here it only works for swaps now. We need to integrate add and remove liq in the action blocks.
     addItem({
-      [props.item]: {
+      [props.action]: {
         actionType: props.actionName,
         tokens: {
           [tokenFrom.name]: parseFloat(amountFrom),
-          [tokenRecevied.name]: parseFloat(amountRecevied)
+          [tokenTo.name]: parseFloat(amountTo)
         }
       }
     })
@@ -82,7 +97,7 @@ const ActionBlock = (props: any) => {
           <div className={styles.tokenWrapper}>
             <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
             <div className={styles.shadow}></div>
-            <p>{amountRecevied} {tokenRecevied.symbol}</p>
+            <p>{amountTo} {tokenTo.symbol}</p>
           </div>
         </div>
       </div>
@@ -103,7 +118,7 @@ const ActionBlock = (props: any) => {
                 <TokenChooser
                   selectedToken={tokenFrom}
                   setSelectedToken={setTokenFrom}
-                  selectableTokens={SELECTABLE_TOKENS}
+                  selectableTokens={protocolTokens.filter((token)=>token!==tokenTo)}
                 />
                 <Input
                   placeholder="Input amount"
@@ -118,7 +133,7 @@ const ActionBlock = (props: any) => {
                 />
               </div>
 
-              <svg className={styles.modalArrows} width="50" height="70" viewBox="0 0 80 72" fill="none"
+              <svg onClick={() => switchTokens()} className={styles.modalArrows} width="50" height="70" viewBox="0 0 80 72" fill="none"
                    xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M79.3142 16.4142C80.0952 15.6332 80.0952 14.3668 79.3142 13.5858L66.5863 0.85787C65.8052 0.0768214 64.5389 0.0768213 63.7579 0.85787C62.9768 1.63892 62.9768 2.90525 63.7579 3.6863L75.0716 15L63.7578 26.3137C62.9768 27.0948 62.9768 28.3611 63.7578 29.1421C64.5389 29.9232 65.8052 29.9232 66.5863 29.1421L79.3142 16.4142ZM2 17L77.9 17L77.9 13L2 13L2 17Z"
@@ -131,9 +146,9 @@ const ActionBlock = (props: any) => {
               <h2 className={styles.h2Modal}>To: </h2>
               <div className={styles.inputToken}>
                 <TokenChooser
-                  selectedToken={tokenFrom}
-                  setSelectedToken={setTokenRecevied}
-                  selectableTokens={SELECTABLE_TOKENS}
+                  selectedToken={tokenTo}
+                  setSelectedToken={setTokenTo}
+                  selectableTokens={protocolTokens.filter((token)=>token!==tokenFrom)}
                 />
                 <Input
                   placeholder="Input amount"
@@ -142,8 +157,8 @@ const ActionBlock = (props: any) => {
                   borderColor="gray.300"
                   _hover={{borderColor: "gray.500"}}
                   _focus={{borderColor: "gray.500"}}
-                  value={amountRecevied}
-                  onChange={(e) => setAmountRecevied(e.target.value)}
+                  value={amountTo}
+                  onChange={(e) => setAmountTo(e.target.value)}
                   variant='flushed'
                 />
               </div>

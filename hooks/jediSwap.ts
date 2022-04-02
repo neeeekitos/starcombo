@@ -167,7 +167,7 @@ export class JediSwap implements DexCombo {
       }
     ];
     return Promise.resolve({
-      actionType: ActionTypes.APPROVE_AND_ADD_LIQUIDITY,
+      actionType: ActionTypes.ADD_LIQUIDITY,
       protocolName: ProtocolNames.JEDISWAP,
       call: tx
     });
@@ -269,7 +269,7 @@ export class JediSwap implements DexCombo {
       }
     ];
     return Promise.resolve({
-      actionType: ActionTypes.APPROVE_AND_SWAP,
+      actionType: ActionTypes.SWAP,
       protocolName: ProtocolNames.JEDISWAP,
       call: tx
     });

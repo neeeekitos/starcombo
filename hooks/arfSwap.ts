@@ -109,7 +109,7 @@ export class ArfSwap implements DexCombo {
       }
     ];
     return Promise.resolve({
-      actionType: ActionTypes.APPROVE_AND_ADD_LIQUIDITY,
+      actionType: ActionTypes.ADD_LIQUIDITY,
       protocolName: ProtocolNames.ARF,
       call: tx
     });
@@ -175,7 +175,7 @@ export class ArfSwap implements DexCombo {
       }
     ];
     return Promise.resolve({
-      actionType: ActionTypes.APPROVE_AND_SWAP,
+      actionType: ActionTypes.SWAP,
       protocolName: ProtocolNames.ARF,
       call: tx
     });
