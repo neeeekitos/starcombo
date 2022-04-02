@@ -23,52 +23,73 @@ interface AmountsState {
     [key: string]: number
   }
   addItem: (item: ItemProps) => void,
-  addAddLiquidityItem: (item: ItemProps) => void,
-  addRemoveLiquidityItem: (item: ItemProps) => void,
 }
 
 interface ActionOptions {
   [key: string]: any
 }
 
-const handleSwap = (initialFunds, receivedFunds, tokens) => {
-  const [assetFrom, assetTo] = Object.keys(tokens);
-  const [amountFrom, amountTo] = Object.values(tokens);
-
+const balanceChangesTokenFrom = (initialFunds, receivedFunds, tokenFrom, amountFrom) => {
   //Calculations
-  const outputValue = receivedFunds[assetFrom];
+  const outputValue = receivedFunds[tokenFrom];
 
   //Token From
   // 2 cases : if this input is an output from another card, we need to compute how much of it is the result of the
   // previous operation and how much is new capital brought to the app
   if (outputValue === undefined) {
     //it's not a previous output, so it's an initial fund
-    initialFunds[assetFrom] = initialFunds[assetFrom] ? initialFunds[assetFrom] + amountFrom : amountFrom;
+    initialFunds[tokenFrom] = initialFunds[tokenFrom] ? initialFunds[tokenFrom] + amountFrom : amountFrom;
   } else {
-    //it's a previous output value. So we need to find how much the users needs to bring.
+    //it's a previous output value. So we need to find how much new capital the users needs to bring.
     const usedFromPreviousOutput = outputValue - amountFrom;
     if (usedFromPreviousOutput < 0) {
       //We need to bring new funds and remove the funds from the outputs
-      initialFunds[assetFrom] = initialFunds[assetFrom] ? initialFunds[assetFrom] + Math.abs(usedFromPreviousOutput) : Math.abs(usedFromPreviousOutput);
-      receivedFunds[assetFrom] = 0;
+      initialFunds[tokenFrom] = initialFunds[tokenFrom] ? initialFunds[tokenFrom] + Math.abs(usedFromPreviousOutput) : Math.abs(usedFromPreviousOutput);
+      delete receivedFunds[tokenFrom];
     } else {
       //No need to deploy new capital.
-      receivedFunds[assetFrom] = usedFromPreviousOutput;
+      receivedFunds[tokenFrom] = usedFromPreviousOutput;
+      if(usedFromPreviousOutput===0) delete receivedFunds[tokenFrom]
     }
   }
+  return [initialFunds, receivedFunds];
+}
 
+const balanceChangeTokenTo = (receivedFunds, tokenTo, amountTo) => {
   //Token To
-  receivedFunds[assetTo] = receivedFunds[assetTo] ? receivedFunds[assetTo] + amountTo : amountTo;
+  receivedFunds[tokenTo] = receivedFunds[tokenTo] ? receivedFunds[tokenTo] + amountTo : amountTo;
+  return receivedFunds;
+}
 
+const handleSwap = (initialFunds, receivedFunds, tokens) => {
+  const [tokenFrom, tokenTo] = Object.keys(tokens);
+  const [amountFrom, amountTo] = Object.values(tokens);
+  //We trade tokenFrom to get TokenTo
+  [initialFunds, receivedFunds] = balanceChangesTokenFrom(initialFunds, receivedFunds, tokenFrom, amountFrom);
+  receivedFunds = balanceChangeTokenTo(receivedFunds, tokenTo, amountTo);
   return [initialFunds, receivedFunds];
 
 }
 
-const handleAddLiquidity = (tokens) => {
+const handleAddLiquidity = (initialFunds, receivedFunds, tokens) => {
+  const [token0, token1, tokenReceived] = Object.keys(tokens);
+  const [amount0, amount1, amountReceived] = Object.values(tokens);
+  //We trade token0 and token1 to get LP tokens
+  [initialFunds, receivedFunds] = balanceChangesTokenFrom(initialFunds, receivedFunds, token0, amount0);
+  [initialFunds, receivedFunds] = balanceChangesTokenFrom(initialFunds, receivedFunds, token1, amount1);
+  receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived, amountReceived);
+  return [initialFunds, receivedFunds];
+
 
 }
-const handleRemoveLiquidity = (tokens) => {
-
+const handleRemoveLiquidity = (initialFunds, receivedFunds, tokens) => {
+  const [token0, tokenReceived1, tokenReceived2] = Object.keys(tokens);
+  const [amount0, amountReceived1, amountReceived2] = Object.values(tokens);
+  //We trade LP token for token0 and token1
+  [initialFunds, receivedFunds] = balanceChangesTokenFrom(initialFunds, receivedFunds, token0, amount0);
+  receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived1, amountReceived1);
+  receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived2, amountReceived2);
+  return [initialFunds, receivedFunds];
 }
 
 const calculateFunds = (appItems) => {
@@ -85,7 +106,7 @@ const calculateFunds = (appItems) => {
     }
     handleAction[action.actionType](initialFunds, receivedFunds, action.tokens);
   }
-  return [initialFunds,receivedFunds]
+  return [initialFunds, receivedFunds]
 }
 
 export const useAmounts = create<AmountsState>((set, get) => ({
@@ -106,36 +127,10 @@ export const useAmounts = create<AmountsState>((set, get) => ({
         }
       }
       set((state) => ({...state, appItems: appItems}));
-      // set((state) => ({...state, initialFunds: initialFunds}))
-      //   set((state) => ({...state, receivedFunds: receivedFunds}))
       const [initialFunds, receivedFunds] = calculateFunds(appItems)
-      console.log(initialFunds,receivedFunds)
-
-
+      set((state) => ({...state, initialFunds: initialFunds}));
+      set((state) => ({...state, receivedFunds: receivedFunds}));
     },
-    addAddLiquidityItem: (item) => {
-      const itemNumber = Object.keys(item)[0]; // This is the item id.
-      const [itemTokenFrom, itemTokenTo] = Object.keys(Object.values(item)[0]);
-      const [itemAmountFrom, itemAmountTo] = Object.values(Object.values(item)[0]);
-      let appItems = get().appItems;
-      appItems[itemNumber] = {
-        type: "addLiquidity",
-        [itemTokenFrom]: itemAmountFrom, [itemTokenTo]: itemAmountTo
-      }
-      set((state) => ({...state, appItems: appItems}));
-
-    },
-    addRemoveLiquidityItem: (item) => {
-      const itemNumber = Object.keys(item)[0]; // This is the item id.
-      const [itemTokenFrom, itemTokenTo] = Object.keys(Object.values(item)[0]);
-      const [itemAmountFrom, itemAmountTo] = Object.values(Object.values(item)[0]);
-      let appItems = get().appItems;
-      appItems[itemNumber] = {
-        type: "removeLiquidity",
-        [itemTokenFrom]: itemAmountFrom, [itemTokenTo]: itemAmountTo
-      }
-      set((state) => ({...state, appItems: appItems}));
-    }
 
   }))
 ;

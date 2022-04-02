@@ -25,9 +25,22 @@ const ActionBlock = (props: any) => {
 
   const {addItem} = useAmounts();
 
+  //TODO fill these functions once we have the required elements
+  const addSwapAction = () => {
+
+  }
+
+  const addAddLiquidityAction = () => {
+
+  }
+
+  const addRemoveLiquidityAction = () => {
+
+  }
+
   const submitAction = () => {
-    console.log(parseFloat(amountFrom))
-    // addInput({[tokenFrom.name]: parseFloat(amountFrom)})
+    //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
+    // So here it only works for swaps now. We need to integrate add and remove liq in the action blocks.
     addItem({
       [props.item]: {
         actionType: props.actionName,
