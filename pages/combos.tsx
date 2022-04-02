@@ -117,9 +117,10 @@ const Combos: NextPage = () => {
         {
           // TODO replace the droplist by the modal (furucombo example)
         }
-        <AddAction
-          onAddAction={handleAddAction}
-        />
+          <AddAction
+            newId={actions.length}
+            onAddAction={handleAddAction}
+          />
         </div>
         <Button onClick={()=>send()}>Send</Button>
 
