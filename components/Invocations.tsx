@@ -112,7 +112,7 @@ const Invocations = () => {
     )
 
     const arfSwap: ArfSwap = ArfSwap.getInstance();
-    const poolPair = await arfSwap.getPair(provider, tokenFrom, tokenTo)
+    const {poolPair} = await arfSwap.getPoolDetails(tokenFrom, tokenTo, provider)
     amountTokenFrom = ethers.utils.parseUnits(amountTokenFrom, tokenFrom.decimals).toString()
     const tokenAmountFrom = new TokenAmount(tokenFrom, amountTokenFrom)
     const addLiquidityTx = await arfSwap.addLiquidity(starknetConnector, poolPair, new Percent('50', '10000'), tokenAmountFrom); // 0.5%, tokenAmountFrom)

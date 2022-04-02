@@ -226,7 +226,7 @@ export class ArfSwap implements DexCombo {
    * @param tokenFrom
    * @param tokenTo
    */
-  async getPair(provider:Provider, tokenFrom, tokenTo) {
+  async getPoolDetails(tokenFrom, tokenTo, provider: Provider) {
     const tokenFromDec = number.toBN(tokenFrom.address)
     const tokenToDec = number.toBN(tokenTo.address)
 
@@ -240,6 +240,6 @@ export class ArfSwap implements DexCombo {
     // const poolToken0 = new TokenAmount(tokenFrom, liquidityPool.liqReservesTokenFrom);
     // const poolToken1 = new TokenAmount(tokenTo, liquidityPool.liqReservesTokenTo);
 
-    return new Pair(poolToken0, poolToken1, /* liquidityPool.liqPoolAddress */);
+    return {poolPair: new Pair(poolToken0, poolToken1, /* liquidityPool.liqPoolAddress */)};
   }
 }
