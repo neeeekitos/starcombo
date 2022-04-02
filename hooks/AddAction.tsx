@@ -57,6 +57,7 @@ const AddAction = (props: any) => {
       </Menu>
 
       <Button onClick={() => props.onAddAction({
+        id: props.newId,
         actionType: selectedAction.type,
         protocolName: selectedProtocol.type,
       })}>Add new Action</Button>
