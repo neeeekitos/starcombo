@@ -67,7 +67,7 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
 
 
 export const ACTIONS: { [key in keyof typeof ActionTypes]?: any } = {
-  [ActionTypes.ADD_LIQUIDITY]: {
+  [ActionTypes.APPROVE_AND_ADD_LIQUIDITY]: {
     type: ActionTypes.APPROVE_AND_ADD_LIQUIDITY,
     name: 'Add Liquidity',
     availableProtocols: [
