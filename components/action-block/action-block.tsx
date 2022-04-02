@@ -30,8 +30,11 @@ const ActionBlock = (props: any) => {
     // addInput({[tokenFrom.name]: parseFloat(amountFrom)})
     addItem({
       [props.item]: {
-        [tokenFrom.name]: parseFloat(amountFrom),
-        [tokenRecevied.name]: parseFloat(amountRecevied)
+        actionType: props.actionName,
+        tokens: {
+          [tokenFrom.name]: parseFloat(amountFrom),
+          [tokenRecevied.name]: parseFloat(amountRecevied)
+        }
       }
     })
     setIsComponentVisible(!isComponentVisible)

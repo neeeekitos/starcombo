@@ -24,11 +24,18 @@ import {Pair} from "@jediswap/sdk";
 import alert from "@chakra-ui/theme/src/components/alert";
 import AddAction from "../hooks/AddAction";
 import {useAmounts} from "../hooks/useAmounts";
+import {getBalanceOfErc20} from "../utils/helpers";
+import {NotificationContainer, NotificationManager} from 'react-notifications';
+import {useTransactions} from "../hooks/useTransactions";
 
 
 const Combos: NextPage = () => {
 
   const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
+  const {transactionItems} = useTransactions();
+  const [error, setError] = useState(false);
+  const [transactionHistory, setTransactionHistory] = useState([])
+  const {initialFunds, receivedFunds} = useAmounts()
   const [actions, setActions] = useState<Action[]>([]);
 
   const [hash, setHash] = useState<string>();
@@ -84,9 +91,6 @@ const Combos: NextPage = () => {
     return swapTx;
   }
 
-  const {initialFunds,receivedFunds} = useAmounts()
-
-
   const renderDisconnected = () => {
     return (
       <Flex
@@ -95,6 +99,31 @@ const Combos: NextPage = () => {
         <Button onClick={() => connectWallet()}>Connect Wallet</Button>
       </Flex>
     )
+  }
+
+  /**
+   * Sends the transactions. Verifies is the user has the initial funds required.
+   */
+  const send = async () => {
+    console.log(initialFunds);
+    let error = false
+
+    for (const [key, value] of Object.entries(initialFunds)) {
+      //TODO check if its w or w/o decimals
+      const userBalance = parseFloat(await getBalanceOfErc20(provider, key))
+      if (userBalance < value) {
+        NotificationManager.error(`Insufficient ${key} in your wallet`)
+        error = true;
+      }
+    }
+
+    if (!error) {
+      const transactions = Object.values(transactionItems);
+      console.log(transactions)
+      const hash = await account.execute(transactions);
+      console.log(hash)
+      setTransactionHistory([...transactionHistory, hash]);
+    }
   }
 
 
@@ -130,21 +159,21 @@ const Combos: NextPage = () => {
         {
           // TODO replace the droplist by the modal (furucombo example)
         }
-          <AddAction
-            onAddAction={handleAddAction}
-          />
+        <AddAction
+          onAddAction={handleAddAction}
+        />
 
-          </div>
+      </div>
 
-          )
-        }
+    )
+  }
 
-        return (
-        <>
-          {account && renderConnected()}
-          {!account && renderDisconnected()}
-        </>
-        )
+  return (
+    <>
+      {account && renderConnected()}
+      {!account && renderDisconnected()}
+    </>
+  )
 
-        }
-        export default Combos;
+}
+export default Combos;
