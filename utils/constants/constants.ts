@@ -1,5 +1,7 @@
 import {Percent} from "@jediswap/sdk";
 import {Call} from "starknet/src/types/lib";
+import {JediSwap} from "../../hooks/jediSwap";
+import {MySwap} from "../../hooks/mySwap";
 
 export enum ActionTypes {
   ADD_LIQUIDITY,
@@ -65,7 +67,8 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
         address: '0x01ca5dedf1612b1ffb035e838ac09d70e500d22cf9cd0de4bebcef8553506fdb',
         symbol: 'J23FEB3',
       }
-    ]
+    ],
+    instance:JediSwap.getInstance(),
 
 
   },
@@ -95,9 +98,8 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
         address: '0x07f6e6a3b90ebe02190fba0269becaf8828b9219e92a7a041fa6da3ef11d0c6a',
         symbol: 'tCOMP',
       },
-
-
-    ]
+    ],
+    instance:MySwap.getInstance(),
   },
   [ProtocolNames.ZK_LEND]: {
     name: 'ZkLend',

@@ -9,6 +9,8 @@ export interface DexCombo {
 
   approve(): void
 
+  getPoolDetails(tokenFrom: Token, tokenTo: Token, provider?:Provider)
+
   /**
    * Returns the transaction for a swap operation
    * @param starknetConnector

@@ -66,7 +66,7 @@ const Invocations = () => {
     const arfSwap: ArfSwap = ArfSwap.getInstance();
     const arfPair = await getPair(provider, {
       token0: tokenFrom,
-      token1 : tokenTo,
+      token1: tokenTo,
     }, arfSwap.findPool);
 
     console.log(`pair: ${pair.token0.address} ${pair.token1.address}`);
@@ -133,15 +133,15 @@ const Invocations = () => {
     }
     const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, tokenFromAddress, tokenToAddress);
     const jediSwap: JediSwap = JediSwap.getInstance();
-    const jediPair = await jediSwap.getPair(provider, tokenFrom, tokenTo)
-    setPair(jediPair)
+    const {poolPair} = await jediSwap.getPoolDetails(tokenFrom, tokenTo, provider)
+    setPair(poolPair)
 
     const swapParameters: SwapParameters = {
       tokenFrom: tokenFrom,
       tokenTo: tokenTo,
       amountIn: amountFrom,
       amountOut: amountTo,
-      poolPair: jediPair
+      poolPair: poolPair
     }
     const swapTx = await jediSwap.swap(starknetConnector, swapParameters)
     const txResult = await account.execute(swapTx.call)
@@ -162,7 +162,7 @@ const Invocations = () => {
     }
     const {tokenFrom, tokenTo} = await createTokenObjects(starknetConnector, token0Address, token1Address);
     const jediSwap: JediSwap = JediSwap.getInstance();
-    const poolPair = await jediSwap.getPair(provider, tokenFrom, tokenTo)
+    const {poolPair} = await jediSwap.getPoolDetails(tokenFrom, tokenTo, provider)
     //TODO save pool prices in state
     console.log(poolPair.token0Price.raw.toSignificant(6))
     console.log(poolPair.token1Price.raw.toSignificant(6))

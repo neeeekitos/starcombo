@@ -2,6 +2,7 @@ import create from "zustand";
 import {AccountInterface, Provider} from "starknet";
 import {useCallback} from "react";
 import {ACTIONS, ActionTypes} from "../utils/constants/constants";
+import {Token} from "@jediswap/sdk";
 
 interface ItemProps {
   [key: number]: ItemAction
@@ -21,8 +22,12 @@ interface AmountsState {
   }
   receivedFunds: {
     [key: string]: number
-  }
+  },
+  tokenInfos: {
+    [key: string]: Token
+  },
   addItem: (item: ItemProps) => void,
+  addToken:(address:string, token:Token)=>void,
 }
 
 interface ActionOptions {
@@ -49,7 +54,7 @@ const balanceChangesTokenFrom = (initialFunds, receivedFunds, tokenFrom, amountF
     } else {
       //No need to deploy new capital.
       receivedFunds[tokenFrom] = usedFromPreviousOutput;
-      if(usedFromPreviousOutput===0) delete receivedFunds[tokenFrom]
+      if (usedFromPreviousOutput === 0) delete receivedFunds[tokenFrom]
     }
   }
   return [initialFunds, receivedFunds];
@@ -113,17 +118,18 @@ export const useAmounts = create<AmountsState>((set, get) => ({
     appItems: {},
     initialFunds: {},
     receivedFunds: {},
+    tokenInfos: {},
     addItem: (item) => {
       //First we store this item inside the item structure.
       const itemNumber = Object.keys(item)[0]; // This is the item id.
       const {actionType, tokens} = item[itemNumber];
-      const [itemAssetFrom, itemAssetTo] = Object.keys(tokens);
+      const [itemTokenFrom, itemTokenTo] = Object.keys(tokens);
       const [itemValueFrom, itemValueTo] = Object.values(tokens);
       let appItems = get().appItems;
       appItems[itemNumber] = {
         actionType: actionType,
         tokens: {
-          [itemAssetFrom]: itemValueFrom, [itemAssetTo]: itemValueTo,
+          [itemTokenFrom]: itemValueFrom, [itemTokenTo]: itemValueTo,
         }
       }
       set((state) => ({...state, appItems: appItems}));
@@ -131,6 +137,11 @@ export const useAmounts = create<AmountsState>((set, get) => ({
       set((state) => ({...state, initialFunds: initialFunds}));
       set((state) => ({...state, receivedFunds: receivedFunds}));
     },
+  addToken:(address,token) =>{
+    let tokenInfos = get().tokenInfos;
+    tokenInfos[address] = token
+    set((state) => ({...state, tokenInfos: tokenInfos}));
+  }
 
   }))
 ;

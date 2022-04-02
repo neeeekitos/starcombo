@@ -20,7 +20,6 @@ const AddAction = (props: any) => {
         </MenuButton>
         <MenuList>
           {Object.keys(ACTIONS).map((actionKey: string) => {
-            console.log(actionKey);
             return (
               <MenuItem
                 key={actionKey}
