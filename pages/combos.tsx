@@ -31,7 +31,9 @@ import {useTransactions} from "../hooks/useTransactions";
 import ActionBlockAdd from "../components/action-block-add/action-block-add";
 import ActionBlockRemove from "../components/action-block-remove/action-block-remove";
 import FundsRecap from "../components/FundsRecap";
+import SelectNewAction from "../components/select-new-action/select-new-action";
 
+import useComponentVisible from "../hooks/UseComponentVisible";
 
 const Combos: NextPage = () => {
 
@@ -47,6 +49,10 @@ const Combos: NextPage = () => {
 
   const [hash, setHash] = useState<string>();
   const [pair, setPair] = useState<Pair>();
+
+  const {ref, isComponentVisible, setIsComponentVisible} = useComponentVisible(false);
+
+  const [openNewActionModal, setOpenNewActionModal] = useState<boolean>(false);
 
   const handleAddAction = (action: Action) => {
     console.log(`Adding action: ${JSON.stringify(action)}`);
@@ -109,8 +115,8 @@ const Combos: NextPage = () => {
         >
           <Button
             background="transparent"
-            _hover={{bg: "brand.body"}}
-            _active={{bg: "brand.navbar"}}
+            _hover={{ bg: "brand.body"}}
+            _active={ { bg: "brand.navbar" } }
             onClick={() => connectWallet()}>Connect Wallet to start</Button>
         </Flex>
       </div>
@@ -121,37 +127,40 @@ const Combos: NextPage = () => {
     return (
       <div className={styles.container}>
 
+        <FundsRecap/>
+        <div className={styles.container}>
 
-          <FundsRecap/>
-          <div className={styles.container}>
-            <Reorder.Group
-              as="ul"
-              className={styles.actionsWrapper}
-              axis="y"
-              values={actions}
-              onReorder={setActions}
-              layoutScroll
-              style={{overflowY: "scroll"}}
-            >
-              {actions.map((action) => (
-                <Reorder.Item key={action.id} value={action}>
-                  <div className={styles.blockWrapper}>
-                    {renderCorrespondingActionBlock(action)}
-                  </div>
-                </Reorder.Item>
-              ))}
-            </Reorder.Group>
-            {
-              // TODO replace the droplist by the modal (furucombo example)
-            }
-            <AddAction
-              newId={actions.length}
-              onAddAction={handleAddAction}
-            />
-            <Button onClick={() => send()}>Send</Button>
-          </div>
+          <Button onClick={() => setIsComponentVisible(true)} hidden={isComponentVisible}>Add action</Button>
+          {
+            isComponentVisible &&
+            <div ref={ref}>
+              <SelectNewAction setIsComponentVisible={setIsComponentVisible}  newId={actions.length} onAddAction={handleAddAction}/>
+            </div>
+          }
+
+          <Reorder.Group
+            as="ul"
+            className={styles.actionsWrapper}
+            axis="y"
+            values={actions}
+            onReorder={setActions}
+            layoutScroll
+            style={{overflowY: "scroll"}}
+          >
+            {actions.map((action) => (
+              <Reorder.Item key={action.id} value={action}>
+                <div className={styles.blockWrapper}>
+                  {renderCorrespondingActionBlock(action)}
+                </div>
+              </Reorder.Item>
+            ))}
+          </Reorder.Group>
+
+        </div>
+        <Button onClick={() => send()}>Send</Button>
+
+      <div />
       </div>
-
 
     )
   }
