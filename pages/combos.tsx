@@ -10,7 +10,7 @@ import {defaultProvider, ec, hash} from "starknet/src/index";
 import {transformCallsToMulticallArrays} from "starknet/src/utils/transaction";
 import {getStarknet} from "@argent/get-starknet";
 import {StarknetWindowObject} from "@argent/get-starknet/dist/extension.model";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import ActionBlockSwap from "../components/action-block-swap/action-block-swap";
 import {Reorder} from "framer-motion"
 
@@ -53,6 +53,15 @@ const Combos: NextPage = () => {
   const {ref, isComponentVisible, setIsComponentVisible} = useComponentVisible(false);
 
   const [openNewActionModal, setOpenNewActionModal] = useState<boolean>(false);
+  const footerRef = useRef(null);
+
+  const scrollToBottom = () => {
+    footerRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [actions]);
 
   const handleAddAction = (action: Action) => {
     console.log(`Adding action: ${JSON.stringify(action)}`);
@@ -62,6 +71,8 @@ const Combos: NextPage = () => {
   const handleRemoveAction = (action: Action) => {
     setActions(actions.filter(a => a.id !== action.id))
   }
+
+
 
   /**
    * Sends the transactions. Verifies is the user has the initial funds required.
@@ -159,7 +170,7 @@ const Combos: NextPage = () => {
         </div>
         <Button onClick={() => send()}>Send</Button>
 
-      <div />
+      <footer  ref={footerRef}/>
       </div>
 
     )
