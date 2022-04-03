@@ -1,6 +1,6 @@
 // import {useStarknet} from "../hooks/useStarknet";
 import {getStarknet} from "@argent/get-starknet/dist";
-import {ReactNode} from 'react';
+import {ReactNode, useEffect, useRef} from 'react';
 import {
   Box,
   Flex,
@@ -21,6 +21,7 @@ import {HamburgerIcon, CloseIcon} from '@chakra-ui/icons';
 import Link from "next/link"
 import {useStarknet} from "../hooks/useStarknet";
 import argentLogo from "../utils/assets/logo/argent.png"
+import {useTransactions} from "../hooks/useTransactions";
 
 const Links = [
   {
@@ -33,7 +34,7 @@ const Links = [
   }
 ];
 
-const NavLink = ({ target, name}: { target: string, name: string }) => (
+const NavLink = ({target, name}: { target: string, name: string }) => (
   <Link href={target} passHref>
     <Button
       py={1}
@@ -50,10 +51,21 @@ const NavLink = ({ target, name}: { target: string, name: string }) => (
 
 const Navbar = () => {
 
-  const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
-
-
+  const {account, provider, connectWallet, disconnect} = useStarknet();
+  const {transactionHistory, updateTransactionStatus} = useTransactions();
+  const timer = useRef(null);
   const {isOpen, onOpen, onClose} = useDisclosure();
+
+  //Update transaction status
+  useEffect(() => {
+    if(!provider) return
+    timer.current = setInterval(() => {
+      updateTransactionStatus(provider)
+    }, 30 * 1000);
+    return () => {
+      if(timer.current !== null) clearInterval(timer.current);
+    };
+  }, []);
 
   return (
     <>
@@ -101,11 +113,27 @@ const Navbar = () => {
                 />
               </MenuButton>
               <MenuList>
-                <MenuItem onClick={()=> window.open(`https://goerli.voyager.online/contract/${account?.address}`, "_blank")}>
+                <MenuItem
+                  onClick={() => window.open(`https://goerli.voyager.online/contract/${account?.address}`, "_blank")}>
                   {account?.address}
                 </MenuItem>
                 <MenuDivider/>
-                <MenuItem>{account?.address}</MenuItem>
+                <MenuItem>
+                  <Flex flexDir={"column"}>
+                    <h2>Your Transactions</h2>
+
+                  {transactionHistory.length > 0 && transactionHistory.map((transaction) => {
+                    return (
+                      <div onClick={() => window.open(`https://goerli.voyager.online/tx/${transaction.tx_hash}`)}
+                           key={transaction.tx_hash}>
+                        {transaction.tx_hash} - {transaction.status}
+                      </div>
+                    )
+                  })
+                  }
+                  {transactionHistory.length === 0 && <div> No pending transactions</div>}
+                  </Flex>
+                </MenuItem>
                 <MenuDivider/>
                 <MenuItem> <Button onClick={() => disconnect()}>Disconnect Wallet</Button></MenuItem>
               </MenuList>

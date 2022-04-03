@@ -1,34 +1,48 @@
 import create from "zustand";
-import {Call} from "starknet";
+import {Call, Provider} from "starknet";
+import {Status} from "starknet/src/types/lib";
 
 interface TransactionItem {
   [key: number]: Call | Call[]
 }
 
+interface SentTransactions {
+  tx_hash: string,
+  status: Status,
+}
+
 interface TransactionState {
   transactionItems: TransactionItem, //mapping item id => Call
-  transactionHistory:string[],
+  transactionHistory: SentTransactions[],
   addTransaction: (transaction: TransactionItem) => void,
-  addTransactionHistory:(hash:string)=>void,
+  addTransactionHistory: (hash: string) => void,
+  updateTransactionStatus: (provider: Provider) => void,
 }
 
 export const useTransactions = create<TransactionState>((set, get) => ({
-    transactionItems:{},
-    transactionHistory:[],
-    addTransaction: (transaction) =>{
-      console.log(transaction)
+    transactionItems: {},
+    transactionHistory: [],
+    addTransaction: (transaction) => {
       const itemNumber = Object.keys(transaction)[0]; // This is the item id.
-      console.log(Object.values(transaction));
       const transactionCalls = Object.values(transaction)[0]
-      console.log(transactionCalls)
       let appTransaction = get().transactionItems;
       appTransaction[itemNumber] = transactionCalls;
       set((state) => ({...state, transactions: appTransaction}));
     },
-    addTransactionHistory:(hash)=>{
-      set((state) => ({...state, transactionHistory: [...state.transactionHistory,hash]}));
+    addTransactionHistory: (hash) => {
+      set((state) => ({
+        ...state,
+        transactionHistory: [...state.transactionHistory, {tx_hash: hash, status: 'RECEIVED'}]
+      }));
+    },
+    updateTransactionStatus: async (provider) => {
+      let transactionHistory = get().transactionHistory;
+      await Promise.all(transactionHistory.map(async (transaction) => {
+        transaction.status = (await provider.getTransactionStatus(transaction.tx_hash)).tx_status
+      }));
+      set((state) => ({...state, transactionHistory: transactionHistory }));
 
     }
 
-}
+  }
 ));
