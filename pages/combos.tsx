@@ -183,6 +183,7 @@ const Combos: NextPage = () => {
           _hover={{ bg: "brand.body"}}
           _active={ { bg: "brand.navbar" } }
           onClick={() => send()}
+          hidden={actions.length === 0}
         >
           Send
         </Button>
