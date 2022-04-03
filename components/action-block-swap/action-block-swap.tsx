@@ -27,7 +27,7 @@ interface ActionBlockProps {
   action: any
 }
 
-const ActionBlock = (props: ActionBlockProps) => {
+const ActionBlockSwap = (props: ActionBlockProps) => {
   //custom hooks
   const {account, provider} = useStarknet();
   const starknetConnector: StarknetConnector = {
@@ -294,4 +294,4 @@ const ActionBlock = (props: ActionBlockProps) => {
 }
 
 
-export default ActionBlock;
+export default ActionBlockSwap;
