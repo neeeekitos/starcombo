@@ -30,6 +30,7 @@ import {useTransactions} from "../hooks/useTransactions";
 
 import ActionBlockAdd from "../components/action-block-add/action-block-add";
 import ActionBlockRemove from "../components/action-block-remove/action-block-remove";
+import FundsRecap from "../components/FundsRecap";
 
 
 const Combos: NextPage = () => {
@@ -105,11 +106,11 @@ const Combos: NextPage = () => {
         <Flex
           justifyContent={'center'}
           flexDirection={'column'}
-          >
+        >
           <Button
             background="transparent"
-            _hover={{ bg: "brand.body"}}
-            _active={ { bg: "brand.navbar" } }
+            _hover={{bg: "brand.body"}}
+            _active={{bg: "brand.navbar"}}
             onClick={() => connectWallet()}>Connect Wallet to start</Button>
         </Flex>
       </div>
@@ -119,42 +120,38 @@ const Combos: NextPage = () => {
     console.log(actions)
     return (
       <div className={styles.container}>
-        {JSON.stringify(initialFunds)}
-        {JSON.stringify(receivedFunds)}
-        {JSON.stringify(transactionHistory)}
-
-        <Invocations/>
 
 
-        <div className={styles.container}>
-          <Reorder.Group
-            as="ul"
-            className={styles.actionsWrapper}
-            axis="y"
-            values={actions}
-            onReorder={setActions}
-            layoutScroll
-            style={{overflowY: "scroll"}}
-          >
-            {actions.map((action) => (
-              <Reorder.Item key={action.id} value={action}>
-                <div className={styles.blockWrapper}>
-                  {renderCorrespondingActionBlock(action)}
-                </div>
-              </Reorder.Item>
-            ))}
-          </Reorder.Group>
-          {
-            // TODO replace the droplist by the modal (furucombo example)
-          }
-          <AddAction
-            newId={actions.length}
-            onAddAction={handleAddAction}
-          />
-        </div>
-        <Button onClick={() => send()}>Send</Button>
-
+          <FundsRecap/>
+          <div className={styles.container}>
+            <Reorder.Group
+              as="ul"
+              className={styles.actionsWrapper}
+              axis="y"
+              values={actions}
+              onReorder={setActions}
+              layoutScroll
+              style={{overflowY: "scroll"}}
+            >
+              {actions.map((action) => (
+                <Reorder.Item key={action.id} value={action}>
+                  <div className={styles.blockWrapper}>
+                    {renderCorrespondingActionBlock(action)}
+                  </div>
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+            {
+              // TODO replace the droplist by the modal (furucombo example)
+            }
+            <AddAction
+              newId={actions.length}
+              onAddAction={handleAddAction}
+            />
+            <Button onClick={() => send()}>Send</Button>
+          </div>
       </div>
+
 
     )
   }
