@@ -6,14 +6,15 @@ import BatLogo from "../../public/img/tokens/bat.svg";
 import EtherLogo from "../../public/img/tokens/ether.svg";
 import TokenChooser from "../token-chooser";
 import {Input} from "@chakra-ui/react";
-import {PROTOCOLS} from "../../utils/constants/constants";
+import {PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
 import {useStarknet} from "../../hooks/useStarknet";
-import {DexCombo, StarknetConnector} from "../../utils/constants/interfaces";
+import {DexCombo, StarknetConnector, SwapParameters} from "../../utils/constants/interfaces";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useTransactions} from "../../hooks/useTransactions";
-import {Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
+import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {createTokenObjects} from "../../utils/helpers";
 import {ethers} from "ethers";
+import {MySwap} from "../../hooks/mySwap";
 
 
 interface ActionBlockProps {
@@ -43,15 +44,15 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   //states
   const [pair, setPair] = useState<Pair>();
   const [poolId, setPoolId] = useState<string>();
+  const [token0, setToken0] = useState<Token>();
   const [token1, setToken1] = useState<Token>();
-  const [token2, setToken2] = useState<Token>();
   const [loading, setLoading] = useState<boolean>(false);
 
-  const [addToken1Selector, setAddToken1Selector] = useState(protocolTokens[0]);
-  const [addToken2Selector, setAddToken2Selector] = useState(protocolTokens[1]);
+  const [token0Selector, setToken0Selector] = useState(protocolTokens[0]);
+  const [token1Selector, setToken1Selector] = useState(protocolTokens[1]);
+  const [amountToken0, setAmountToken0] = useState("");
   const [amountToken1, setAmountToken1] = useState("");
-  const [amountToken2, setAmountToken2] = useState("");
-  const [poolShare, setPoolShare] = useState("");
+  const [poolShare, setPoolShare] = useState<number>();
   const [estimation, setEstimation] = useState("");
 
 
@@ -61,12 +62,12 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     const fetchPair = async () => {
       setLoading(true);
       const {
-        tokenFrom: token1,
-        tokenTo: token2
-      } = await createTokenObjects(starknetConnector, addToken1Selector.address, addToken2Selector.address);
-      setToken1(token1);
-      setToken2(token2)
-      const poolDetails = await protocolInstance.getPoolDetails(token1, token2, provider);
+        tokenFrom: token0,
+        tokenTo: token1
+      } = await createTokenObjects(starknetConnector, token0Selector.address, token1Selector.address);
+      setToken0(token0);
+      setToken1(token1)
+      const poolDetails = await protocolInstance.getPoolDetails(token0, token1, provider);
       const poolPair: Pair = poolDetails.poolPair;
       if (poolDetails.poolId) setPoolId(poolDetails.poolId)
       setPair(poolPair);
@@ -74,30 +75,30 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     }
     fetchPair();
 
-  }, [addToken1Selector, addToken2Selector])
+  }, [token0Selector, token1Selector])
 
   useEffect(() => {
     if (pair === undefined) return;
-    let value = amountToken1;
+    let value = amountToken0;
     let direction = "to"
     if (isNaN(parseFloat(value))) {
-      value = amountToken2;
+      value = amountToken1;
       direction = "from";
     }
     setQuoteTokenAmount(value, direction)
   }, [pair])
 
 
-  const handleAmountToken1 = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleAmountToken0 = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setAmountToken1(value);
+    setAmountToken0(value);
     if (!pair) return;
     setQuoteTokenAmount(value, "to")
   }
 
-  const handleAmountToken2 = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleAmountToken1 = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setAmountToken2(value);
+    setAmountToken1(value);
     if (!pair) return;
     setQuoteTokenAmount(value, "from")
   }
@@ -106,37 +107,61 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     if (isNaN(parseFloat(value))) return;
     let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price,
       reserveFrom: TokenAmount;
-    addToken1Selector.address === pair.token0.address ?
+    token0Selector.address === pair.token0.address ?
       [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, reserveFrom, tokenFromIsToken0] = [pair.token0, pair.token1, pair.token0Price, pair.token1Price, pair.reserve0, true] :
       [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, reserveFrom, tokenFromIsToken0] = [pair.token1, pair.token0, pair.token1Price, pair.token0Price, pair.reserve1, false];
 
+    let poolShare;
     if (priceWanted === "from") {
       const parsedValue = ethers.utils.parseUnits(value, tokenTo.decimals)
       const parsedFromAmount = tokenToPrice.raw.multiply(parsedValue.toString())
-      const amountFrom = parseFloat(ethers.utils.formatUnits(parsedFromAmount.toFixed(0), tokenFrom.decimals)).toPrecision(6)
-      setAmountToken1(amountFrom)
-
-      const poolShare = parsedValue.div(reserveFrom.raw.toString())
-      console.log(poolShare.toString());
+      const amountFrom = parseFloat(ethers.utils.formatUnits(parsedFromAmount.toFixed(0), tokenFrom.decimals))
+      setAmountToken0(amountFrom.toPrecision(6))
+      // poolShare = parsedFromAmount.divide(reserveFrom).toFixed(0);
     } else {
       // to
       const parsedValue = ethers.utils.parseUnits(value, tokenFrom.decimals)
       const parsedToAmount = tokenFromPrice.raw.multiply(parsedValue.toString())
-      const amountTo = parseFloat(ethers.utils.formatUnits(parsedToAmount.toFixed(0), tokenTo.decimals)).toPrecision(6)
-      setAmountToken2(amountTo)
-      const poolShare = parsedValue.div(reserveFrom.raw.toString())
-      console.log(poolShare.toString());
+      const amountTo = parseFloat(ethers.utils.formatUnits(parsedToAmount.toFixed(0), tokenTo.decimals))
+      setAmountToken1(amountTo.toPrecision(6))
+      // poolShare = new Fraction(parsedValue.toString()).divide(reserveFrom).toFixed(0);
     }
+    //TODO if time
+    console.log(poolShare)
+    setPoolShare(poolShare)
 
   }
 
   const switchTokens = () => {
-    const token1Temp = addToken1Selector;
-    const amount1Temp = amountToken1;
-    setAddToken1Selector(addToken2Selector);
-    setAddToken2Selector(token1Temp);
-    setAmountToken1(amountToken2);
-    setAmountToken2(amount1Temp);
+    const token1Temp = token0Selector;
+    const amount1Temp = amountToken0;
+    setToken0Selector(token1Selector);
+    setToken1Selector(token1Temp);
+    setAmountToken0(amountToken1);
+    setAmountToken1(amount1Temp);
+  }
+
+  const submitAction = async () => {
+    //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
+    // So here it only works for swaps now. We need to integrate add and remove liq in the action blocks.
+    addItem({
+      [props.action.id]: {
+        actionType: props.actionName,
+        tokens: {
+          [token0Selector.name]: parseFloat(amountToken0),
+          [token1Selector.name]: parseFloat(amountToken1)
+        }
+      }
+    });
+    addToken(token0Selector.name, token0);
+    addToken(token1Selector.name, token1);
+    const tokenAmountFrom = new TokenAmount(token0, ethers.utils.parseUnits(amountToken0,token0.decimals).toString());
+    const txLiq = await protocolInstance.addLiquidity(starknetConnector, pair, SLIPPAGE, tokenAmountFrom)
+
+    addTransaction({
+      [props.action.id]: txLiq.call
+    })
+    setIsComponentVisible(!isComponentVisible)
   }
 
   return (
@@ -161,12 +186,12 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
           <div className={styles.addLiquidity}>
             <div className={styles.tokenWrapperAdd}>
               <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
-              <p className={styles.tokenAmount}>{amountToken1 === "" ? 0 : amountToken1}</p>
+              <p className={styles.tokenAmount}>{amountToken0 === "" ? 0 : amountToken0}</p>
             </div>
             <div className={styles.space}/>
             <div className={styles.tokenWrapperAdd}>
               <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
-              <p className={styles.tokenAmount}>{amountToken2 === "" ? 0 : amountToken2}</p>
+              <p className={styles.tokenAmount}>{amountToken1 === "" ? 0 : amountToken1}</p>
             </div>
             <svg className={styles.addLiquidityArrow} width="61" height="24" viewBox="0 0 61 24" fill="none"
                  xmlns="http://www.w3.org/2000/svg">
@@ -200,9 +225,37 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
         <div className={styles.modalBodyLiquidity}>
           <div className={styles.inputToken}>
             <TokenChooser
-              selectedToken={addToken1Selector}
-              setSelectedToken={setAddToken1Selector}
-              selectableTokens={protocolTokens.filter((token) => token !== addToken2Selector)}
+              selectedToken={token0Selector}
+              setSelectedToken={setToken0Selector}
+              selectableTokens={protocolTokens.filter((token) => token !== token1Selector)}
+            />
+            <Input
+              placeholder="Input amount"
+              color="gray.300"
+              height={"3rem"}
+              borderColor="gray.300"
+              _hover={{borderColor: "gray.500"}}
+              _focus={{borderColor: "gray.500"}}
+              value={amountToken0}
+              onKeyPress={(event) => {
+                if (!/[0-9]/.test(event.key)) {
+                  event.preventDefault();
+                }
+              }}
+              onChange={(e) => handleAmountToken0(e)}
+              variant='flushed'
+            />
+          </div>
+          <svg onClick={() => switchTokens()} width="18" height="18" viewBox="0 0 18 18" fill="none"
+               xmlns="http://www.w3.org/2000/svg">
+            <line x1="9" y1="1" x2="9" y2="17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="17" y1="9" x2="1" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <div className={styles.inputToken}>
+            <TokenChooser
+              selectedToken={token1Selector}
+              setSelectedToken={setToken1Selector}
+              selectableTokens={protocolTokens.filter((token) => token !== token0Selector)}
             />
             <Input
               placeholder="Input amount"
@@ -221,39 +274,13 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
               variant='flushed'
             />
           </div>
-          <svg onClick={() => switchTokens()} width="18" height="18" viewBox="0 0 18 18" fill="none"
-               xmlns="http://www.w3.org/2000/svg">
-            <line x1="9" y1="1" x2="9" y2="17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            <line x1="17" y1="9" x2="1" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <div className={styles.inputToken}>
-            <TokenChooser
-              selectedToken={addToken2Selector}
-              setSelectedToken={setAddToken2Selector}
-              selectableTokens={protocolTokens.filter((token) => token !== addToken1Selector)}
-            />
-            <Input
-              placeholder="Input amount"
-              color="gray.300"
-              height={"3rem"}
-              borderColor="gray.300"
-              _hover={{borderColor: "gray.500"}}
-              _focus={{borderColor: "gray.500"}}
-              value={amountToken2}
-              onKeyPress={(event) => {
-                if (!/[0-9]/.test(event.key)) {
-                  event.preventDefault();
-                }
-              }}
-              onChange={(e) => handleAmountToken2(e)}
-              variant='flushed'
-            />
-          </div>
           <div className={styles.whiteLine}/>
           <div className={styles.totalLiquidityWrapper}>
-            <p>Estimation: <span>{estimation}</span></p>
+            {poolShare && <p>Your pool share: <span>{poolShare.toString()}</span></p>}
           </div>
-          <button className={styles.sumbitButton} onClick={() => setIsComponentVisible(false)}>Submit</button>
+          {loading ? <button className={styles.sumbitButton} disabled>Fetching route</button>
+            : <button className={styles.sumbitButton} onClick={() => submitAction()}>Submit</button>
+          }
         </div>
       </div>
       }

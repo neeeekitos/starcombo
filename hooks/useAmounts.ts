@@ -77,23 +77,24 @@ const handleSwap = (initialFunds, receivedFunds, tokens) => {
 }
 
 const handleAddLiquidity = (initialFunds, receivedFunds, tokens) => {
-  const [token0, token1, tokenReceived] = Object.keys(tokens);
-  const [amount0, amount1, amountReceived] = Object.values(tokens);
+  const [token0, token1] = Object.keys(tokens);
+  const [amount0, amount1] = Object.values(tokens);
   //We trade token0 and token1 to get LP tokens
   [initialFunds, receivedFunds] = balanceChangesTokenFrom(initialFunds, receivedFunds, token0, amount0);
   [initialFunds, receivedFunds] = balanceChangesTokenFrom(initialFunds, receivedFunds, token1, amount1);
-  receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived, amountReceived);
+  // receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived, amountReceived);
   return [initialFunds, receivedFunds];
 
 
 }
 const handleRemoveLiquidity = (initialFunds, receivedFunds, tokens) => {
-  const [token0, tokenReceived1, tokenReceived2] = Object.keys(tokens);
-  const [amount0, amountReceived1, amountReceived2] = Object.values(tokens);
+  const [tokenReceived0, tokenReceived1] = Object.keys(tokens);
+  const [amountReceived0, amountReceived1] = Object.values(tokens);
   //We trade LP token for token0 and token1
-  [initialFunds, receivedFunds] = balanceChangesTokenFrom(initialFunds, receivedFunds, token0, amount0);
+  // [initialFunds, receivedFunds] = balanceChangesTokenFrom(initialFunds, receivedFunds, token0, amount0);
+  receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived0, amountReceived0);
   receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived1, amountReceived1);
-  receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived2, amountReceived2);
+  console.log(receivedFunds)
   return [initialFunds, receivedFunds];
 }
 
@@ -111,6 +112,7 @@ const calculateFunds = (appItems) => {
     }
     handleAction[action.actionType](initialFunds, receivedFunds, action.tokens);
   }
+  console.log(receivedFunds)
   return [initialFunds, receivedFunds]
 }
 

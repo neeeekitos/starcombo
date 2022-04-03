@@ -64,8 +64,9 @@ export class JediSwap implements DexCombo {
     return {poolPair:poolPair};
   }
 
-  async getLiquidityPosition(starknetConnector: StarknetConnector, liqPoolToken: Token, token0: Token, token1: Token) {
+  async getLiquidityPosition(starknetConnector: StarknetConnector, token0: Token, token1: Token, poolPair: Pair) : Promise<PoolPosition> {
     const {account, provider} = starknetConnector;
+    const liqPoolToken = poolPair.liquidityToken;
     const userBalance = await provider.callContract({
       contractAddress: liqPoolToken.address,
       entrypoint: "balanceOf",
@@ -80,7 +81,6 @@ export class JediSwap implements DexCombo {
 
     const supply = new TokenAmount(liqPoolToken, totalSupply);
     const liquidity = new TokenAmount(liqPoolToken, userBalance);
-    const {poolPair} = await this.getPoolDetails(token0, token1, provider);
 
     return {
       poolSupply: supply,
@@ -183,10 +183,15 @@ export class JediSwap implements DexCombo {
   removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Promise<Action> {
 
     const poolPair: Pair = poolPosition.poolPair;
-    let token0Amount = poolPair.getLiquidityValue(poolPair.token0, poolPosition.poolSupply, liqToRemove);
-    let token1Amount = poolPair.getLiquidityValue(poolPair.token1, poolPosition.poolSupply, liqToRemove);
-    console.log(token0Amount.raw.toString())
-    console.log(token1Amount.raw.toString())
+    let poolShare = poolPosition.userLiquidity.divide(poolPosition.poolSupply); // represents the %of the pool the user owns.
+    //token0Amount is reserve0*poolShare
+    let token0Amount = poolPair.reserve0.multiply(poolShare);
+    let token1Amount = poolPair.reserve1.multiply(poolShare)
+    //These values are not in WEI but in unit... so we need to find a way to give the wei value without rounding.
+    //To do so we parse units the whole result with the token decimals.
+    // Inside this, we're calculating tokenAmount(1-slippage). Note that this result is in unit and not wei terms so we need to parseUnit all of this :)
+    let token0min = ethers.utils.parseUnits(token0Amount.subtract(token0Amount.multiply(SLIPPAGE)).toFixed(poolPair.token0.decimals), poolPair.token0.decimals);
+    let token1min = ethers.utils.parseUnits(token1Amount.subtract(token1Amount.multiply(SLIPPAGE)).toFixed(poolPair.token1.decimals), poolPair.token1.decimals);
 
     const approval: Call | Call[] = {
       contractAddress: poolPair.pairAddress,
@@ -206,9 +211,9 @@ export class JediSwap implements DexCombo {
         number.toBN(poolPair.token1.address).toString(),
         liqToRemove.raw.toString(),
         "0",
-        token0Amount.raw.toString(),
+        token0min.toString(),
         "0",
-        token1Amount.raw.toString(),
+        token1min.toString(),
         "0",
         number.toBN(starknetConnector.account.address).toString(),
         Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour

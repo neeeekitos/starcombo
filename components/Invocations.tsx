@@ -189,7 +189,7 @@ const Invocations = () => {
     const liqPoolTokenDec = await getErc20Decimals(provider, liqPoolAddress);
     const liqPoolToken = new Token(ChainId.GÖRLI, liqPoolAddress, parseInt(liqPoolTokenDec));
 
-    const poolPosition = await JediSwap.getInstance().getLiquidityPosition(starknetConnector, liqPoolToken, token0, token1);
+    const poolPosition = await JediSwap.getInstance().getLiquidityPosition(starknetConnector,  token0, token1,undefined);//we need pair here
     console.log(poolPosition)
     const tx = await JediSwap.getInstance().removeLiquidity(starknetConnector, poolPosition, poolPosition.userLiquidity);
     const txResult = await account.execute(tx.call)

@@ -32,6 +32,7 @@ import ActionBlockAdd from "../components/action-block-add/action-block-add";
 import ActionBlockRemove from "../components/action-block-remove/action-block-remove";
 import FundsRecap from "../components/FundsRecap";
 import SelectNewAction from "../components/select-new-action/select-new-action";
+import 'react-notifications/lib/notifications.css';
 
 import useComponentVisible from "../hooks/UseComponentVisible";
 
@@ -79,25 +80,30 @@ const Combos: NextPage = () => {
    * Sends the transactions. Verifies is the user has the initial funds required.
    */
   const send = async () => {
-    console.log(transactionItems)
-    let error = false;
-    for (const [key, value] of Object.entries(initialFunds)) {
-      const token: Token = tokenInfos[key]
-      //TODO check if its w or w/o decimals\
-      const userBalance = parseFloat(await getBalanceOfErc20(starknetConnector, token))
-      if (userBalance < value) {
-        NotificationManager.error(`Insufficient ${key} in your wallet`)
-        error = true;
+    try {
+      let error = false;
+      for (const [key, value] of Object.entries(initialFunds)) {
+        const token: Token = tokenInfos[key]
+        //TODO check if its w or w/o decimals\
+        const userBalance = parseFloat(await getBalanceOfErc20(starknetConnector, token))
+        if (userBalance < value) {
+          NotificationManager.error(`Insufficient ${key} in your wallet`)
+          error = true;
+        }
       }
-    }
 
-    if (!error) {
-      const transactions = Object.values(transactionItems).flat();
-      console.log(transactions)
-      const tx_data = await account.execute(transactions);
-      console.log(tx_data)
-      addTransactionHistory(tx_data.transaction_hash);
-      console.log(hash)
+      if (!error) {
+        const transactions = Object.values(transactionItems).flat();
+        console.log(transactions)
+        const tx_data = await account.execute(transactions);
+        console.log(tx_data)
+        NotificationManager.success("Transaction Sent!", 'Transaction sent', 5000, () => window.open(`https://goerli.voyager.online/tx/${tx_data.transaction_hash}`));
+        addTransactionHistory(tx_data.transaction_hash);
+        console.log(hash)
+      }
+    }catch(err){
+      console.log(err)
+      NotificationManager.error("There was an error when sending the transaction", 'Error')
     }
   }
 
@@ -139,7 +145,7 @@ const Combos: NextPage = () => {
     console.log(actions)
     return (
       <div className={styles.container}>
-
+        <NotificationContainer/>
         <FundsRecap/>
         <div className={styles.container}>
 

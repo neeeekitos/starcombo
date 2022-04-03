@@ -126,19 +126,6 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
     }
   }
 
-  //TODO fill these functions once we have the required elements
-  const addSwapAction = () => {
-
-  }
-
-  const addAddLiquidityAction = () => {
-
-  }
-
-  const addRemoveLiquidityAction = () => {
-
-  }
-
   const switchTokens = () => {
     const tempFrom = tokenFromSelector;
     const tempAmtFrom = amountFrom;
