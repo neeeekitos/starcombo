@@ -48,7 +48,8 @@ export class JediSwap implements DexCombo {
    * @param tokenFrom
    * @param tokenTo
    */
-  async getPair(provider: Provider, tokenFrom: Token, tokenTo: Token) {
+  async getPoolDetails(tokenFrom: Token, tokenTo: Token, provider: Provider) {
+    console.log("poolDetails")
 
     const tokenFromDec = number.toBN(tokenFrom.address)
     const tokenToDec = number.toBN(tokenTo.address)
@@ -60,7 +61,7 @@ export class JediSwap implements DexCombo {
     const poolToken1 = new TokenAmount(tokenTo, liquidityPool.liqReservesTokenTo);
     const poolPair = new Pair(poolToken0, poolToken1, liquidityPool.liqPoolAddress);
 
-    return poolPair;
+    return {poolPair:poolPair};
   }
 
   async getLiquidityPosition(starknetConnector: StarknetConnector, liqPoolToken: Token, token0: Token, token1: Token) {
@@ -79,7 +80,7 @@ export class JediSwap implements DexCombo {
 
     const supply = new TokenAmount(liqPoolToken, totalSupply);
     const liquidity = new TokenAmount(liqPoolToken, userBalance);
-    const poolPair = await this.getPair(provider, token0, token1);
+    const {poolPair} = await this.getPoolDetails(token0, token1, provider);
 
     return {
       poolSupply: supply,
@@ -127,19 +128,19 @@ export class JediSwap implements DexCombo {
     console.log(tokenFromIsToken0)
 
     const callData: Array<string> = [
-        tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),
-        tokenFromIsToken0 ? tokenToDec.toString() : tokenFromDec.toString(),
-        tokenFromIsToken0 ? desiredAmountFrom.toString() : desiredAmountTo.toFixed(0),
-        "0",
-        tokenFromIsToken0 ? desiredAmountTo.toFixed(0) : desiredAmountFrom.toString(),
-        "0",
-        tokenFromIsToken0 ? minAmountFrom : minAmountTo,
-        "0",
-        tokenFromIsToken0 ? minAmountTo : minAmountFrom,
-        "0",
-        number.toBN(starknetConnector.account.address).toString(),
-        Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
-      ];
+      tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),
+      tokenFromIsToken0 ? tokenToDec.toString() : tokenFromDec.toString(),
+      tokenFromIsToken0 ? desiredAmountFrom.toString() : desiredAmountTo.toFixed(0),
+      "0",
+      tokenFromIsToken0 ? desiredAmountTo.toFixed(0) : desiredAmountFrom.toString(),
+      "0",
+      tokenFromIsToken0 ? minAmountFrom : minAmountTo,
+      "0",
+      tokenFromIsToken0 ? minAmountTo : minAmountFrom,
+      "0",
+      number.toBN(starknetConnector.account.address).toString(),
+      Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
+    ];
 
     const tx: Call | Call[] = [
       {
@@ -252,6 +253,7 @@ export class JediSwap implements DexCombo {
       Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
     ].flatMap((x) => x);
 
+
     const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
@@ -273,10 +275,6 @@ export class JediSwap implements DexCombo {
       protocolName: ProtocolNames.JEDISWAP,
       call: tx
     });
-  }
-
-  async getPoolDetails(liqPoolAddress: string) {
-
   }
 
   /**
