@@ -179,7 +179,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
 
   return (
     <div className={styles.wrapperComponent}>
-      <div className={styles.actionBlockWrapper} onClick={() => setIsComponentVisible(true)}>
+      <div className={styles.actionBlockWrapper} onClick={() => setIsComponentVisible(true)} hidden={isComponentVisible}>
         <div className={styles.actionBlockHead}>
           <div>
             <h3>{props.actionName} on {props.protocolName}</h3>
