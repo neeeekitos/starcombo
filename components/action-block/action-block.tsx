@@ -71,7 +71,6 @@ const ActionBlock = (props: ActionBlockProps) => {
       if(poolDetails.poolId) setPoolId(poolDetails.poolId)
       setPair(poolPair);
       setLoading(false);
-      console.log("done")
     }
 
     fetchPair();

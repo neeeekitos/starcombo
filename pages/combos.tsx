@@ -36,9 +36,8 @@ const Combos: NextPage = () => {
     account:account,
     provider:provider
   }
-  const {transactionItems} = useTransactions();
+  const {transactionItems,transactionHistory,addTransactionHistory} = useTransactions();
   const [error, setError] = useState(false);
-  const [transactionHistory, setTransactionHistory] = useState([])
   const {initialFunds, receivedFunds, tokenInfos} = useAmounts()
   const [actions, setActions] = useState<Action[]>([]);
 
@@ -74,8 +73,9 @@ const Combos: NextPage = () => {
       if (!error) {
         const transactions = Object.values(transactionItems).flat();
         console.log(transactions)
-        const hash = await account.execute(transactions);
-        setTransactionHistory([...transactionHistory, hash]);
+        const tx_data = await account.execute(transactions);
+        console.log(tx_data)
+        addTransactionHistory(tx_data.transaction_hash);
         console.log(hash)
       }
     }
