@@ -18,6 +18,8 @@ import {number} from "starknet";
 import {ethers} from "ethers";
 import {useTransactions} from "../../hooks/useTransactions";
 import {add} from "@noble/hashes/_u64";
+import {Simulate} from "react-dom/test-utils";
+import load = Simulate.load;
 
 interface ActionBlockProps {
   actionName: string,
@@ -47,13 +49,17 @@ const ActionBlock = (props: ActionBlockProps) => {
   const [tokenToSelector, setTokenToSelector] = useState(protocolTokens[1]);
   const [amountTo, setAmountTo] = useState("");
   const [pair, setPair] = useState<Pair>();
+  const [poolId,setPoolId] = useState<string>();
   const [tokenFrom, setTokenFrom] = useState<Token>();
   const [tokenTo, setTokenTo] = useState<Token>();
+  const [loading, setLoading] = useState<boolean>(false);
+
 
   //effects
   useEffect(() => {
 
     const fetchPair = async () => {
+      setLoading(true);
       const {
         tokenFrom,
         tokenTo
@@ -62,7 +68,10 @@ const ActionBlock = (props: ActionBlockProps) => {
       setTokenTo(tokenTo)
       const poolDetails = await protocolInstance.getPoolDetails(tokenFrom, tokenTo, provider);
       const poolPair: Pair = poolDetails.poolPair;
+      if(poolDetails.poolId) setPoolId(poolDetails.poolId)
       setPair(poolPair);
+      setLoading(false);
+      console.log("done")
     }
 
     fetchPair();
@@ -159,10 +168,12 @@ const ActionBlock = (props: ActionBlockProps) => {
       tokenTo: tokenTo,
       amountIn: amountFrom,
       amountOut: "0", //TODO support for this
-      poolPair: pair
+      poolPair: pair,
     }
+    console.log(poolId)
+    const call = poolId ? (await protocolInstance.swap(starknetConnector, swapParameters, poolId)).call : (await protocolInstance.swap(starknetConnector, swapParameters)).call
     addTransaction({
-      [props.action.id]: (await protocolInstance.swap(starknetConnector, swapParameters)).call
+      [props.action.id]: call
     })
     setIsComponentVisible(!isComponentVisible)
   }
@@ -271,7 +282,9 @@ const ActionBlock = (props: ActionBlockProps) => {
                 />
               </div>
               <div className={styles.modalFooter}>
-                <button className={styles.sumbitButton} onClick={() => submitAction()}>Submit</button>
+                {loading ? <button className={styles.sumbitButton} disabled>Fetching route</button>
+                  : <button className={styles.sumbitButton} onClick={() => submitAction()}>Submit</button>
+                }
               </div>
 
             </div>

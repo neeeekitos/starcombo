@@ -95,6 +95,8 @@ const Combos: NextPage = () => {
       <div className={styles.container}>
         {JSON.stringify(initialFunds)}
         {JSON.stringify(receivedFunds)}
+        {JSON.stringify(transactionHistory)}
+
         <Invocations/>
 
 

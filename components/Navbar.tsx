@@ -15,11 +15,12 @@ import {
   MenuDivider,
   useDisclosure,
   useColorModeValue,
-  Stack, Heading,
+  Stack, Heading, Tooltip,
 } from '@chakra-ui/react';
 import {HamburgerIcon, CloseIcon} from '@chakra-ui/icons';
 import Link from "next/link"
 import {useStarknet} from "../hooks/useStarknet";
+import argentLogo from "../utils/assets/logo/argent.png"
 
 const Links = [
   {
@@ -96,11 +97,14 @@ const Navbar = () => {
                 minW={0}>
                 <Avatar
                   size={'sm'}
-                  src={""
-                  }
+                  src={"https://pbs.twimg.com/profile_images/1024585501901303808/m92jEcPI_400x400.jpg"}
                 />
               </MenuButton>
               <MenuList>
+                <MenuItem onClick={()=> window.open(`https://goerli.voyager.online/contract/${account?.address}`, "_blank")}>
+                  {account?.address}
+                </MenuItem>
+                <MenuDivider/>
                 <MenuItem>{account?.address}</MenuItem>
                 <MenuDivider/>
                 <MenuItem> <Button onClick={() => disconnect()}>Disconnect Wallet</Button></MenuItem>
