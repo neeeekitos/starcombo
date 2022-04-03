@@ -138,7 +138,6 @@ const ActionBlock = (props: ActionBlockProps) => {
 
   }
 
-
   const switchTokens = () => {
     const tempFrom = tokenFromSelector;
     const tempAmtFrom = amountFrom;
@@ -188,9 +187,10 @@ const ActionBlock = (props: ActionBlockProps) => {
         </div>
 
         <div className={styles.actionBlockBody}>
+          <>
           <div className={styles.tokenWrapper}>
             <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
-            <div className={styles.shadow}></div>
+            <div className={styles.shadow}/>
             <p>{amountFrom} {tokenFromSelector.symbol}</p>
           </div>
           <svg width="50" height="70" viewBox="0 0 80 72" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -203,9 +203,10 @@ const ActionBlock = (props: ActionBlockProps) => {
           </svg>
           <div className={styles.tokenWrapper}>
             <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
-            <div className={styles.shadow}></div>
+            <div className={styles.shadow}/>
             <p>{amountTo} {tokenToSelector.symbol}</p>
           </div>
+          </>
         </div>
       </div>
 
@@ -287,10 +288,7 @@ const ActionBlock = (props: ActionBlockProps) => {
               </div>
 
             </div>
-          </div> : null
-      }
-
-
+          </div> : null}
     </div>
   )
 }

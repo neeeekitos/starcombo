@@ -28,6 +28,9 @@ import {getBalanceOfErc20} from "../utils/helpers";
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 import {useTransactions} from "../hooks/useTransactions";
 
+import ActionBlockAdd from "../components/action-block-add/action-block-add";
+import ActionBlockRemove from "../components/action-block-remove/action-block-remove";
+
 
 const Combos: NextPage = () => {
 
@@ -56,7 +59,6 @@ const Combos: NextPage = () => {
   /**
    * Sends the transactions. Verifies is the user has the initial funds required.
    */
-    //TODO theoritical and not working yet
   const send = async () => {
       console.log(transactionItems)
       let error = false;
@@ -101,34 +103,34 @@ const Combos: NextPage = () => {
 
 
         <div className={styles.container}>
-          <Reorder.Group
-            as="ul"
-            className={styles.actionsWrapper}
-            axis="y"
-            values={actions}
-            onReorder={setActions}
-            layoutScroll
-            style={{overflowY: "scroll"}}
-          >
-            {actions.map((action) => (
-              <Reorder.Item key={action.id} value={action}>
-                <div className={styles.blockWrapper}>
-                  <ActionBlock
-                    actionName={ACTIONS[action.actionType].name}
-                    protocolName={PROTOCOLS[action.protocolName].name}
-                    action={action}
-                  />
-                </div>
-              </Reorder.Item>
-            ))}
-          </Reorder.Group>
-          {
-            // TODO replace the droplist by the modal (furucombo example)
-          }
-          <AddAction
-            newId={actions.length}
-            onAddAction={handleAddAction}
-          />
+        <Reorder.Group
+          as="ul"
+          className={styles.actionsWrapper}
+          axis="y"
+          values={actions}
+          onReorder={setActions}
+          layoutScroll
+          style={{overflowY: "scroll"}}
+        >
+          {actions.map((action) => (
+            <Reorder.Item key={action.id} value={action}>
+              <div className={styles.blockWrapper}>
+                <ActionBlockRemove
+                  actionName={ACTIONS[action.actionType].name}
+                  protocolName={PROTOCOLS[action.protocolName].name}
+                  action={action}
+                />
+              </div>
+            </Reorder.Item>
+          ))}
+        </Reorder.Group>
+        {
+          // TODO replace the droplist by the modal (furucombo example)
+        }
+        <AddAction
+          newId={actions.length}
+          onAddAction={handleAddAction}
+        />
         </div>
         <Button onClick={() => send()}>Send</Button>
 
