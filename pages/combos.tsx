@@ -28,6 +28,9 @@ import {getBalanceOfErc20} from "../utils/helpers";
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 import {useTransactions} from "../hooks/useTransactions";
 
+import ActionBlockAdd from "../components/action-block-add/action-block-add";
+import ActionBlockRemove from "../components/action-block-remove/action-block-remove";
+
 
 const Combos: NextPage = () => {
 
@@ -105,7 +108,7 @@ const Combos: NextPage = () => {
           {actions.map((action) => (
             <Reorder.Item key={action.id} value={action}>
               <div className={styles.blockWrapper}>
-                <ActionBlock
+                <ActionBlockRemove
                   actionName={ACTIONS[action.actionType].name}
                   protocolName={PROTOCOLS[action.protocolName].name}
                   action={action}

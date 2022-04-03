@@ -43,6 +43,8 @@
   color: white;
 }
 
+
+
 .underlineTitle {
   height: 2px;
   width: 100%;
@@ -178,4 +180,67 @@
 .sumbitButton:hover{
   transition-duration: 1s;
   transform: scale(1.05);
+}
+
+.addLiquidity{
+  width: fit-content;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tokenWrapperAdd {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 5px;
+}
+
+.tokenWrapperAdd p {
+  margin-top: 4px;
+  font-weight: bold;
+}
+
+.poolWrapper {
+  margin-left: 10px;
+  text-align: center;
+}
+
+.poolWrapper div {
+  display: flex;
+  align-items: center;
+}
+
+.poolWrapper svg {
+  margin-left: 8px;
+}
+
+.addLiquidityArrow {
+  margin-bottom: 18px;
+}
+
+.modalBodyLiquidity{
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 40px 20px 40px;
+  color: black;
+  align-items: center;
+  flex-direction: column;
+}
+
+.whiteLine{
+  height: 1px;
+  width: 100%;
+  background: white;
+  margin: 20px auto;
+  border-radius: 5px;
+}
+
+.totalLiquidityWrapper {
+  width: 90%;
+  font-weight: bold;
+  display: flex;
+  color: white;
+  justify-content: flex-end;
 }
