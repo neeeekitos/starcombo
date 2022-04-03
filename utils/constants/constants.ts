@@ -2,6 +2,7 @@ import {Percent} from "@jediswap/sdk";
 import {Call} from "starknet/src/types/lib";
 import {JediSwap} from "../../hooks/jediSwap";
 import {MySwap} from "../../hooks/mySwap";
+import styles from "../../components/select-new-action/select-new-action.module.css";
 
 export enum ActionTypes {
   ADD_LIQUIDITY,
@@ -46,6 +47,13 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
     address: '0x818e6fecd516ecc3849daf6845e3ec868087b755',
     abi: [],
     type: ProtocolNames.JEDISWAP,
+    stylesTitle: styles.jediSwap,
+    stylesCard: styles.cardJediSwap,
+    availableAction: [
+      ActionTypes.SWAP,
+      ActionTypes.ADD_LIQUIDITY,
+      ActionTypes.REMOVE_LIQUIDITY
+    ],
     tokens: [
       {
         name: 'J23FEB0',
@@ -77,6 +85,13 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
     address: '0x9B11EFD69332A98D3C2cCb8e4a8a57160D9F6A0E',
     abi: [],
     type: ProtocolNames.MY_SWAP,
+    stylesTitle: styles.mySwap,
+    stylesCard: styles.cardMySwap,
+    availableAction: [
+      ActionTypes.SWAP,
+      ActionTypes.ADD_LIQUIDITY,
+      ActionTypes.REMOVE_LIQUIDITY
+    ],
     tokens: [
       {
         name: 'Test Token',
@@ -101,20 +116,27 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
     ],
     instance:MySwap.getInstance(),
   },
-  [ProtocolNames.ZK_LEND]: {
-    name: 'ZkLend',
-    address: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
-    abi: [],
-    type: ProtocolNames.ZK_LEND,
-    tokens:[]
-
-  },
+  // [ProtocolNames.ZK_LEND]: {
+  //   name: 'ZkLend',
+  //   address: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+  //   abi: [],
+  //   type: ProtocolNames.ZK_LEND,
+  //   tokens:[]
+  //
+  // },
   [ProtocolNames.ARF]: {
     name: 'AlphaRoad Finance',
     address: '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2',
     abi: [],
     type: ProtocolNames.ARF,
-    tokens:[]
+    tokens:[],
+    stylesTitle: styles.alphaRoad,
+    stylesCard: styles.cardAlpha,
+    availableAction: [
+      // ActionTypes.SWAP,
+      ActionTypes.ADD_LIQUIDITY,
+      ActionTypes.REMOVE_LIQUIDITY
+    ],
   },
 }
 
@@ -144,7 +166,7 @@ export const ACTIONS: { [key in keyof typeof ActionTypes]?: any } = {
     availableProtocols: [
       ProtocolNames.MY_SWAP,
       ProtocolNames.JEDISWAP,
-      // ProtocolNames.ARF, //Not yet ?
+      ProtocolNames.ARF, //Not yet ?
     ],
   },
   // [ActionTypes.SWAP]: {
