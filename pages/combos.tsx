@@ -65,12 +65,10 @@ const Combos: NextPage = () => {
   }, [actions]);
 
   const handleAddAction = (action: Action) => {
-    console.log(`Adding action: ${JSON.stringify(action)}`);
     setActions([...actions, action]);
   }
 
   const handleRemoveAction = (actionId: number) => {
-    console.log(`Removing action: ${JSON.stringify(actionId)}`);
     setActions(actions.filter(a => a.id !== actionId))
   }
 
@@ -94,15 +92,11 @@ const Combos: NextPage = () => {
 
       if (!error) {
         const transactions = Object.values(transactionItems).flat();
-        console.log(transactions)
         const tx_data = await account.execute(transactions);
-        console.log(tx_data)
         NotificationManager.success("Transaction Sent!", 'Transaction sent', 5000, () => window.open(`https://goerli.voyager.online/tx/${tx_data.transaction_hash}`));
         addTransactionHistory(tx_data.transaction_hash);
-        console.log(hash)
       }
     }catch(err){
-      console.log(err)
       NotificationManager.error("There was an error when sending the transaction", 'Error')
     }
   }
@@ -142,7 +136,6 @@ const Combos: NextPage = () => {
     )
   }
   const renderConnected = () => {
-    console.log(actions)
     return (
       <div className={styles.container}>
         <NotificationContainer/>

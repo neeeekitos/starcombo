@@ -78,10 +78,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
       setToken1(token1)
 
       let poolPosition:PoolPosition;
-      console.log(props.protocolName,PROTOCOLS[ProtocolNames.JEDISWAP].name)
       if(props.protocolName===PROTOCOLS[ProtocolNames.JEDISWAP].name){
         const {poolPair}:{poolPair:Pair} = await protocolInstance.getPoolDetails(token0, token1, provider);
-        console.log(poolPair)
         poolPosition = await protocolInstance.getLiquidityPosition(starknetConnector, token0, token1,poolPair);
       }else{
         poolPosition = await protocolInstance.getLiquidityPosition(starknetConnector, token0, token1);
@@ -98,17 +96,11 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     const {poolPair}:{poolPair:Pair} = poolPosition;
     const sliderPercent = new Percent(sliderValue.toString(),"100");
     const liqToRemove = poolPosition.userLiquidity.multiply(sliderPercent);
-    console.log(poolPosition.userLiquidity.toExact())
-
-    console.log(liqToRemove.toFixed(10))
     let poolShare = liqToRemove.divide(poolPosition.poolSupply);
     setLiqToRemove(liqToRemove)
     const token0isPoolToken0 = token0.address===poolPair.token0.address;
-    console.log(token0.address,poolPair.token0.address,token0isPoolToken0)
     let token0Amount = token0isPoolToken0? poolPair.reserve0.multiply(poolShare) :  poolPair.reserve1.multiply(poolShare);
     let token1Amount = token0isPoolToken0? poolPair.reserve1.multiply(poolShare) :  poolPair.reserve0.multiply(poolShare);
-    console.log(token0Amount.toSignificant(6))
-    console.log(token1Amount.toSignificant(6))
     setAmountToken0(token0Amount.toSignificant(6))
     setAmountToken1(token1Amount.toSignificant(6))
   },[sliderValue])

@@ -117,7 +117,6 @@ export class MySwap implements DexCombo {
     //TODO check if there's another way to add fixed amountToken1 ? This works only if amountTokenFrom refers to Token0.
 
     let tokenFrom, tokenTo, tokenFromIsToken0, tokenFromPrice: Price;
-    console.log(tokenAmountFrom.token.address, poolPair.token0.address)
     tokenAmountFrom.token.address === poolPair.token0.address ?
       [tokenFrom, tokenTo, tokenFromPrice, tokenFromIsToken0] = [poolPair.token0, poolPair.token1, poolPair.token0Price, true] :
       [tokenFrom, tokenTo, tokenFromPrice, tokenFromIsToken0] = [poolPair.token1, poolPair.token0, poolPair.token1Price, false];
@@ -130,16 +129,12 @@ export class MySwap implements DexCombo {
 
     // from
     desiredAmountFrom = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
-    console.log(desiredAmountFrom)
     minAmountFrom = desiredAmountFrom.sub(SLIPPAGE.multiply(desiredAmountFrom.toBigInt()).toFixed(0)).toString()
 
     // to
     desiredAmountTo = tokenFromPrice.raw.multiply(desiredAmountFrom.toString());
-    console.log(desiredAmountTo)
     minAmountTo = desiredAmountTo.subtract(SLIPPAGE.multiply(desiredAmountTo).toFixed(0)).toFixed(0)
 
-    console.log(desiredAmountFrom.toString(), desiredAmountTo.toFixed(0), minAmountFrom, minAmountTo)
-    console.log(tokenFromIsToken0)
 
     const callData: Array<string> = [
       tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),

@@ -14,7 +14,6 @@ import {useTransactions} from "../../hooks/useTransactions";
 import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {createTokenObjects} from "../../utils/helpers";
 import {ethers} from "ethers";
-import {MySwap} from "../../hooks/mySwap";
 
 
 interface ActionBlockProps {
@@ -127,7 +126,6 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
       // poolShare = new Fraction(parsedValue.toString()).divide(reserveFrom).toFixed(0);
     }
     //TODO if time
-    console.log(poolShare)
     setPoolShare(poolShare)
 
   }

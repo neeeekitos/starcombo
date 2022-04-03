@@ -156,7 +156,6 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
       amountOut: "0", //TODO support for this
       poolPair: pair,
     }
-    console.log(poolId)
     const call = poolId ? (await protocolInstance.swap(starknetConnector, swapParameters, poolId)).call : (await protocolInstance.swap(starknetConnector, swapParameters)).call
     addTransaction({
       [props.action.id]: call

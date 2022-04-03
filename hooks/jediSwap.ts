@@ -49,7 +49,6 @@ export class JediSwap implements DexCombo {
    * @param tokenTo
    */
   async getPoolDetails(tokenFrom: Token, tokenTo: Token, provider: Provider) {
-    console.log("poolDetails")
 
     const tokenFromDec = number.toBN(tokenFrom.address)
     const tokenToDec = number.toBN(tokenTo.address)
@@ -103,7 +102,6 @@ export class JediSwap implements DexCombo {
     //TODO check if there's another way to add fixed amountToken1 ? This works only if amountTokenFrom refers to Token0.
 
     let tokenFrom, tokenTo, tokenFromIsToken0, tokenFromPrice: Price;
-    console.log(tokenAmountFrom.token.address, poolPair.token0.address)
     tokenAmountFrom.token.address === poolPair.token0.address ?
       [tokenFrom, tokenTo, tokenFromPrice, tokenFromIsToken0] = [poolPair.token0, poolPair.token1, poolPair.token0Price, true] :
       [tokenFrom, tokenTo, tokenFromPrice, tokenFromIsToken0] = [poolPair.token1, poolPair.token0, poolPair.token1Price, false];
@@ -116,16 +114,11 @@ export class JediSwap implements DexCombo {
 
     // from
     desiredAmountFrom = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
-    console.log(desiredAmountFrom)
     minAmountFrom = desiredAmountFrom.sub(SLIPPAGE.multiply(desiredAmountFrom.toBigInt()).toFixed(0)).toString()
 
     // to
     desiredAmountTo = tokenFromPrice.raw.multiply(desiredAmountFrom.toString());
-    console.log(desiredAmountTo)
     minAmountTo = desiredAmountTo.subtract(SLIPPAGE.multiply(desiredAmountTo).toFixed(0)).toFixed(0)
-
-    console.log(desiredAmountFrom.toString(), desiredAmountTo.toFixed(0), minAmountFrom, minAmountTo)
-    console.log(tokenFromIsToken0)
 
     const callData: Array<string> = [
       tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),
@@ -330,7 +323,6 @@ export class JediSwap implements DexCombo {
   async findBestTrade(from: Token, to: Token, pairFromTo: Pair, amountFrom: string, amountTo: string, slippageTolerance: Percent): Promise<TradeInfo | undefined> {
     //Create poolPair to find the best trade for this poolPair. Use liq reserves as poolPair amounts
     let trade: Trade;
-    console.log(pairFromTo, from, amountFrom, to)
     if (amountTo === "0") {
       trade = Trade.bestTradeExactIn([pairFromTo], new TokenAmount(from, amountFrom), to)[0];
 
@@ -338,7 +330,6 @@ export class JediSwap implements DexCombo {
       trade = Trade.bestTradeExactOut([pairFromTo], from, new TokenAmount(from, amountFrom))[0];
     }
 
-    console.log(trade)
     console.log("execution price: $" + trade.executionPrice.toSignificant(6));
     console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
 
