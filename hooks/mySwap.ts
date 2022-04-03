@@ -1,7 +1,7 @@
 import {DexCombo, StarknetConnector, SwapParameters, TradeInfo} from "../utils/constants/interfaces";
 import {ethers} from "ethers";
 
-import {Abi, Call, Contract, number} from "starknet";
+import {Abi, Call, Contract, number, Provider} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
 import {ChainId, Fraction, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {Action, ActionTypes, MY_SWAP_ROUTER_ADDRESS, ProtocolNames, SLIPPAGE} from "../utils/constants/constants";
@@ -142,17 +142,17 @@ export class MySwap implements DexCombo {
     console.log(tokenFromIsToken0)
 
     const callData: Array<string> = [
-        tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),
-        tokenFromIsToken0 ? desiredAmountFrom.toString() : desiredAmountTo.toFixed(0),
-        "0",
-        tokenFromIsToken0 ? minAmountFrom : minAmountTo,
-        "0",
-        tokenFromIsToken0 ? tokenToDec.toString() : tokenFromDec.toString(),
-        tokenFromIsToken0 ? desiredAmountTo.toFixed(0) : desiredAmountFrom.toString(),
-        "0",
-        tokenFromIsToken0 ? minAmountTo : minAmountFrom,
-        "0"
-      ];
+      tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),
+      tokenFromIsToken0 ? desiredAmountFrom.toString() : desiredAmountTo.toFixed(0),
+      "0",
+      tokenFromIsToken0 ? minAmountFrom : minAmountTo,
+      "0",
+      tokenFromIsToken0 ? tokenToDec.toString() : tokenFromDec.toString(),
+      tokenFromIsToken0 ? desiredAmountTo.toFixed(0) : desiredAmountFrom.toString(),
+      "0",
+      tokenFromIsToken0 ? minAmountTo : minAmountFrom,
+      "0"
+    ];
 
     const tx: Call | Call[] = [
       {

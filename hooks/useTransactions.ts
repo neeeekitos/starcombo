@@ -7,17 +7,27 @@ interface TransactionItem {
 
 interface TransactionState {
   transactionItems: TransactionItem, //mapping item id => Call
+  transactionHistory:string[],
   addTransaction: (transaction: TransactionItem) => void,
+  addTransactionHistory:(hash:string)=>void,
 }
 
 export const useTransactions = create<TransactionState>((set, get) => ({
     transactionItems:{},
+    transactionHistory:[],
     addTransaction: (transaction) =>{
+      console.log(transaction)
       const itemNumber = Object.keys(transaction)[0]; // This is the item id.
-      const [transactionCall] = Object.keys(Object.values(transaction)[0]);
+      console.log(Object.values(transaction));
+      const transactionCalls = Object.values(transaction)[0]
+      console.log(transactionCalls)
       let appTransaction = get().transactionItems;
-      appTransaction[itemNumber] = transactionCall;
+      appTransaction[itemNumber] = transactionCalls;
       set((state) => ({...state, transactions: appTransaction}));
+    },
+    addTransactionHistory:(hash)=>{
+      set((state) => ({...state, transactionHistory: [...state.transactionHistory,hash]}));
+
     }
 
 }

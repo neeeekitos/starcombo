@@ -20,7 +20,7 @@ import Invocations from "../components/Invocations";
 import {StarknetConnector, SwapParameters} from "../utils/constants/interfaces";
 import {createTokenObjects} from "../utils/helpers";
 import {JediSwap} from "../hooks/jediSwap";
-import {Pair} from "@jediswap/sdk";
+import {Pair, Token} from "@jediswap/sdk";
 import alert from "@chakra-ui/theme/src/components/alert";
 import AddAction from "../hooks/AddAction";
 import {useAmounts} from "../hooks/useAmounts";
@@ -32,10 +32,14 @@ import {useTransactions} from "../hooks/useTransactions";
 const Combos: NextPage = () => {
 
   const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
+  const starknetConnector:StarknetConnector = {
+    account:account,
+    provider:provider
+  }
   const {transactionItems} = useTransactions();
   const [error, setError] = useState(false);
   const [transactionHistory, setTransactionHistory] = useState([])
-  const {initialFunds, receivedFunds} = useAmounts()
+  const {initialFunds, receivedFunds, tokenInfos} = useAmounts()
   const [actions, setActions] = useState<Action[]>([]);
 
   const [hash, setHash] = useState<string>();
@@ -53,26 +57,28 @@ const Combos: NextPage = () => {
   /**
    * Sends the transactions. Verifies is the user has the initial funds required.
    */
-  //TODO theoritical and not working yet
+    //TODO theoritical and not working yet
   const send = async () => {
-    let error = false
-    for (const [key, value] of Object.entries(initialFunds)) {
-      //TODO check if its w or w/o decimals
-      const userBalance = parseFloat(await getBalanceOfErc20(provider, key))
-      if (userBalance < value) {
-        NotificationManager.error(`Insufficient ${key} in your wallet`)
-        error = true;
+      console.log(transactionItems)
+      let error = false;
+      for (const [key, value] of Object.entries(initialFunds)) {
+        const token:Token = tokenInfos[key]
+        //TODO check if its w or w/o decimals\
+        const userBalance = parseFloat(await getBalanceOfErc20(starknetConnector, token))
+        if (userBalance < value) {
+          NotificationManager.error(`Insufficient ${key} in your wallet`)
+          error = true;
+        }
+      }
+
+      if (!error) {
+        const transactions = Object.values(transactionItems).flat();
+        console.log(transactions)
+        const hash = await account.execute(transactions);
+        setTransactionHistory([...transactionHistory, hash]);
+        console.log(hash)
       }
     }
-
-    if (!error) {
-      const transactions = Object.values(transactionItems);
-      console.log(transactions)
-      const hash = await account.execute(transactions);
-      console.log(hash)
-      setTransactionHistory([...transactionHistory, hash]);
-    }
-  }
 
   //Render functions
   const renderDisconnected = () => {
@@ -89,39 +95,42 @@ const Combos: NextPage = () => {
       <div className={styles.container}>
         {JSON.stringify(initialFunds)}
         {JSON.stringify(receivedFunds)}
+        {JSON.stringify(transactionHistory)}
+
         <Invocations/>
 
 
         <div className={styles.container}>
-        <Reorder.Group
-          as="ul"
-          className={styles.actionsWrapper}
-          axis="y"
-          values={actions}
-          onReorder={setActions}
-          layoutScroll
-          style={{overflowY: "scroll"}}
-        >
-          {actions.map((action) => (
-            <Reorder.Item key={action.id} value={action}>
-              <div className={styles.blockWrapper}>
-                <ActionBlock
-                  actionName={ACTIONS[action.actionType].name}
-                  protocolName={PROTOCOLS[action.protocolName].name}
-                  action={action}
-                />
-              </div>
-            </Reorder.Item>
-          ))}
-        </Reorder.Group>
-        {
-          // TODO replace the droplist by the modal (furucombo example)
-        }
-        <AddAction
-          onAddAction={handleAddAction}
-        />
+          <Reorder.Group
+            as="ul"
+            className={styles.actionsWrapper}
+            axis="y"
+            values={actions}
+            onReorder={setActions}
+            layoutScroll
+            style={{overflowY: "scroll"}}
+          >
+            {actions.map((action) => (
+              <Reorder.Item key={action.id} value={action}>
+                <div className={styles.blockWrapper}>
+                  <ActionBlock
+                    actionName={ACTIONS[action.actionType].name}
+                    protocolName={PROTOCOLS[action.protocolName].name}
+                    action={action}
+                  />
+                </div>
+              </Reorder.Item>
+            ))}
+          </Reorder.Group>
+          {
+            // TODO replace the droplist by the modal (furucombo example)
+          }
+          <AddAction
+            newId={actions.length}
+            onAddAction={handleAddAction}
+          />
         </div>
-        <Button onClick={()=>send()}>Send</Button>
+        <Button onClick={() => send()}>Send</Button>
 
       </div>
 

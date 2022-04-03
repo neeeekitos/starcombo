@@ -20,7 +20,6 @@ const AddAction = (props: any) => {
         </MenuButton>
         <MenuList>
           {Object.keys(ACTIONS).map((actionKey: string) => {
-            console.log(actionKey);
             return (
               <MenuItem
                 key={actionKey}
@@ -57,6 +56,7 @@ const AddAction = (props: any) => {
       </Menu>
 
       <Button onClick={() => props.onAddAction({
+        id: props.newId,
         actionType: selectedAction.type,
         protocolName: selectedProtocol.type,
       })}>Add new Action</Button>
