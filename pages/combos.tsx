@@ -10,8 +10,8 @@ import {defaultProvider, ec, hash} from "starknet/src/index";
 import {transformCallsToMulticallArrays} from "starknet/src/utils/transaction";
 import {getStarknet} from "@argent/get-starknet";
 import {StarknetWindowObject} from "@argent/get-starknet/dist/extension.model";
-import {useEffect, useState} from "react";
-import ActionBlock from "../components/action-block/action-block";
+import React, {useEffect, useState} from "react";
+import ActionBlockSwap from "../components/action-block-swap/action-block-swap";
 import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
@@ -28,15 +28,18 @@ import {getBalanceOfErc20} from "../utils/helpers";
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 import {useTransactions} from "../hooks/useTransactions";
 
+import ActionBlockAdd from "../components/action-block-add/action-block-add";
+import ActionBlockRemove from "../components/action-block-remove/action-block-remove";
+
 
 const Combos: NextPage = () => {
 
   const {account, setAccount, provider, setProvider, connectWallet, disconnect} = useStarknet();
-  const starknetConnector:StarknetConnector = {
-    account:account,
-    provider:provider
+  const starknetConnector: StarknetConnector = {
+    account: account,
+    provider: provider
   }
-  const {transactionItems,transactionHistory,addTransactionHistory} = useTransactions();
+  const {transactionItems, transactionHistory, addTransactionHistory} = useTransactions();
   const [error, setError] = useState(false);
   const {initialFunds, receivedFunds, tokenInfos} = useAmounts()
   const [actions, setActions] = useState<Action[]>([]);
@@ -56,41 +59,64 @@ const Combos: NextPage = () => {
   /**
    * Sends the transactions. Verifies is the user has the initial funds required.
    */
-    //TODO theoritical and not working yet
   const send = async () => {
-      console.log(transactionItems)
-      let error = false;
-      for (const [key, value] of Object.entries(initialFunds)) {
-        const token:Token = tokenInfos[key]
-        //TODO check if its w or w/o decimals\
-        const userBalance = parseFloat(await getBalanceOfErc20(starknetConnector, token))
-        if (userBalance < value) {
-          NotificationManager.error(`Insufficient ${key} in your wallet`)
-          error = true;
-        }
-      }
-
-      if (!error) {
-        const transactions = Object.values(transactionItems).flat();
-        console.log(transactions)
-        const tx_data = await account.execute(transactions);
-        console.log(tx_data)
-        addTransactionHistory(tx_data.transaction_hash);
-        console.log(hash)
+    console.log(transactionItems)
+    let error = false;
+    for (const [key, value] of Object.entries(initialFunds)) {
+      const token: Token = tokenInfos[key]
+      //TODO check if its w or w/o decimals\
+      const userBalance = parseFloat(await getBalanceOfErc20(starknetConnector, token))
+      if (userBalance < value) {
+        NotificationManager.error(`Insufficient ${key} in your wallet`)
+        error = true;
       }
     }
 
+    if (!error) {
+      const transactions = Object.values(transactionItems).flat();
+      console.log(transactions)
+      const tx_data = await account.execute(transactions);
+      console.log(tx_data)
+      addTransactionHistory(tx_data.transaction_hash);
+      console.log(hash)
+    }
+  }
+
   //Render functions
+  const renderCorrespondingActionBlock = (action) => {
+    const actionBlocks = {
+      [ActionTypes.ADD_LIQUIDITY]: ActionBlockAdd,
+      [ActionTypes.REMOVE_LIQUIDITY]: ActionBlockRemove,
+      [ActionTypes.SWAP]: ActionBlockSwap
+    }
+    let Component = actionBlocks[action.actionType];
+    return (
+      <Component
+        actionName={ACTIONS[action.actionType].name}
+        protocolName={PROTOCOLS[action.protocolName].name}
+        action={action}
+      />
+    )
+  }
+
   const renderDisconnected = () => {
     return (
-      <Flex
-        marginTop={"50px"}>
-        Connect your Wallet to start
-        <Button onClick={() => connectWallet()}>Connect Wallet</Button>
-      </Flex>
+      <div className={styles.notConnectedWrapper}>
+        <Flex
+          justifyContent={'center'}
+          flexDirection={'column'}
+          >
+          <Button
+            background="transparent"
+            _hover={{ bg: "brand.body"}}
+            _active={ { bg: "brand.navbar" } }
+            onClick={() => connectWallet()}>Connect Wallet to start</Button>
+        </Flex>
+      </div>
     )
   }
   const renderConnected = () => {
+    console.log(actions)
     return (
       <div className={styles.container}>
         {JSON.stringify(initialFunds)}
@@ -113,11 +139,7 @@ const Combos: NextPage = () => {
             {actions.map((action) => (
               <Reorder.Item key={action.id} value={action}>
                 <div className={styles.blockWrapper}>
-                  <ActionBlock
-                    actionName={ACTIONS[action.actionType].name}
-                    protocolName={PROTOCOLS[action.protocolName].name}
-                    action={action}
-                  />
+                  {renderCorrespondingActionBlock(action)}
                 </div>
               </Reorder.Item>
             ))}
