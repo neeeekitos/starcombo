@@ -59,8 +59,9 @@ const Combos: NextPage = () => {
     setActions([...actions, action]);
   }
 
-  const handleRemoveAction = (action: Action) => {
-    setActions(actions.filter(a => a.id !== action.id))
+  const handleRemoveAction = (actionId: number) => {
+    console.log(`Removing action: ${JSON.stringify(actionId)}`);
+    setActions(actions.filter(a => a.id !== actionId))
   }
 
   /**
@@ -102,6 +103,7 @@ const Combos: NextPage = () => {
         actionName={ACTIONS[action.actionType].name}
         protocolName={PROTOCOLS[action.protocolName].name}
         action={action}
+        handleRemoveAction={handleRemoveAction}
       />
     )
   }
@@ -130,7 +132,15 @@ const Combos: NextPage = () => {
         <FundsRecap/>
         <div className={styles.container}>
 
-          <Button onClick={() => setIsComponentVisible(true)} hidden={isComponentVisible}>Add action</Button>
+          <Button
+            background="brand.body"
+            _hover={{ bg: "brand.body"}}
+            _active={ { bg: "brand.navbar" } }
+            onClick={() => setIsComponentVisible(true)}
+            hidden={isComponentVisible}
+          >
+            Add action
+          </Button>
           {
             isComponentVisible &&
             <div ref={ref}>
@@ -157,7 +167,14 @@ const Combos: NextPage = () => {
           </Reorder.Group>
 
         </div>
-        <Button onClick={() => send()}>Send</Button>
+        <Button
+          background="brand.body"
+          _hover={{ bg: "brand.body"}}
+          _active={ { bg: "brand.navbar" } }
+          onClick={() => send()}
+        >
+          Send
+        </Button>
 
       <div />
       </div>

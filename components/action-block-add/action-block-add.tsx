@@ -19,7 +19,8 @@ import {ethers} from "ethers";
 interface ActionBlockProps {
   actionName: string,
   protocolName: string,
-  action: any
+  action: any,
+  handleRemoveAction: (actionId: number) => void,
 }
 
 const ActionBlockAdd = (props: ActionBlockProps) => {
@@ -103,7 +104,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
   const setQuoteTokenAmount = (value, priceWanted) => {
     if (isNaN(parseFloat(value))) return;
-    let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price, reserveFrom:TokenAmount;
+    let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price,
+      reserveFrom: TokenAmount;
     addToken1Selector.address === pair.token0.address ?
       [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, reserveFrom, tokenFromIsToken0] = [pair.token0, pair.token1, pair.token0Price, pair.token1Price, pair.reserve0, true] :
       [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, reserveFrom, tokenFromIsToken0] = [pair.token1, pair.token0, pair.token1Price, pair.token0Price, pair.reserve1, false];
@@ -146,6 +148,14 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
             <h3>{props.actionName} on {props.protocolName}</h3>
             <div className={styles.underlineTitle}/>
           </div>
+        </div>
+        <div className={styles.removeActionButton} onClick={(e) => {
+          e.stopPropagation();
+          props.handleRemoveAction(props.action.id)
+        }}>
+          <p>
+            X
+          </p>
         </div>
         <div className={styles.actionBlockBody}>
           <div className={styles.addLiquidity}>

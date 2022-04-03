@@ -12,6 +12,7 @@
     transform: translateX(-50%);
     position: absolute;
     z-index: 30;
+    background: #070A21;
 }
 
 .modalContent {

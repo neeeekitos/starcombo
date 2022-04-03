@@ -2,8 +2,6 @@ import {useState} from "react";
 import styles from "../components/token-chooser.module.css";
 import {Button, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import {ACTIONS, ActionTypes, PROTOCOLS} from "../utils/constants/constants";
-import dynamic from "next/dynamic";
-
 
 const AddAction = (props: any) => {
 
