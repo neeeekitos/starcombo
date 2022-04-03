@@ -101,11 +101,18 @@ const Combos: NextPage = () => {
 
   const renderDisconnected = () => {
     return (
-      <Flex
-        marginTop={"50px"}>
-        Connect your Wallet to start
-        <Button onClick={() => connectWallet()}>Connect Wallet</Button>
-      </Flex>
+      <div className={styles.notConnectedWrapper}>
+        <Flex
+          justifyContent={'center'}
+          flexDirection={'column'}
+          >
+          <Button
+            background="transparent"
+            _hover={{ bg: "brand.body"}}
+            _active={ { bg: "brand.navbar" } }
+            onClick={() => connectWallet()}>Connect Wallet to start</Button>
+        </Flex>
+      </div>
     )
   }
   const renderConnected = () => {

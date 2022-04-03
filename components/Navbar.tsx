@@ -1,5 +1,3 @@
-// import {useStarknet} from "../hooks/useStarknet";
-import {getStarknet} from "@argent/get-starknet/dist";
 import {ReactNode, useEffect, useRef} from 'react';
 import {
   Box,
@@ -22,6 +20,7 @@ import Link from "next/link"
 import {useStarknet} from "../hooks/useStarknet";
 import argentLogo from "../utils/assets/logo/argent.png"
 import {useTransactions} from "../hooks/useTransactions";
+import theme from "../styles/Theme";
 
 const Links = [
   {
@@ -34,18 +33,12 @@ const Links = [
   }
 ];
 
+
 const NavLink = ({target, name}: { target: string, name: string }) => (
-  <Link href={target} passHref>
-    <Button
-      py={1}
-      rounded={'md'}
-      _hover={{
-        textDecoration: 'none',
-        bg: useColorModeValue('gray.200', 'gray.700'),
-      }}
-    >
+  <Link
+    href={target}
+    passHref>
       {name}
-    </Button>
   </Link>
 );
 
@@ -101,7 +94,7 @@ const Navbar = () => {
           <Flex alignItems={'center'}>
             {account &&
             <Menu>
-              <MenuButton
+                <MenuButton
                 as={Button}
                 rounded={'full'}
                 variant={'link'}
@@ -112,13 +105,20 @@ const Navbar = () => {
                   src={"https://pbs.twimg.com/profile_images/1024585501901303808/m92jEcPI_400x400.jpg"}
                 />
               </MenuButton>
-              <MenuList>
+              <MenuList
+                bg="brand.navbar"
+                padding={0}
+              >
                 <MenuItem
+                  _active={ { bg: "brand.navbar" } }
+                  _focus={ { bg: "brand.body" } }
                   onClick={() => window.open(`https://goerli.voyager.online/contract/${account?.address}`, "_blank")}>
                   {account?.address}
                 </MenuItem>
-                <MenuDivider/>
-                <MenuItem>
+                <MenuDivider margin={0}/>
+                <MenuItem
+                  _active={ { bg: "brand.navbar" } }
+                  _focus={ { bg: "brand.body" } }>
                   <Flex flexDir={"column"}>
                     <h2>Your Transactions</h2>
 
@@ -134,13 +134,26 @@ const Navbar = () => {
                   {transactionHistory.length === 0 && <div> No pending transactions</div>}
                   </Flex>
                 </MenuItem>
-                <MenuDivider/>
-                <MenuItem> <Button onClick={() => disconnect()}>Disconnect Wallet</Button></MenuItem>
+                <MenuDivider margin={0}/>
+                <MenuItem
+                  _focus={ { bg: "brand.body" } }
+                  _active={ { bg: "brand.navbar" } }
+                  onClick={() => disconnect()}
+                >
+                  Disconnect Wallet
+                </MenuItem>
               </MenuList>
             </Menu>}
             {!account &&
             <div>
-              <Button onClick={() => connectWallet()}>Connect Wallet</Button>
+              <Button
+                background="transparent"
+                _hover={{ bg: "brand.body"}}
+                _active={ { bg: "brand.navbar" } }
+                onClick={() => connectWallet()}
+              >
+                Connect Wallet
+              </Button>
             </div>}
           </Flex>
         </Flex>

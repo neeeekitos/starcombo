@@ -1,5 +1,5 @@
 import type {NextPage} from 'next'
-import {Box, Flex, Text, chakra, ButtonGroup, Button, Heading} from "@chakra-ui/react";
+import {Box, Flex, Text, chakra, ButtonGroup, Button, Heading, Fade, ScaleFade} from "@chakra-ui/react";
 import Link from 'next/link'
 
 const Home: NextPage = () => {
@@ -11,18 +11,20 @@ const Home: NextPage = () => {
         height={"calc(100vh - 72px)"}
         flexDirection={"column"}
       >
-        <Flex>
-          <Heading
-            as={"h1"}
-            bgGradient='linear(to-r, #F0C3EC, #7F6AFF)'
-            bgClip='text'
-            fontSize={['6xl', '7xl', '8xl', '8xl']}
-            fontWeight='extrabold'
-            isTruncated
-          >
-            StarCombo
-          </Heading>
-        </Flex>
+        <ScaleFade initialScale={0.9} in={true}>
+          <Flex>
+            <Heading
+              as={"h1"}
+              bgGradient='linear(to-r, #F0C3EC, #7F6AFF)'
+              bgClip='text'
+              fontSize={['6xl', '7xl', '8xl', '8xl']}
+              fontWeight='extrabold'
+              isTruncated
+            >
+              StarCombo
+            </Heading>
+          </Flex>
+        </ScaleFade>
         <Flex
           justify={"center"}
           align={"center"}
@@ -58,26 +60,10 @@ const Home: NextPage = () => {
           </Text>
         </Flex>
         <Flex
-          justifyContent={"space-between"}
+          justifyContent={"center"}
           width={"50%"}
           marginTop={"50px"}
         >
-          <Link
-            href={"/explore"} passHref
-          >
-            <Button
-              background='transparent'
-              width={"145px"}
-              height='60px'
-              borderRadius='35px'
-              border='1px'
-              borderColor='#FFFF'
-              _hover={{bgGradient: 'linear(to-r, #F0C3EC, #7F6AFF)'}}
-            >
-              Explore protocols
-            </Button>
-          </Link>
-
           <Link href={"/combos"} passHref>
             <Button
               bg='transparent'
@@ -87,6 +73,7 @@ const Home: NextPage = () => {
               border='1px'
               borderColor='#FFFF'
               _hover={{bgGradient: 'linear(to-l, #F0C3EC, #7F6AFF)'}}
+              transition="background-color 0.5s ease"
             >
               Create combos
 
