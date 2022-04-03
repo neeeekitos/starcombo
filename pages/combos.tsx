@@ -10,7 +10,7 @@ import {defaultProvider, ec, hash} from "starknet/src/index";
 import {transformCallsToMulticallArrays} from "starknet/src/utils/transaction";
 import {getStarknet} from "@argent/get-starknet";
 import {StarknetWindowObject} from "@argent/get-starknet/dist/extension.model";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import ActionBlockSwap from "../components/action-block-swap/action-block-swap";
 import {Reorder} from "framer-motion"
 
@@ -53,15 +53,27 @@ const Combos: NextPage = () => {
   const {ref, isComponentVisible, setIsComponentVisible} = useComponentVisible(false);
 
   const [openNewActionModal, setOpenNewActionModal] = useState<boolean>(false);
+  const footerRef = useRef(null);
+
+  const scrollToBottom = () => {
+    footerRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [actions]);
 
   const handleAddAction = (action: Action) => {
     console.log(`Adding action: ${JSON.stringify(action)}`);
     setActions([...actions, action]);
   }
 
-  const handleRemoveAction = (action: Action) => {
-    setActions(actions.filter(a => a.id !== action.id))
+  const handleRemoveAction = (actionId: number) => {
+    console.log(`Removing action: ${JSON.stringify(actionId)}`);
+    setActions(actions.filter(a => a.id !== actionId))
   }
+
+
 
   /**
    * Sends the transactions. Verifies is the user has the initial funds required.
@@ -102,6 +114,7 @@ const Combos: NextPage = () => {
         actionName={ACTIONS[action.actionType].name}
         protocolName={PROTOCOLS[action.protocolName].name}
         action={action}
+        handleRemoveAction={handleRemoveAction}
       />
     )
   }
@@ -130,7 +143,15 @@ const Combos: NextPage = () => {
         <FundsRecap/>
         <div className={styles.container}>
 
-          <Button onClick={() => setIsComponentVisible(true)} hidden={isComponentVisible}>Add action</Button>
+          <Button
+            background="brand.body"
+            _hover={{ bg: "brand.body"}}
+            _active={ { bg: "brand.navbar" } }
+            onClick={() => setIsComponentVisible(true)}
+            hidden={isComponentVisible}
+          >
+            Add action
+          </Button>
           {
             isComponentVisible &&
             <div ref={ref}>
@@ -157,9 +178,16 @@ const Combos: NextPage = () => {
           </Reorder.Group>
 
         </div>
-        <Button onClick={() => send()}>Send</Button>
+        <Button
+          background="brand.body"
+          _hover={{ bg: "brand.body"}}
+          _active={ { bg: "brand.navbar" } }
+          onClick={() => send()}
+        >
+          Send
+        </Button>
 
-      <div />
+      <footer  ref={footerRef}/>
       </div>
 
     )

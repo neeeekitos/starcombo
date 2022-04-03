@@ -24,7 +24,8 @@ import load = Simulate.load;
 interface ActionBlockProps {
   actionName: string,
   protocolName: string,
-  action: any
+  action: any,
+  handleRemoveAction: (actionId: number) => void,
 }
 
 const ActionBlockSwap = (props: ActionBlockProps) => {
@@ -178,14 +179,21 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
 
   return (
     <div className={styles.wrapperComponent}>
-      <div className={styles.actionBlockWrapper} onClick={() => setIsComponentVisible(true)}>
+      <div className={styles.actionBlockWrapper} onClick={() => setIsComponentVisible(true)} hidden={isComponentVisible}>
         <div className={styles.actionBlockHead}>
           <div>
             <h3>{props.actionName} on {props.protocolName}</h3>
             <div className={styles.underlineTitle}/>
           </div>
         </div>
-
+        <div className={styles.removeActionButton} onClick={(e) => {
+          e.stopPropagation();
+          props.handleRemoveAction(props.action.id)
+        }}>
+          <p>
+            X
+          </p>
+        </div>
         <div className={styles.actionBlockBody}>
           <>
           <div className={styles.tokenWrapper}>

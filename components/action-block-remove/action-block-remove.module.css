@@ -1,5 +1,6 @@
 
 .actionBlockWrapper {
+    position: relative;
     background-color: var(--block-color);
     border-radius: var(--border-radius);
     max-width: 350px;
@@ -28,7 +29,7 @@
 }
 
 .actionBlockHead h3, .modalHead h3 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 500;
     background: linear-gradient(180deg, #ffffff, #ff89ab);
     -webkit-background-clip: text;
@@ -249,4 +250,11 @@
 .sliderSelect {
     width: 80%;
     color: darkslateblue;
+}
+
+.removeActionButton {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 1.2rem;
 }
