@@ -9,7 +9,9 @@ export interface DexCombo {
 
   approve(): void
 
-  getPoolDetails(tokenFrom: Token, tokenTo: Token, provider?:Provider)
+  getPoolDetails(tokenFrom: Token, tokenTo: Token, provider?: Provider)
+
+  getLiquidityPosition(starknetConnector: StarknetConnector, token0: Token, token1: Token, poolPair?: Pair)
 
   /**
    * Returns the transaction for a swap operation
@@ -22,6 +24,7 @@ export interface DexCombo {
   revoke(): void
 
   addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Action>;
+
   /**
    * Returns the transaction for an add liquidity opeartion
    * @param starknetConnector
@@ -31,7 +34,7 @@ export interface DexCombo {
    */
   addLiquidity(starknetConnector: StarknetConnector, poolPair: Pair, slippage: Percent, tokenAmountFrom: TokenAmount): Promise<Action>;
 
-  removeLiquidity(starknetConnector:StarknetConnector,poolPosition:PoolPosition,liqToRemove:TokenAmount): Promise<Action>;
+  removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Promise<Action>;
 }
 
 export interface StarknetConnector {

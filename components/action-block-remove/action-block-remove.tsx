@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import styles from "./action-block-remove.module.css";
 import useComponentVisible from "../../hooks/UseComponentVisible";
 import Image from "next/image";
@@ -6,7 +6,7 @@ import BatLogo from "../../public/img/tokens/bat.svg";
 import EtherLogo from "../../public/img/tokens/ether.svg";
 import TokenChooser from "../token-chooser";
 import {Input} from "@chakra-ui/react";
-import {PROTOCOLS} from "../../utils/constants/constants";
+import {ProtocolNames, PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
 import {
   Slider,
   SliderTrack,
@@ -14,6 +14,15 @@ import {
   SliderThumb,
   SliderMark,
 } from '@chakra-ui/react';
+import {createTokenObjects} from "../../utils/helpers";
+import {Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
+import {MySwap} from "../../hooks/mySwap";
+import {useStarknet} from "../../hooks/useStarknet";
+import {DexCombo, StarknetConnector} from "../../utils/constants/interfaces";
+import {useAmounts} from "../../hooks/useAmounts";
+import {useTransactions} from "../../hooks/useTransactions";
+import {PoolPosition} from "../../hooks/jediSwap";
+import {ethers} from "ethers";
 
 interface ActionBlockProps {
   actionName: string,
@@ -23,16 +32,110 @@ interface ActionBlockProps {
 
 const ActionBlockAdd = (props: ActionBlockProps) => {
 
-  const protocolTokens = PROTOCOLS[props.action.protocolName].tokens;
-  const [removeToken1, setRemoveToken1] = useState(protocolTokens[0]);
-  const [amountToken1, setAmountToken1] = useState("0");
-  const [amountToken2, setAmountToken2] = useState("0");
-  const [estimation, setEstimation] = useState("0");
-
-  const [sliderValue, setSliderValue] = useState(0);
-
+  //custom hooks
+  const {account, provider} = useStarknet();
+  const starknetConnector: StarknetConnector = {
+    account: account,
+    provider: provider
+  }
+  const {addItem, addToken} = useAmounts();
+  const {addTransaction} = useTransactions();
+  const {
+    tokens: protocolTokens,
+    instance: protocolInstance
+  }: { tokens: any, instance: DexCombo } = PROTOCOLS[props.action.protocolName];
   const {ref, isComponentVisible, setIsComponentVisible} =
     useComponentVisible(false);
+
+  //states
+  const [pair, setPair] = useState<Pair>();
+  const [poolId, setPoolId] = useState<string>();
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [token0Selector, setToken0Selector] = useState(protocolTokens[0]);
+  const [token1Selector, setToken1Selector] = useState(protocolTokens[1]);
+  const [token0, setToken0] = useState<Token>();
+  const [token1, setToken1] = useState<Token>();
+  const [amountToken0, setAmountToken0] = useState("");
+  const [amountToken1, setAmountToken1] = useState("");
+  const [poolPosition,setPoolPosition] = useState<PoolPosition>();
+
+  const [poolShare, setPoolShare] = useState<number>();
+  const [estimation, setEstimation] = useState("");
+  const [sliderValue, setSliderValue] = useState(0);
+  const [liqToRemove,setLiqToRemove] = useState<any>();
+
+  useEffect(() => {
+
+    const fetchPair = async () => {
+      setLoading(true);
+      const {
+        tokenFrom: token0,
+        tokenTo: token1
+      } = await createTokenObjects(starknetConnector, token0Selector.address, token1Selector.address);
+      setToken0(token0);
+      setToken1(token1)
+
+      let poolPosition:PoolPosition;
+      console.log(props.protocolName,PROTOCOLS[ProtocolNames.JEDISWAP].name)
+      if(props.protocolName===PROTOCOLS[ProtocolNames.JEDISWAP].name){
+        const {poolPair}:{poolPair:Pair} = await protocolInstance.getPoolDetails(token0, token1, provider);
+        console.log(poolPair)
+        poolPosition = await protocolInstance.getLiquidityPosition(starknetConnector, token0, token1,poolPair);
+      }else{
+        poolPosition = await protocolInstance.getLiquidityPosition(starknetConnector, token0, token1);
+      }
+      setPoolPosition(poolPosition)
+      setLoading(false);
+    }
+    fetchPair();
+
+  }, [token0Selector, token1Selector])
+
+  useEffect(()=>{
+    if(!poolPosition) return;
+    const {poolPair}:{poolPair:Pair} = poolPosition;
+    const sliderPercent = new Percent(sliderValue.toString(),"100");
+    const liqToRemove = poolPosition.userLiquidity.multiply(sliderPercent);
+    console.log(poolPosition.userLiquidity.toExact())
+
+    console.log(liqToRemove.toFixed(10))
+    let poolShare = liqToRemove.divide(poolPosition.poolSupply);
+    setLiqToRemove(liqToRemove)
+    const token0isPoolToken0 = token0.address===poolPair.token0.address;
+    console.log(token0.address,poolPair.token0.address,token0isPoolToken0)
+    let token0Amount = token0isPoolToken0? poolPair.reserve0.multiply(poolShare) :  poolPair.reserve1.multiply(poolShare);
+    let token1Amount = token0isPoolToken0? poolPair.reserve1.multiply(poolShare) :  poolPair.reserve0.multiply(poolShare);
+    console.log(token0Amount.toSignificant(6))
+    console.log(token1Amount.toSignificant(6))
+    setAmountToken0(token0Amount.toSignificant(6))
+    setAmountToken1(token1Amount.toSignificant(6))
+  },[sliderValue])
+
+  const submitAction = async () => {
+    //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
+    // So here it only works for swaps now. We need to integrate add and remove liq in the action blocks.
+    addItem({
+      [props.action.id]: {
+        actionType: props.actionName,
+        tokens: {
+          [token0Selector.name]: parseFloat(amountToken0),
+          [token1Selector.name]: parseFloat(amountToken1)
+        }
+      }
+    });
+    addToken(token0Selector.name, token0);
+    addToken(token1Selector.name, token1);
+    const {liquidityToken} = poolPosition.poolPair;
+    const tokenLiqToRemove = new TokenAmount(liquidityToken, ethers.utils.parseUnits(liqToRemove.toSignificant(6),liquidityToken.decimals).toString());
+    const txLiq = await protocolInstance.removeLiquidity(starknetConnector, poolPosition, tokenLiqToRemove)
+
+    addTransaction({
+      [props.action.id]: txLiq.call
+    })
+    setIsComponentVisible(!isComponentVisible)
+  }
+
 
   return (
     <>
@@ -56,7 +159,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
                 </svg>
                 <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
               </div>
-              <p>{estimation}</p>
+              <p>{sliderValue}%</p>
             </div>
             <svg className={styles.addLiquidityArrow} width="61" height="24" viewBox="0 0 61 24" fill="none"
                  xmlns="http://www.w3.org/2000/svg">
@@ -66,12 +169,12 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
             </svg>
             <div className={styles.tokenWrapperAdd}>
               <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
-              <p className={styles.tokenAmount}>{amountToken1 === "" ? 0 : amountToken1}</p>
+              <p className={styles.tokenAmount}>{amountToken0}</p>
             </div>
             <div className={styles.space}/>
             <div className={styles.tokenWrapperAdd}>
               <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
-              <p className={styles.tokenAmount}>{amountToken2 === "" ? 0 : amountToken2}</p>
+              <p className={styles.tokenAmount}>{amountToken1}</p>
             </div>
 
           </div>
@@ -90,21 +193,16 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
           <div className={styles.modalBodyLiquidity}>
             <div className={styles.inputToken}>
               <TokenChooser
-                selectedToken={removeToken1}
-                setSelectedToken={setRemoveToken1}
-                selectableTokens={protocolTokens.filter((token) => token !== removeToken1)}
+                selectedToken={token0Selector}
+                setSelectedToken={setToken0Selector}
+                selectableTokens={protocolTokens.filter((token) => token !== token1Selector)}
               />
-              <Input
-                placeholder="Input amount"
-                color="gray.300"
-                height={"3rem"}
-                borderColor="gray.300"
-                _hover={{borderColor: "gray.500"}}
-                _focus={{borderColor: "gray.500"}}
-                value={amountToken1}
-                onChange={(e) => setAmountToken1(e.target.value)}
-                variant='flushed'
+              <TokenChooser
+                selectedToken={token1Selector}
+                setSelectedToken={setToken1Selector}
+                selectableTokens={protocolTokens.filter((token) => token !== token0Selector)}
               />
+
             </div>
 
             <div className={styles.sliderSelect}>
@@ -148,7 +246,9 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
             <div className={styles.totalLiquidityWrapper}>
               <p>Estimation: <span>{estimation}</span></p>
             </div>
-            <button className={styles.sumbitButton} onClick={() => setIsComponentVisible(false)}>Submit</button>
+            {loading ? <button className={styles.sumbitButton} disabled>Fetching route</button>
+              : <button className={styles.sumbitButton} onClick={() => submitAction()}>Submit</button>
+            }
           </div>
         </div>
       }
