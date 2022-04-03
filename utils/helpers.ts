@@ -18,7 +18,6 @@ export async function createTokenObjects(starknetConnector: StarknetConnector, t
     getErc20Decimals(starknetConnector.provider, tokenAddressA),
     getErc20Decimals(starknetConnector.provider, tokenAddressB)
   ]);
-  console.log(tokenFromDecimals, tokenToDecimals)
   const tokenFrom = new Token(
     ChainId.GÖRLI,
     tokenAddressA,
@@ -40,7 +39,6 @@ export const getBalanceOfErc20 = async (starknetConnector:StarknetConnector, tok
       number.toBN(starknetConnector.account.address).toString()
     ]
   }).then((res) => {
-    console.log(res.result[0])
    return ethers.utils.formatUnits(res.result[0],token.decimals);
   })
 

@@ -126,19 +126,6 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
     }
   }
 
-  //TODO fill these functions once we have the required elements
-  const addSwapAction = () => {
-
-  }
-
-  const addAddLiquidityAction = () => {
-
-  }
-
-  const addRemoveLiquidityAction = () => {
-
-  }
-
   const switchTokens = () => {
     const tempFrom = tokenFromSelector;
     const tempAmtFrom = amountFrom;
@@ -169,7 +156,6 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
       amountOut: "0", //TODO support for this
       poolPair: pair,
     }
-    console.log(poolId)
     const call = poolId ? (await protocolInstance.swap(starknetConnector, swapParameters, poolId)).call : (await protocolInstance.swap(starknetConnector, swapParameters)).call
     addTransaction({
       [props.action.id]: call

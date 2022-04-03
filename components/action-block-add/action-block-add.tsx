@@ -127,7 +127,6 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
       // poolShare = new Fraction(parsedValue.toString()).divide(reserveFrom).toFixed(0);
     }
     //TODO if time
-    console.log(poolShare)
     setPoolShare(poolShare)
 
   }
@@ -278,7 +277,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
           <div className={styles.totalLiquidityWrapper}>
             {poolShare && <p>Your pool share: <span>{poolShare.toString()}</span></p>}
           </div>
-          {!loading ? <button className={styles.sumbitButton} disabled>Fetching route</button>
+          {loading ? <button className={styles.sumbitButton} disabled>Fetching route</button>
             : <button className={styles.sumbitButton} onClick={() => submitAction()}>Submit</button>
           }
         </div>

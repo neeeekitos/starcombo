@@ -1,7 +1,7 @@
 import {DexCombo, StarknetConnector, SwapParameters} from "../utils/constants/interfaces";
 import {Call, number, Provider} from "starknet";
 import {ethers} from "ethers";
-import {BigintIsh, Pair, Percent, Price, TokenAmount, Trade} from "@jediswap/sdk";
+import {BigintIsh, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {
   Action,
   ActionTypes,
@@ -130,6 +130,10 @@ export class ArfSwap implements DexCombo {
   }
 
   revoke(): void {
+  }
+
+  async getLiquidityPosition(starknetConnector: StarknetConnector, token0: Token, token1: Token, poolPair: Pair) : Promise<PoolPosition> {
+    return undefined;
   }
 
   /**

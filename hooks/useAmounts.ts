@@ -94,7 +94,6 @@ const handleRemoveLiquidity = (initialFunds, receivedFunds, tokens) => {
   // [initialFunds, receivedFunds] = balanceChangesTokenFrom(initialFunds, receivedFunds, token0, amount0);
   receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived0, amountReceived0);
   receivedFunds = balanceChangeTokenTo(receivedFunds, tokenReceived1, amountReceived1);
-  console.log(receivedFunds)
   return [initialFunds, receivedFunds];
 }
 
@@ -112,7 +111,6 @@ const calculateFunds = (appItems) => {
     }
     handleAction[action.actionType](initialFunds, receivedFunds, action.tokens);
   }
-  console.log(receivedFunds)
   return [initialFunds, receivedFunds]
 }
 

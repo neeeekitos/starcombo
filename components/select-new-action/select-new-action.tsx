@@ -17,7 +17,6 @@ const SelectNewAction = (props: any) => {
                   <div className={styles.listAction}>
                     {
                       PROTOCOLS[protocolKey].availableAction.map((actionKey: string) => {
-                        console.log(actionKey + " " + ACTIONS[actionKey])
                         return (
                           <>
                             <div className={PROTOCOLS[protocolKey].stylesCard}
