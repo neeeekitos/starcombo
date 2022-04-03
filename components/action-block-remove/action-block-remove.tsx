@@ -5,7 +5,7 @@ import Image from "next/image";
 import BatLogo from "../../public/img/tokens/bat.svg";
 import EtherLogo from "../../public/img/tokens/ether.svg";
 import TokenChooser from "../token-chooser";
-import {Input} from "@chakra-ui/react";
+import {Flex, Input, Spinner} from "@chakra-ui/react";
 import {ProtocolNames, PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
 import {
   Slider,
@@ -15,7 +15,7 @@ import {
   SliderMark,
 } from '@chakra-ui/react';
 import {createTokenObjects} from "../../utils/helpers";
-import {Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
+import {Fraction, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
 import {MySwap} from "../../hooks/mySwap";
 import {useStarknet} from "../../hooks/useStarknet";
 import {DexCombo, StarknetConnector} from "../../utils/constants/interfaces";
@@ -64,7 +64,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [poolShare, setPoolShare] = useState<number>();
   const [estimation, setEstimation] = useState("");
   const [sliderValue, setSliderValue] = useState(0);
-  const [liqToRemove,setLiqToRemove] = useState<any>();
+  const [liqToRemove,setLiqToRemove] = useState<Fraction>();
 
   useEffect(() => {
 
@@ -92,11 +92,13 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   }, [token0Selector, token1Selector])
 
   useEffect(()=>{
+    console.log(sliderValue);
     if(!poolPosition) return;
     const {poolPair}:{poolPair:Pair} = poolPosition;
     const sliderPercent = new Percent(sliderValue.toString(),"100");
     const liqToRemove = poolPosition.userLiquidity.multiply(sliderPercent);
     let poolShare = liqToRemove.divide(poolPosition.poolSupply);
+    console.log(liqToRemove.toSignificant(6))
     setLiqToRemove(liqToRemove)
     const token0isPoolToken0 = token0.address===poolPair.token0.address;
     let token0Amount = token0isPoolToken0? poolPair.reserve0.multiply(poolShare) :  poolPair.reserve1.multiply(poolShare);
@@ -105,7 +107,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     setAmountToken1(token1Amount.toSignificant(6))
   },[sliderValue])
 
-  const submitAction = async () => {
+  const setAction = async () => {
     //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
     // So here it only works for swaps now. We need to integrate add and remove liq in the action blocks.
     addItem({
@@ -120,7 +122,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     addToken(token0Selector.name, token0);
     addToken(token1Selector.name, token1);
     const {liquidityToken} = poolPosition.poolPair;
-    const tokenLiqToRemove = new TokenAmount(liquidityToken, ethers.utils.parseUnits(liqToRemove.toSignificant(6),liquidityToken.decimals).toString());
+    const tokenLiqToRemove = new TokenAmount(liquidityToken, ethers.utils.parseUnits(liqToRemove.toFixed(liquidityToken.decimals),liquidityToken.decimals).toString());
+    console.log(tokenLiqToRemove.raw.toString())
     const txLiq = await protocolInstance.removeLiquidity(starknetConnector, poolPosition, tokenLiqToRemove)
 
     addTransaction({
@@ -180,6 +183,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
           </div>
         </div>
+        {loading ? <Spinner/> : null }
       </div>
 
       {isComponentVisible &&
@@ -207,7 +211,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
             </div>
 
             <div className={styles.sliderSelect}>
-              <Slider aria-label='slider-ex-6' onChange={(val) => setSliderValue(val)} colorScheme='purple'>
+              <Slider value={sliderValue} aria-label='slider-ex-6' onChange={(val) => setSliderValue(val)} colorScheme='purple'>
                 <SliderMark value={0} mt='1' ml='-2.5' fontSize='sm' color='white'>
                   0%
                 </SliderMark>
@@ -247,8 +251,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
             <div className={styles.totalLiquidityWrapper}>
               <p>Estimation: <span>{estimation}</span></p>
             </div>
-            {loading ? <button className={styles.sumbitButton} disabled>Fetching route</button>
-              : <button className={styles.sumbitButton} onClick={() => submitAction()}>Submit</button>
+            {loading ? <Flex alignItems={"center"} className={styles.sumbitButton}>Fetching route &nbsp; <Spinner/></Flex>
+              : <button className={styles.sumbitButton} onClick={() => setAction()}>Set</button>
             }
           </div>
         </div>

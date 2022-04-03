@@ -5,7 +5,7 @@ import Image from "next/image";
 import BatLogo from "../../public/img/tokens/bat.svg";
 import EtherLogo from "../../public/img/tokens/ether.svg";
 import TokenChooser from "../token-chooser";
-import {Input} from "@chakra-ui/react";
+import {Flex, Input, Spinner} from "@chakra-ui/react";
 import {PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
 import {useStarknet} from "../../hooks/useStarknet";
 import {DexCombo, StarknetConnector, SwapParameters} from "../../utils/constants/interfaces";
@@ -46,6 +46,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [token0, setToken0] = useState<Token>();
   const [token1, setToken1] = useState<Token>();
   const [loading, setLoading] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(false);
 
   const [token0Selector, setToken0Selector] = useState(protocolTokens[0]);
   const [token1Selector, setToken1Selector] = useState(protocolTokens[1]);
@@ -139,7 +140,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     setAmountToken1(amount1Temp);
   }
 
-  const submitAction = async () => {
+  const setAction = async () => {
     //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
     // So here it only works for swaps now. We need to integrate add and remove liq in the action blocks.
     addItem({
@@ -153,13 +154,14 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     });
     addToken(token0Selector.name, token0);
     addToken(token1Selector.name, token1);
-    const tokenAmountFrom = new TokenAmount(token0, ethers.utils.parseUnits(amountToken0,token0.decimals).toString());
+    const tokenAmountFrom = new TokenAmount(token0, ethers.utils.parseUnits(amountToken0, token0.decimals).toString());
     const txLiq = await protocolInstance.addLiquidity(starknetConnector, pair, SLIPPAGE, tokenAmountFrom)
 
     addTransaction({
       [props.action.id]: txLiq.call
     })
     setIsComponentVisible(!isComponentVisible)
+    setSubmitted(true);
   }
 
   return (
@@ -208,8 +210,11 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
               </div>
               <p>{estimation}</p>
             </div>
+
           </div>
         </div>
+        {loading ? <Spinner/> : null }
+
       </div>
 
       {isComponentVisible &&
@@ -236,7 +241,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
               _focus={{borderColor: "gray.500"}}
               value={amountToken0}
               onKeyPress={(event) => {
-                if (!/[0-9]/.test(event.key)) {
+                if (!/^[0-9]+.?[0-9]*$/.test(amountToken0 + event.key)) {
                   event.preventDefault();
                 }
               }}
@@ -264,7 +269,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
               _focus={{borderColor: "gray.500"}}
               value={amountToken1}
               onKeyPress={(event) => {
-                if (!/[0-9]/.test(event.key)) {
+                if (!/^[0-9]+.?[0-9]*$/.test(amountToken1 + event.key)) {
                   event.preventDefault();
                 }
               }}
@@ -276,8 +281,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
           <div className={styles.totalLiquidityWrapper}>
             {poolShare && <p>Your pool share: <span>{poolShare.toString()}</span></p>}
           </div>
-          {loading ? <button className={styles.sumbitButton} disabled>Fetching route</button>
-            : <button className={styles.sumbitButton} onClick={() => submitAction()}>Submit</button>
+          {loading ? <Flex alignItems={"center"} className={styles.sumbitButton}>Fetching route &nbsp; <Spinner/></Flex>
+            : <button className={styles.sumbitButton} onClick={() => setAction()}>Set</button>
           }
         </div>
       </div>

@@ -43,9 +43,9 @@ const Combos: NextPage = () => {
     account: account,
     provider: provider
   }
-  const {transactionItems, transactionHistory, addTransactionHistory} = useTransactions();
+  const {transactionItems, transactionHistory, addTransactionHistory, removeTransaction} = useTransactions();
   const [error, setError] = useState(false);
-  const {initialFunds, receivedFunds, tokenInfos} = useAmounts()
+  const {initialFunds, receivedFunds, tokenInfos, removeItem} = useAmounts();
   const [actions, setActions] = useState<Action[]>([]);
 
   const [hash, setHash] = useState<string>();
@@ -57,7 +57,7 @@ const Combos: NextPage = () => {
   const footerRef = useRef(null);
 
   const scrollToBottom = () => {
-    footerRef.current?.scrollIntoView({ behavior: "smooth" })
+    footerRef.current?.scrollIntoView({behavior: "smooth"})
   }
 
   useEffect(() => {
@@ -70,8 +70,9 @@ const Combos: NextPage = () => {
 
   const handleRemoveAction = (actionId: number) => {
     setActions(actions.filter(a => a.id !== actionId))
+    removeItem(actionId);
+    removeTransaction(actionId)
   }
-
 
 
   /**
@@ -96,7 +97,7 @@ const Combos: NextPage = () => {
         NotificationManager.success("Transaction Sent!", 'Transaction sent', 5000, () => window.open(`https://goerli.voyager.online/tx/${tx_data.transaction_hash}`));
         addTransactionHistory(tx_data.transaction_hash);
       }
-    }catch(err){
+    } catch (err) {
       NotificationManager.error("There was an error when sending the transaction", 'Error')
     }
   }
@@ -128,8 +129,8 @@ const Combos: NextPage = () => {
         >
           <Button
             background="transparent"
-            _hover={{ bg: "brand.body"}}
-            _active={ { bg: "brand.navbar" } }
+            _hover={{bg: "brand.body"}}
+            _active={{bg: "brand.navbar"}}
             onClick={() => connectWallet()}>Connect Wallet to start</Button>
         </Flex>
       </div>
@@ -144,8 +145,8 @@ const Combos: NextPage = () => {
 
           <Button
             background="brand.body"
-            _hover={{ bg: "brand.body"}}
-            _active={ { bg: "brand.navbar" } }
+            _hover={{bg: "brand.body"}}
+            _active={{bg: "brand.navbar"}}
             onClick={() => setIsComponentVisible(true)}
             hidden={isComponentVisible}
           >
@@ -154,7 +155,8 @@ const Combos: NextPage = () => {
           {
             isComponentVisible &&
             <div ref={ref}>
-              <SelectNewAction setIsComponentVisible={setIsComponentVisible}  newId={actions.length} onAddAction={handleAddAction}/>
+              <SelectNewAction setIsComponentVisible={setIsComponentVisible} newId={actions.length}
+                               onAddAction={handleAddAction}/>
             </div>
           }
 
@@ -165,7 +167,7 @@ const Combos: NextPage = () => {
             values={actions}
             onReorder={setActions}
             layoutScroll
-            style={{overflowY: "scroll"}}
+            style={{overflowY: "hidden"}}
           >
             {actions.map((action) => (
               <Reorder.Item key={action.id} value={action}>
@@ -179,15 +181,15 @@ const Combos: NextPage = () => {
         </div>
         <Button
           background="brand.body"
-          _hover={{ bg: "brand.body"}}
-          _active={ { bg: "brand.navbar" } }
+          _hover={{bg: "brand.body"}}
+          _active={{bg: "brand.navbar"}}
           onClick={() => send()}
-          hidden={actions.length === 0}
+          hidden={Object.keys(transactionItems).length === 0}
         >
           Send
         </Button>
 
-      <footer  ref={footerRef}/>
+        <footer ref={footerRef}/>
       </div>
 
     )

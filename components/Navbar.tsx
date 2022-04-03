@@ -13,7 +13,7 @@ import {
   MenuDivider,
   useDisclosure,
   useColorModeValue,
-  Stack, Heading, Tooltip,
+  Stack, Heading, Tooltip
 } from '@chakra-ui/react';
 import {HamburgerIcon, CloseIcon} from '@chakra-ui/icons';
 import Link from "next/link"
@@ -21,12 +21,13 @@ import {useStarknet} from "../hooks/useStarknet";
 import argentLogo from "../utils/assets/logo/argent.png"
 import {useTransactions} from "../hooks/useTransactions";
 import theme from "../styles/Theme";
-
+import starcomboLogo from "../utils/assets/logo/starcombo.png"
+import Image from "next/image";
 const Links = [
-  {
-    name: 'Home',
-    target: '/'
-  },
+  // {
+  //   name: 'Home',
+  //   target: '/'
+  // },
   {
     name: 'Combos',
     target: '/combos'
@@ -38,7 +39,7 @@ const NavLink = ({target, name}: { target: string, name: string }) => (
   <Link
     href={target}
     passHref>
-      {name}
+    {name}
   </Link>
 );
 
@@ -51,12 +52,12 @@ const Navbar = () => {
 
   //Update transaction status
   useEffect(() => {
-    if(!provider) return
+    if (!provider) return
     timer.current = setInterval(() => {
       updateTransactionStatus(provider)
     }, 30 * 1000);
     return () => {
-      if(timer.current !== null) clearInterval(timer.current);
+      if (timer.current !== null) clearInterval(timer.current);
     };
   }, []);
 
@@ -72,16 +73,23 @@ const Navbar = () => {
             onClick={isOpen ? onClose : onOpen}
           />
           <HStack spacing={8} alignItems={'center'}>
-            <Heading
-              as={"h1"}
-              bgGradient='linear(to-r, #F0C3EC, #7F6AFF)'
-              bgClip='text'
-              fontSize={['6l', '7l', '8l', '8l']}
-              fontWeight='extrabold'
-              isTruncated
-            >
-              StarCombo
-            </Heading>
+            <Link href={"/"}>
+              <Flex flexDir={"row"} alignItems={"center"} gap={"10px"} cursor={"pointer"}>
+                <Image width={"40px"} height={"40px"} src={starcomboLogo}/>
+                <Heading
+                  as={"h1"}
+                  bgGradient='linear(to-r, #F0C3EC, #7F6AFF)'
+                  bgClip='text'
+                  fontSize={['6l', '7l', '8l', '8l']}
+                  fontWeight='extrabold'
+                  isTruncated
+                >
+                  StarCombo
+                </Heading>
+
+              </Flex>
+            </Link>
+
             <HStack
               as={'nav'}
               spacing={4}
@@ -94,7 +102,7 @@ const Navbar = () => {
           <Flex alignItems={'center'}>
             {account &&
             <Menu>
-                <MenuButton
+              <MenuButton
                 as={Button}
                 rounded={'full'}
                 variant={'link'}
@@ -110,34 +118,34 @@ const Navbar = () => {
                 padding={0}
               >
                 <MenuItem
-                  _active={ { bg: "brand.navbar" } }
-                  _focus={ { bg: "brand.body" } }
+                  _active={{bg: "brand.navbar"}}
+                  _focus={{bg: "brand.body"}}
                   onClick={() => window.open(`https://goerli.voyager.online/contract/${account?.address}`, "_blank")}>
                   {account?.address}
                 </MenuItem>
                 <MenuDivider margin={0}/>
                 <MenuItem
-                  _active={ { bg: "brand.navbar" } }
-                  _focus={ { bg: "brand.body" } }>
+                  _active={{bg: "brand.navbar"}}
+                  _focus={{bg: "brand.body"}}>
                   <Flex flexDir={"column"}>
                     <h2>Your Transactions</h2>
 
-                  {transactionHistory.length > 0 && transactionHistory.map((transaction) => {
-                    return (
-                      <div onClick={() => window.open(`https://goerli.voyager.online/tx/${transaction.tx_hash}`)}
-                           key={transaction.tx_hash}>
-                        {transaction.tx_hash} - {transaction.status}
-                      </div>
-                    )
-                  })
-                  }
-                  {transactionHistory.length === 0 && <div> No pending transactions</div>}
+                    {transactionHistory.length > 0 && transactionHistory.map((transaction) => {
+                      return (
+                        <div onClick={() => window.open(`https://goerli.voyager.online/tx/${transaction.tx_hash}`)}
+                             key={transaction.tx_hash}>
+                          {transaction.tx_hash} - {transaction.status}
+                        </div>
+                      )
+                    })
+                    }
+                    {transactionHistory.length === 0 && <div> No pending transactions</div>}
                   </Flex>
                 </MenuItem>
                 <MenuDivider margin={0}/>
                 <MenuItem
-                  _focus={ { bg: "brand.body" } }
-                  _active={ { bg: "brand.navbar" } }
+                  _focus={{bg: "brand.body"}}
+                  _active={{bg: "brand.navbar"}}
                   onClick={() => disconnect()}
                 >
                   Disconnect Wallet
@@ -148,8 +156,8 @@ const Navbar = () => {
             <div>
               <Button
                 background="transparent"
-                _hover={{ bg: "brand.body"}}
-                _active={ { bg: "brand.navbar" } }
+                _hover={{bg: "brand.body"}}
+                _active={{bg: "brand.navbar"}}
                 onClick={() => connectWallet()}
               >
                 Connect Wallet

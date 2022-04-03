@@ -17,6 +17,8 @@ interface TransactionState {
   addTransaction: (transaction: TransactionItem) => void,
   addTransactionHistory: (hash: string) => void,
   updateTransactionStatus: (provider: Provider) => void,
+  removeTransaction:(itemNumber:number)=>void,
+
 }
 
 export const useTransactions = create<TransactionState>((set, get) => ({
@@ -41,8 +43,13 @@ export const useTransactions = create<TransactionState>((set, get) => ({
         transaction.status = (await provider.getTransactionStatus(transaction.tx_hash)).tx_status
       }));
       set((state) => ({...state, transactionHistory: transactionHistory }));
-
+    },
+    removeTransaction:(itemNumber)=>{
+      let appTransaction = get().transactionItems;
+      delete appTransaction[itemNumber];
+      set((state) => ({...state, appItems: appTransaction}));
     }
+
 
   }
 ));

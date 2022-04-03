@@ -6,7 +6,7 @@ import BatLogo from "../../public/img/tokens/bat.svg";
 
 import {ACTIONS, PROTOCOLS, SELECTABLE_TOKENS, SLIPPAGE} from "../../utils/constants/constants";
 
-import {Input} from "@chakra-ui/react";
+import {Flex, Input, Spinner} from "@chakra-ui/react";
 import TokenChooser from "../token-chooser";
 import useComponentVisible from "../../hooks/UseComponentVisible";
 import {useAmounts} from "../../hooks/useAmounts";
@@ -135,7 +135,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
     setAmountTo(tempAmtFrom);
   }
 
-  const submitAction = async () => {
+  const setAction = async () => {
     //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
     // So here it only works for swaps now. We need to integrate add and remove liq in the action blocks.
     addItem({
@@ -202,6 +202,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
           </div>
           </>
         </div>
+        {loading ? <Spinner/> : null }
       </div>
 
       {
@@ -231,7 +232,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
                   _focus={{borderColor: "gray.500"}}
                   value={amountFrom}
                   onKeyPress={(event) => {
-                    if (!/[0-9]/.test(event.key)) {
+                    if (!/^[0-9]+.?[0-9]*$/.test(amountFrom+event.key)) {
                       event.preventDefault();
                     }
                   }}
@@ -267,7 +268,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
                   _focus={{borderColor: "gray.500"}}
                   value={amountTo}
                   onKeyPress={(event) => {
-                    if (!/[0-9]/.test(event.key)) {
+                    if (!/^[0-9]+.?[0-9]*$/.test(amountTo+event.key)) {
                       event.preventDefault();
                     }
                   }}
@@ -276,8 +277,8 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
                 />
               </div>
               <div className={styles.modalFooter}>
-                {loading ? <button className={styles.sumbitButton} disabled>Fetching route</button>
-                  : <button className={styles.sumbitButton} onClick={() => submitAction()}>Submit</button>
+                {loading ? <Flex alignItems={"center"} className={styles.sumbitButton}>Fetching route &nbsp; <Spinner/></Flex>
+                  : <button className={styles.sumbitButton} onClick={() => setAction()}>Set</button>
                 }
               </div>
 

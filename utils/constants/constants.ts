@@ -134,8 +134,8 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
     stylesCard: styles.cardAlpha,
     availableAction: [
       // ActionTypes.SWAP,
-      ActionTypes.ADD_LIQUIDITY,
-      ActionTypes.REMOVE_LIQUIDITY
+      // ActionTypes.ADD_LIQUIDITY,
+      // ActionTypes.REMOVE_LIQUIDITY
     ],
   },
 }
@@ -166,7 +166,7 @@ export const ACTIONS: { [key in keyof typeof ActionTypes]?: any } = {
     availableProtocols: [
       ProtocolNames.MY_SWAP,
       ProtocolNames.JEDISWAP,
-      ProtocolNames.ARF, //Not yet ?
+      // ProtocolNames.ARF, //Not yet ?
     ],
   },
   // [ActionTypes.SWAP]: {

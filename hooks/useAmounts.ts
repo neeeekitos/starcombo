@@ -27,7 +27,8 @@ interface AmountsState {
     [key: string]: Token
   },
   addItem: (item: ItemProps) => void,
-  addToken:(address:string, token:Token)=>void,
+  addToken: (address: string, token: Token) => void,
+  removeItem: (itemId: number) => void,
 }
 
 interface ActionOptions {
@@ -137,11 +138,19 @@ export const useAmounts = create<AmountsState>((set, get) => ({
       set((state) => ({...state, initialFunds: initialFunds}));
       set((state) => ({...state, receivedFunds: receivedFunds}));
     },
-  addToken:(address,token) =>{
-    let tokenInfos = get().tokenInfos;
-    tokenInfos[address] = token
-    set((state) => ({...state, tokenInfos: tokenInfos}));
-  }
+    addToken: (address, token) => {
+      let tokenInfos = get().tokenInfos;
+      tokenInfos[address] = token
+      set((state) => ({...state, tokenInfos: tokenInfos}));
+    },
+    removeItem: (itemNumber) => {
+      let appItems = get().appItems;
+      delete appItems[itemNumber];
+      const [initialFunds, receivedFunds] = calculateFunds(appItems)
+      set((state) => ({...state, initialFunds: initialFunds}));
+      set((state) => ({...state, receivedFunds: receivedFunds}));
+      set((state) => ({...state, appItems: appItems}));
+    }
 
   }))
 ;
