@@ -59,7 +59,7 @@ const Navbar = () => {
     return () => {
       if (timer.current !== null) clearInterval(timer.current);
     };
-  }, []);
+  }, [provider]);
 
   return (
     <>

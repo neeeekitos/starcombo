@@ -40,7 +40,9 @@ export const useTransactions = create<TransactionState>((set, get) => ({
     updateTransactionStatus: async (provider) => {
       let transactionHistory = get().transactionHistory;
       await Promise.all(transactionHistory.map(async (transaction) => {
-        transaction.status = (await provider.getTransactionStatus(transaction.tx_hash)).tx_status
+        const updatedStatus = (await provider.getTransactionStatus(transaction.tx_hash)).tx_status
+        transaction.status = updatedStatus
+        console.log(updatedStatus,transaction.status)
       }));
       set((state) => ({...state, transactionHistory: transactionHistory }));
     },

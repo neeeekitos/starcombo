@@ -176,7 +176,7 @@ export class JediSwap implements DexCombo {
   removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Promise<Action> {
 
     const poolPair: Pair = poolPosition.poolPair;
-    let poolShare = poolPosition.userLiquidity.divide(poolPosition.poolSupply); // represents the %of the pool the user owns.
+    let poolShare = liqToRemove.divide(poolPosition.poolSupply); // represents the %of the pool the user owns.
     //token0Amount is reserve0*poolShare
     let token0Amount = poolPair.reserve0.multiply(poolShare);
     let token1Amount = poolPair.reserve1.multiply(poolShare)
