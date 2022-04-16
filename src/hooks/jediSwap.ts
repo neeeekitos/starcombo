@@ -237,6 +237,7 @@ export class JediSwap implements DexCombo {
     amountOut = ethers.utils.parseUnits(amountOut, tokenTo.decimals).toString();
 
     const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountIn, amountOut, SLIPPAGE)
+    console.log(trade)
     if (!trade) return undefined;
 
     //flatten the array because trade.pathAddresses is a subarray
@@ -325,11 +326,9 @@ export class JediSwap implements DexCombo {
     let trade: Trade;
     if (amountTo === "0") {
       trade = Trade.bestTradeExactIn([pairFromTo], new TokenAmount(from, amountFrom), to)[0];
-
     } else {
       trade = Trade.bestTradeExactOut([pairFromTo], from, new TokenAmount(from, amountFrom))[0];
     }
-
     console.log("execution price: $" + trade.executionPrice.toSignificant(6));
     console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
 

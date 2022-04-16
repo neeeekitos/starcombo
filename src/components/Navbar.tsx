@@ -54,12 +54,12 @@ const Navbar = () => {
   useEffect(() => {
     if (!provider) return
     timer.current = setInterval(() => {
-      updateTransactionStatus(provider)
+      updateTransactionStatus(provider);
     }, 30 * 1000);
     return () => {
       if (timer.current !== null) clearInterval(timer.current);
     };
-  }, [provider]);
+  }, [provider  ]);
 
   return (
     <>

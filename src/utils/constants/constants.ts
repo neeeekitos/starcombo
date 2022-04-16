@@ -4,6 +4,9 @@ import {JediSwap} from "../../hooks/jediSwap";
 import {MySwap} from "../../hooks/mySwap";
 import styles from "../../components/select-new-action/select-new-action.module.css";
 
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000000000000000000000000000'
+
+
 export enum ActionTypes {
   ADD_LIQUIDITY,
   REMOVE_LIQUIDITY,

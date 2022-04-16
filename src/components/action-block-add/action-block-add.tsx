@@ -1,9 +1,9 @@
-import React, {ChangeEvent, useEffect, useState} from "react";
+import React, {ChangeEvent, useEffect, useRef, useState} from "react";
 import styles from "./action-block-add.module.css";
 import useComponentVisible from "../../hooks/UseComponentVisible";
 import Image from "next/image";
-import BatLogo from "../../public/img/tokens/bat.svg";
-import EtherLogo from "../../public/img/tokens/ether.svg";
+import BatLogo from "../../../public/img/tokens/bat.svg";
+import EtherLogo from "../../../public/img/tokens/ether.svg";
 import TokenChooser from "../token-chooser";
 import {Flex, Input, Spinner} from "@chakra-ui/react";
 import {PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
@@ -31,8 +31,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     account: account,
     provider: provider
   }
-  const {addItem, addToken} = useAmounts();
-  const {addTransaction} = useTransactions();
+  const {addItem, addToken, removeItem} = useAmounts();
+  const {addTransaction, removeTransaction} = useTransactions();
   const {
     tokens: protocolTokens,
     instance: protocolInstance
@@ -46,7 +46,6 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [token0, setToken0] = useState<Token>();
   const [token1, setToken1] = useState<Token>();
   const [loading, setLoading] = useState<boolean>(false);
-  const [submitted, setSubmitted] = useState<boolean>(false);
 
   const [token0Selector, setToken0Selector] = useState(protocolTokens[0]);
   const [token1Selector, setToken1Selector] = useState(protocolTokens[1]);
@@ -55,10 +54,18 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [poolShare, setPoolShare] = useState<number>();
   const [estimation, setEstimation] = useState("");
 
+  //If the component has been set by the user
+  const [set, setSet] = useState<boolean>(false)
+
+  //REFS//
+  const outsideSetButton = useRef(null);
+
 
   //effects
   useEffect(() => {
-
+    setAmountToken0('0')
+    setAmountToken1('0')
+    unsetItem();
     const fetchPair = async () => {
       setLoading(true);
       const {
@@ -78,10 +85,11 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   }, [token0Selector, token1Selector])
 
   useEffect(() => {
+    unsetItem();
     if (pair === undefined) return;
     let value = amountToken0;
     let direction = "to"
-    if (isNaN(parseFloat(value))) {
+    if (isNaN(value as any)) {
       value = amountToken1;
       direction = "from";
     }
@@ -90,21 +98,25 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
 
   const handleAmountToken0 = (e: ChangeEvent<HTMLInputElement>) => {
+    unsetItem();
     const value = e.target.value;
+    if (isNaN(value as any)) return;
     setAmountToken0(value);
     if (!pair) return;
     setQuoteTokenAmount(value, "to")
   }
 
   const handleAmountToken1 = (e: ChangeEvent<HTMLInputElement>) => {
+    unsetItem();
     const value = e.target.value;
+    if (isNaN(value as any)) return;
     setAmountToken1(value);
     if (!pair) return;
     setQuoteTokenAmount(value, "from")
   }
 
   const setQuoteTokenAmount = (value, priceWanted) => {
-    if (isNaN(parseFloat(value))) return;
+    if (isNaN(value as any)) return;
     let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price,
       reserveFrom: TokenAmount;
     token0Selector.address === pair.token0.address ?
@@ -132,6 +144,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   }
 
   const switchTokens = () => {
+    unsetItem();
     const token1Temp = token0Selector;
     const amount1Temp = amountToken0;
     setToken0Selector(token1Selector);
@@ -160,13 +173,27 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     addTransaction({
       [props.action.id]: txLiq.call
     })
-    setIsComponentVisible(!isComponentVisible)
-    setSubmitted(true);
+    setIsComponentVisible(false);
+    setSet(true);
   }
+
+  //Removes item from set.
+  const unsetItem = () => {
+    if (set) {
+      setSet(false);
+      removeItem(props.action.id);
+      removeTransaction(props.action.id)
+    }
+  }
+
 
   return (
     <>
-      <div className={styles.actionBlockWrapper} onClick={() => setIsComponentVisible(true)}
+      <div className={styles.actionBlockWrapper} onClick={(e) => {
+        console.log(outsideSetButton.current,e.target)
+        if (outsideSetButton.current === e.target) return;
+        setIsComponentVisible(true)
+      }}
            hidden={isComponentVisible}>
         <div className={styles.actionBlockHead}>
           <div>
@@ -213,8 +240,18 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
           </div>
         </div>
-        {loading ? <Spinner/> : null }
-
+        {loading ? <Spinner/> : null}
+        {!set && !loading &&
+        <Flex justifyContent={'center'}>
+          <button ref={outsideSetButton} className={styles.submitButtonExternal} onClick={(e) => {
+            console.log('click')
+            console.log(e.currentTarget)
+            setAction();
+          }}>
+            Set
+          </button>
+        </Flex>
+        }
       </div>
 
       {isComponentVisible &&
@@ -281,8 +318,14 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
           <div className={styles.totalLiquidityWrapper}>
             {poolShare && <p>Your pool share: <span>{poolShare.toString()}</span></p>}
           </div>
-          {loading ? <Flex alignItems={"center"} className={styles.sumbitButton}>Fetching route &nbsp; <Spinner/></Flex>
-            : <button className={styles.sumbitButton} onClick={() => setAction()}>Set</button>
+          {loading &&
+          <Flex alignItems={"center"} className={styles.submitButton}>Fetching route &nbsp; <Spinner/></Flex>
+          }
+          {!set && !loading &&
+          <button className={styles.submitButton} onClick={() => setAction()}>Set</button>
+          }
+          {set &&
+          <button className={styles.submitButton} onClick={() => unsetItem()}>Edit</button>
           }
         </div>
       </div>

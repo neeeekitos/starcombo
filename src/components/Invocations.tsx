@@ -49,18 +49,23 @@ const Invocations = () => {
     const tokenFromAddress = "0x3dd7b0db7cca8e8468d06d27b40ca9368754c30d76900fcd19a65736fab9084";
     const tokenToAddress = "0x4b60f66889f5d3d96022bfb9d761b73baeefe7f46070a1d33ed71ea4e837b75";
 
-    const tokenFromDecimals = await getErc20Decimals(provider, tokenFromAddress);
-    const tokenToDecimals = await getErc20Decimals(provider, tokenToAddress);
+    const starknetConnector: StarknetConnector = {
+      account: account,
+      provider: provider
+    }
+
+    const tokenFromDecimals = await getErc20Decimals(starknetConnector, tokenFromAddress);
+    const tokenToDecimals = await getErc20Decimals(starknetConnector, tokenToAddress);
 
     const tokenFrom = new Token(
       ChainId.GÖRLI,
       tokenFromAddress,
-      parseInt(tokenFromDecimals),
+      tokenFromDecimals
     )
     const tokenTo = new Token(
       ChainId.GÖRLI,
       tokenToAddress,
-      parseInt(tokenToDecimals),
+      tokenToDecimals
     )
 
     const arfSwap: ArfSwap = ArfSwap.getInstance();
@@ -71,10 +76,7 @@ const Invocations = () => {
 
     console.log(`pair: ${pair.token0.address} ${pair.token1.address}`);
 
-    const starknetConnector: StarknetConnector = {
-      account: account,
-      provider: provider
-    }
+
 
     const swapParameters: SwapParameters = {
       tokenFrom: tokenFrom,
@@ -186,8 +188,8 @@ const Invocations = () => {
       tokenFrom: token0,
       tokenTo: token1
     } = await createTokenObjects(starknetConnector, token0Address, token1Address);
-    const liqPoolTokenDec = await getErc20Decimals(provider, liqPoolAddress);
-    const liqPoolToken = new Token(ChainId.GÖRLI, liqPoolAddress, parseInt(liqPoolTokenDec));
+    const liqPoolTokenDec = await getErc20Decimals(starknetConnector, liqPoolAddress);
+    const liqPoolToken = new Token(ChainId.GÖRLI, liqPoolAddress, liqPoolTokenDec);
 
     const poolPosition = await JediSwap.getInstance().getLiquidityPosition(starknetConnector,  token0, token1,undefined);//we need pair here
     console.log(poolPosition)

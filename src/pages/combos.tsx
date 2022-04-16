@@ -26,13 +26,14 @@ import AddAction from "../hooks/AddAction";
 import {useAmounts} from "../hooks/useAmounts";
 import {getBalanceOfErc20} from "../utils/helpers";
 import {NotificationContainer, NotificationManager} from 'react-notifications';
+import 'react-notifications/lib/notifications.css';
+
 import {useTransactions} from "../hooks/useTransactions";
 
 import ActionBlockAdd from "../components/action-block-add/action-block-add";
 import ActionBlockRemove from "../components/action-block-remove/action-block-remove";
 import FundsRecap from "../components/FundsRecap";
 import SelectNewAction from "../components/select-new-action/select-new-action";
-import 'react-notifications/lib/notifications.css';
 
 import useComponentVisible from "../hooks/UseComponentVisible";
 
@@ -94,6 +95,7 @@ const Combos: NextPage = () => {
       if (!error) {
         const transactions = Object.values(transactionItems).flat();
         const tx_data = await account.execute(transactions);
+        console.log(tx_data)
         NotificationManager.success("Transaction Sent!", 'Transaction sent', 5000, () => window.open(`https://goerli.voyager.online/tx/${tx_data.transaction_hash}`));
         addTransactionHistory(tx_data.transaction_hash);
       }

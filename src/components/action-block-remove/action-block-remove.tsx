@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import styles from "./action-block-remove.module.css";
 import useComponentVisible from "../../hooks/UseComponentVisible";
 import Image from "next/image";
-import BatLogo from "../../public/img/tokens/bat.svg";
-import EtherLogo from "../../public/img/tokens/ether.svg";
+import BatLogo from "../../../public/img/tokens/bat.svg";
+import EtherLogo from "../../../public/img/tokens/ether.svg";
 import TokenChooser from "../token-chooser";
 import {Flex, Input, Spinner} from "@chakra-ui/react";
 import {ProtocolNames, PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
@@ -39,8 +39,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     account: account,
     provider: provider
   }
-  const {addItem, addToken} = useAmounts();
-  const {addTransaction} = useTransactions();
+  const {addItem, addToken, removeItem} = useAmounts();
+  const {addTransaction, removeTransaction} = useTransactions();
   const {
     tokens: protocolTokens,
     instance: protocolInstance
@@ -59,15 +59,22 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [token1, setToken1] = useState<Token>();
   const [amountToken0, setAmountToken0] = useState("");
   const [amountToken1, setAmountToken1] = useState("");
-  const [poolPosition,setPoolPosition] = useState<PoolPosition>();
+  const [poolPosition, setPoolPosition] = useState<PoolPosition>();
 
   const [poolShare, setPoolShare] = useState<number>();
   const [estimation, setEstimation] = useState("");
   const [sliderValue, setSliderValue] = useState(0);
-  const [liqToRemove,setLiqToRemove] = useState<Fraction>();
+  const [liqToRemove, setLiqToRemove] = useState<Fraction>();
+
+  //If the component has been set by the user
+  const [set, setSet] = useState<boolean>(false)
+
+  //REFS//
+  const outsideSetButton = useRef(null);
 
   useEffect(() => {
-
+    setAmountToken0('0')
+    setAmountToken1('0')
     const fetchPair = async () => {
       setLoading(true);
       const {
@@ -77,11 +84,11 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
       setToken0(token0);
       setToken1(token1)
 
-      let poolPosition:PoolPosition;
-      if(props.protocolName===PROTOCOLS[ProtocolNames.JEDISWAP].name){
-        const {poolPair}:{poolPair:Pair} = await protocolInstance.getPoolDetails(token0, token1, provider);
-        poolPosition = await protocolInstance.getLiquidityPosition(starknetConnector, token0, token1,poolPair);
-      }else{
+      let poolPosition: PoolPosition;
+      if (props.protocolName === PROTOCOLS[ProtocolNames.JEDISWAP].name) {
+        const {poolPair}: { poolPair: Pair } = await protocolInstance.getPoolDetails(token0, token1, provider);
+        poolPosition = await protocolInstance.getLiquidityPosition(starknetConnector, token0, token1, poolPair);
+      } else {
         poolPosition = await protocolInstance.getLiquidityPosition(starknetConnector, token0, token1);
       }
       setPoolPosition(poolPosition)
@@ -91,21 +98,27 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
   }, [token0Selector, token1Selector])
 
-  useEffect(()=>{
-    console.log(sliderValue);
-    if(!poolPosition) return;
-    const {poolPair}:{poolPair:Pair} = poolPosition;
-    const sliderPercent = new Percent(sliderValue.toString(),"100");
+  useEffect(() => {
+
+    unsetItem();
+
+    //poolInfo
+    if (!poolPosition) return;
+    const {poolPair}: { poolPair: Pair } = poolPosition;
+
+    //liq to remove
+    const sliderPercent = new Percent(sliderValue.toString(), "100");
     const liqToRemove = poolPosition.userLiquidity.multiply(sliderPercent);
     let poolShare = liqToRemove.divide(poolPosition.poolSupply);
-    console.log(liqToRemove.toSignificant(6))
     setLiqToRemove(liqToRemove)
-    const token0isPoolToken0 = token0.address===poolPair.token0.address;
-    let token0Amount = token0isPoolToken0? poolPair.reserve0.multiply(poolShare) :  poolPair.reserve1.multiply(poolShare);
-    let token1Amount = token0isPoolToken0? poolPair.reserve1.multiply(poolShare) :  poolPair.reserve0.multiply(poolShare);
+
+    //tokenAmounts
+    const token0isPoolToken0 = token0.address === poolPair.token0.address;
+    let token0Amount = token0isPoolToken0 ? poolPair.reserve0.multiply(poolShare) : poolPair.reserve1.multiply(poolShare);
+    let token1Amount = token0isPoolToken0 ? poolPair.reserve1.multiply(poolShare) : poolPair.reserve0.multiply(poolShare);
     setAmountToken0(token0Amount.toSignificant(6))
     setAmountToken1(token1Amount.toSignificant(6))
-  },[sliderValue])
+  }, [sliderValue])
 
   const setAction = async () => {
     //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
@@ -122,20 +135,34 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     addToken(token0Selector.name, token0);
     addToken(token1Selector.name, token1);
     const {liquidityToken} = poolPosition.poolPair;
-    const tokenLiqToRemove = new TokenAmount(liquidityToken, ethers.utils.parseUnits(liqToRemove.toFixed(liquidityToken.decimals),liquidityToken.decimals).toString());
+    const tokenLiqToRemove = new TokenAmount(liquidityToken, ethers.utils.parseUnits(liqToRemove.toFixed(liquidityToken.decimals), liquidityToken.decimals).toString());
     console.log(tokenLiqToRemove.raw.toString())
     const txLiq = await protocolInstance.removeLiquidity(starknetConnector, poolPosition, tokenLiqToRemove)
 
     addTransaction({
       [props.action.id]: txLiq.call
     })
-    setIsComponentVisible(!isComponentVisible)
+    setIsComponentVisible(false)
+    setSet(true);
+
+  }
+
+  //Removes item from set.
+  const unsetItem = () => {
+    if (set) {
+      setSet(false);
+      removeItem(props.action.id);
+      removeTransaction(props.action.id)
+    }
   }
 
 
   return (
     <>
-      <div className={styles.actionBlockWrapper} onClick={() => setIsComponentVisible(true)}
+      <div className={styles.actionBlockWrapper} onClick={(e) => {
+        if (outsideSetButton.current === e.target) return;
+        setIsComponentVisible(true)
+      }}
            hidden={isComponentVisible}>
         <div className={styles.actionBlockHead}>
           <div>
@@ -183,79 +210,95 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
           </div>
         </div>
-        {loading ? <Spinner/> : null }
+        {loading ? <Spinner/> : null}
+        {!set && !loading &&
+        <Flex justifyContent={'center'}>
+          <button ref={outsideSetButton} className={styles.submitButtonExternal} onClick={(e) => {
+            setAction();
+          }}>
+            Set
+          </button>
+        </Flex>
+        }
       </div>
 
       {isComponentVisible &&
-        <div className={styles.modalWrapper} ref={ref}>
-          <div className={styles.modalHead}>
-            <div>
-              <h3>Remove Liquidity</h3>
-              <div className={styles.underlineTitle}/>
-            </div>
-            <p>{props.protocolName}</p>
+      <div className={styles.modalWrapper} ref={ref}>
+        <div className={styles.modalHead}>
+          <div>
+            <h3>Remove Liquidity</h3>
+            <div className={styles.underlineTitle}/>
           </div>
-          <div className={styles.modalBodyLiquidity}>
-            <div className={styles.inputToken}>
-              <TokenChooser
-                selectedToken={token0Selector}
-                setSelectedToken={setToken0Selector}
-                selectableTokens={protocolTokens.filter((token) => token !== token1Selector)}
-              />
-              <TokenChooser
-                selectedToken={token1Selector}
-                setSelectedToken={setToken1Selector}
-                selectableTokens={protocolTokens.filter((token) => token !== token0Selector)}
-              />
-
-            </div>
-
-            <div className={styles.sliderSelect}>
-              <Slider value={sliderValue} aria-label='slider-ex-6' onChange={(val) => setSliderValue(val)} colorScheme='purple'>
-                <SliderMark value={0} mt='1' ml='-2.5' fontSize='sm' color='white'>
-                  0%
-                </SliderMark>
-                <SliderMark value={25} mt='1' ml='-2.5' fontSize='sm' color='white'>
-                  25%
-                </SliderMark>
-                <SliderMark value={50} mt='1' ml='-2.5' fontSize='sm' color='white'>
-                  50%
-                </SliderMark>
-                <SliderMark value={75} mt='1' ml='-2.5' fontSize='sm' color='white'>
-                  75%
-                </SliderMark>
-                <SliderMark value={100} mt='1' ml='-2.5' fontSize='sm' color='white'>
-                  100%
-                </SliderMark>
-                <SliderMark
-                  value={sliderValue}
-                  textAlign='center'
-                  bg='purple.600'
-                  color='white'
-                  mt='-10'
-                  ml='-5'
-                  w='12'
-                >
-                  {sliderValue}%
-                </SliderMark>
-                <SliderTrack bg='purple.900'>
-                  <SliderFilledTrack/>
-                </SliderTrack>
-                <SliderThumb/>
-              </Slider>
-
-            </div>
-
-
-            <div className={styles.whiteLine}/>
-            <div className={styles.totalLiquidityWrapper}>
-              <p>Estimation: <span>{estimation}</span></p>
-            </div>
-            {loading ? <Flex alignItems={"center"} className={styles.sumbitButton}>Fetching route &nbsp; <Spinner/></Flex>
-              : <button className={styles.sumbitButton} onClick={() => setAction()}>Set</button>
-            }
-          </div>
+          <p>{props.protocolName}</p>
         </div>
+        <div className={styles.modalBodyLiquidity}>
+          <div className={styles.inputToken}>
+            <TokenChooser
+              selectedToken={token0Selector}
+              setSelectedToken={setToken0Selector}
+              selectableTokens={protocolTokens.filter((token) => token !== token1Selector)}
+            />
+            <TokenChooser
+              selectedToken={token1Selector}
+              setSelectedToken={setToken1Selector}
+              selectableTokens={protocolTokens.filter((token) => token !== token0Selector)}
+            />
+
+          </div>
+
+          <div className={styles.sliderSelect}>
+            <Slider value={sliderValue} aria-label='slider-ex-6' onChange={(val) => setSliderValue(val)}
+                    colorScheme='purple'>
+              <SliderMark value={0} mt='1' ml='-2.5' fontSize='sm' color='white'>
+                0%
+              </SliderMark>
+              <SliderMark value={25} mt='1' ml='-2.5' fontSize='sm' color='white'>
+                25%
+              </SliderMark>
+              <SliderMark value={50} mt='1' ml='-2.5' fontSize='sm' color='white'>
+                50%
+              </SliderMark>
+              <SliderMark value={75} mt='1' ml='-2.5' fontSize='sm' color='white'>
+                75%
+              </SliderMark>
+              <SliderMark value={100} mt='1' ml='-2.5' fontSize='sm' color='white'>
+                100%
+              </SliderMark>
+              <SliderMark
+                value={sliderValue}
+                textAlign='center'
+                bg='purple.600'
+                color='white'
+                mt='-10'
+                ml='-5'
+                w='12'
+              >
+                {sliderValue}%
+              </SliderMark>
+              <SliderTrack bg='purple.900'>
+                <SliderFilledTrack/>
+              </SliderTrack>
+              <SliderThumb/>
+            </Slider>
+
+          </div>
+
+
+          <div className={styles.whiteLine}/>
+          <div className={styles.totalLiquidityWrapper}>
+            <p>Estimation: <span>{estimation}</span></p>
+          </div>
+          {loading &&
+          <Flex alignItems={"center"} className={styles.submitButton}>Fetching route &nbsp; <Spinner/></Flex>
+          }
+          {!set && !loading &&
+          <button className={styles.submitButton} onClick={() => setAction()}>Set</button>
+          }
+          {set &&
+          <button className={styles.submitButton} onClick={() => unsetItem()}>Edit</button>
+          }
+        </div>
+      </div>
       }
     </>
   )
