@@ -6,6 +6,9 @@ import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
 import {ChainId, Fraction, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {Action, ActionTypes, MY_SWAP_ROUTER_ADDRESS, ProtocolNames, SLIPPAGE} from "../utils/constants/constants";
 import {PoolPosition} from "./jediSwap";
+import {formatToBigNumberish, formatToDecimal} from "../utils/helpers";
+import {bnToUint256} from "starknet/utils/uint256";
+import {bigNumberishArrayToDecimalStringArray} from "starknet/utils/number";
 
 export class MySwap implements DexCombo {
 
@@ -65,48 +68,78 @@ export class MySwap implements DexCombo {
     const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;
     const amountOutMinDec = number.toBN(amountOutMin.toString());
 
+    const path = trade.route.path;
+    const pathAddresses = path.map((token: Token) => number.toBN(token.address).toString());
+    console.log(path, pathAddresses)
+
     return {
+      pathLength: path.length.toString(),
+      pathAddresses: pathAddresses,
       executionPrice: trade.executionPrice.toSignificant(6),
-      amountOutMin: amountOutMinDec.toString(),
+      amountOutMin: amountOutMinDec.toString()
     }
 
   }
 
-  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters, poolId: string): Promise<Action> {
+  public async getSwapExecutionPrice(starknetConnector: StarknetConnector, swapParameters: SwapParameters) {
     let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
+
+    //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
+    const amountInBN = formatToBigNumberish(amountIn, tokenFrom.decimals)
+    const amountOutBN = formatToBigNumberish(amountOut, tokenTo.decimals);
+
+    const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountInBN, amountOutBN, SLIPPAGE)
+    console.log(trade)
+    return {
+      execPrice: parseFloat(trade.executionPrice),
+      amountMin: formatToDecimal(trade.amountOutMin, tokenTo.decimals)
+    }
+  }
+
+  public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters): Promise<Action> {
+    let {tokenFrom, tokenTo, amountIn, amountOut, poolPair, poolId} = swapParameters;
     const tokenFromDec = number.toBN(tokenFrom.address).toString();
-    //parse amount in with correct decimals
-    amountIn = ethers.utils.parseUnits(amountIn, tokenFrom.decimals).toString()
-    const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountIn, "0", SLIPPAGE)
+
+    //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
+    const amountInBN = formatToBigNumberish(amountIn, tokenFrom.decimals)
+    const amountOutBN = formatToBigNumberish(amountOut, tokenTo.decimals);
+    const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountInBN, amountOutBN, SLIPPAGE)
     if (!trade) return undefined;
+
+
+    const approveCallData = [
+      number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
+      Object.values(bnToUint256(amountInBN))
+    ].flatMap((x) => x);
+
+    const swapCallData = [
+      poolId,
+      tokenFromDec,
+      Object.values(bnToUint256(amountInBN)),
+      Object.values(bnToUint256(trade.amountOutMin))
+    ].flatMap((x) => x);
+
+
     const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
-        calldata: [
-          number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
-          amountIn,
-          "0"
-        ]
+        calldata: bigNumberishArrayToDecimalStringArray(approveCallData)
       },
       {
         contractAddress: MY_SWAP_ROUTER_ADDRESS,
         entrypoint: "swap",
-        calldata: [
-          poolId,
-          tokenFromDec,
-          amountIn,
-          "0",
-          trade.amountOutMin,
-          "0"
-        ]
+        calldata: bigNumberishArrayToDecimalStringArray(swapCallData)
       }
     ]
+
+    console.log(tx)
 
     return Promise.resolve({
       actionType: ActionTypes.SWAP,
       protocolName: ProtocolNames.MY_SWAP,
-      call: tx
+      call: tx,
+      details: trade
     });
 
   }
@@ -136,18 +169,15 @@ export class MySwap implements DexCombo {
     minAmountTo = desiredAmountTo.subtract(SLIPPAGE.multiply(desiredAmountTo).toFixed(0)).toFixed(0)
 
 
-    const callData: Array<string> = [
-      tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),
-      tokenFromIsToken0 ? desiredAmountFrom.toString() : desiredAmountTo.toFixed(0),
-      "0",
-      tokenFromIsToken0 ? minAmountFrom : minAmountTo,
-      "0",
-      tokenFromIsToken0 ? tokenToDec.toString() : tokenFromDec.toString(),
-      tokenFromIsToken0 ? desiredAmountTo.toFixed(0) : desiredAmountFrom.toString(),
-      "0",
-      tokenFromIsToken0 ? minAmountTo : minAmountFrom,
-      "0"
-    ];
+    const addLiqCallData: Array<string> =
+      [
+        tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),
+        tokenFromIsToken0 ? Object.values(bnToUint256(desiredAmountFrom.toString())) : Object.values(bnToUint256(desiredAmountTo.toFixed(0))),
+        tokenFromIsToken0 ? Object.values(bnToUint256(minAmountFrom)) : Object.values(bnToUint256(minAmountTo)),
+        tokenFromIsToken0 ? tokenToDec.toString() : tokenFromDec.toString(),
+        tokenFromIsToken0 ? Object.values(bnToUint256(desiredAmountTo.toFixed(0))) : Object.values(bnToUint256(desiredAmountFrom.toString())),
+        tokenFromIsToken0 ? Object.values(bnToUint256(minAmountTo)) : Object.values(bnToUint256(minAmountFrom)),
+      ].flatMap((x) => x);
 
     const tx: Call | Call[] = [
       {
@@ -155,25 +185,25 @@ export class MySwap implements DexCombo {
         entrypoint: 'approve',
         calldata: [
           number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
-          desiredAmountFrom.toBigInt().toString(),
-          "0"
-        ]
+          Object.values(bnToUint256(desiredAmountFrom.toString()))
+        ].flatMap((x) => x)
       },
       {
         contractAddress: tokenTo.address,
         entrypoint: 'approve',
         calldata: [
           number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
-          desiredAmountTo.toFixed(0),
-          "0"
-        ]
+          Object.values(desiredAmountTo.toFixed(0)),
+        ].flatMap((x) => x)
       },
       {
         contractAddress: MY_SWAP_ROUTER_ADDRESS,
         entrypoint: 'add_liquidity',
-        calldata: callData
+        calldata: bigNumberishArrayToDecimalStringArray(addLiqCallData)
+
       }
     ];
+    console.log(tx)
     return Promise.resolve({
       actionType: ActionTypes.ADD_LIQUIDITY,
       protocolName: ProtocolNames.MY_SWAP,
@@ -190,7 +220,7 @@ export class MySwap implements DexCombo {
   removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Promise<Action> {
 
     const poolPair = poolPosition.poolPair;
-    let poolShare = poolPosition.userLiquidity.divide(poolPosition.poolSupply); // represents the %of the pool the user owns.
+    let poolShare = liqToRemove.divide(poolPosition.poolSupply); // represents the %of the pool the user owns.
     //token0Amount is reserve0*poolShare
     let token0Amount = poolPair.reserve0.multiply(poolShare);
     let token1Amount = poolPair.reserve1.multiply(poolShare)
@@ -199,19 +229,23 @@ export class MySwap implements DexCombo {
     // Inside this, we're calculating tokenAmount(1-slippage). Note that this result is in unit and not wei terms so we need to parseUnit all of this :)
     let token0min = ethers.utils.parseUnits(token0Amount.subtract(token0Amount.multiply(SLIPPAGE)).toFixed(poolPair.token0.decimals), poolPair.token0.decimals);
     let token1min = ethers.utils.parseUnits(token1Amount.subtract(token1Amount.multiply(SLIPPAGE)).toFixed(poolPair.token1.decimals), poolPair.token1.decimals);
+
+    const removeLiqCallData = [
+      poolPosition.poolPair.pairAddress, //no need for BN ops here because it's just the poolId
+      Object.values(bnToUint256(liqToRemove.raw.toString())),
+      Object.values(bnToUint256(token0min.toString())),
+      Object.values(bnToUint256(token1min.toString())),
+    ].flatMap(x => x);
+
+
     const tx: Call | Call[] = {
       contractAddress: MY_SWAP_ROUTER_ADDRESS,
       entrypoint: "withdraw_liquidity",
-      calldata: [
-        poolPosition.poolPair.pairAddress, //no need for BN ops here because it's just the poolId
-        liqToRemove.raw.toString(),
-        "0",
-        token0min.toString(),
-        "0",
-        token1min.toString(),
-        "0"
-      ]
-    }
+      calldata: bigNumberishArrayToDecimalStringArray(removeLiqCallData)
+    };
+
+    console.log(tx)
+
     return Promise.resolve({
       actionType: ActionTypes.REMOVE_LIQUIDITY,
       protocolName: ProtocolNames.MY_SWAP,

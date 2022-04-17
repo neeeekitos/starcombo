@@ -7,9 +7,10 @@ import {
   ActionTypes,
   ARF_FACTORY_ADDRESS,
   ARF_ROUTER_ADDRESS,
-  ProtocolNames
+  ProtocolNames, SLIPPAGE
 } from "../utils/constants/constants";
 import {PoolPosition} from "./jediSwap";
+import {formatToBigNumberish, formatToDecimal} from "../utils/helpers";
 
 
 interface findPoolRes {
@@ -136,6 +137,19 @@ export class ArfSwap implements DexCombo {
     return undefined;
   }
 
+  public async getSwapExecutionPrice(starknetConnector: StarknetConnector, swapParameters: SwapParameters) {
+    // let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
+    // //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
+    // const amountInBN = formatToBigNumberish(amountIn, tokenFrom.decimals)
+    // const amountOutBN = formatToBigNumberish(amountOut, tokenTo.decimals);
+    //
+    // const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountInBN, amountOutBN, SLIPPAGE)
+    // return {
+    //   execPrice: parseFloat(trade.executionPrice),
+    //   amountMin: formatToDecimal(trade.amountOutMin, tokenTo.decimals)
+    // }
+    return undefined;
+  }
   /**
    * Returns the transaction details to perform a swap between two tokens
    * @param starknetConnector

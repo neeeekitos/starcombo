@@ -87,7 +87,8 @@ export interface SwapParameters {
   tokenTo: Token,
   amountIn: string,
   amountOut: string,
-  poolPair: Pair
+  poolPair: Pair,
+  poolId?:string
 }
 
 export interface OperationsState {

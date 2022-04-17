@@ -28,8 +28,8 @@ interface ActionBlockProps {
 }
 
 interface ExecutionPrices {
-  priceAtoB:number,
-  priceBtoA:number
+  priceAtoB: number,
+  priceBtoA: number
 }
 
 const ActionBlockSwap = (props: ActionBlockProps) => {
@@ -61,7 +61,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
 
   // LP pair
   const [pair, setPair] = useState<Pair>();
-  const [prices,setPrices] = useState<ExecutionPrices>();
+  const [prices, setPrices] = useState<ExecutionPrices>();
 
   //poolId required to use with mySwap
   const [poolId, setPoolId] = useState<string>();
@@ -83,7 +83,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
   useEffect(() => {
 
     //Reset states
-    setPrices({priceAtoB:0,priceBtoA:0})
+    setPrices({priceAtoB: 0, priceBtoA: 0})
     setAmountFrom('0')
     setAmountTo('0')
     unsetItem();
@@ -110,8 +110,8 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
       }
       const {execPrice} = await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters);
       const priceAtoB = execPrice;
-      const priceBtoA = 1/execPrice;
-      setPrices({priceAtoB: priceAtoB,priceBtoA: priceBtoA})
+      const priceBtoA = 1 / execPrice;
+      setPrices({priceAtoB: priceAtoB, priceBtoA: priceBtoA})
 
       setLoading(false);
     }
@@ -168,11 +168,11 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
     if (isNaN(value as any)) return;
 
     if (priceWanted === "from") {
-      const amountFrom = value*prices.priceBtoA
+      const amountFrom = value * prices.priceBtoA
       setAmountFrom(amountFrom.toPrecision(6))
     } else {
       // to
-      const amountTo = value*prices.priceAtoB
+      const amountTo = value * prices.priceAtoB
       setAmountTo(amountTo.toPrecision(6))
     }
   }
@@ -197,12 +197,16 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
       amountIn: amountFrom,
       amountOut: "0", //TODO support for this
       poolPair: pair,
+      poolId: poolId
     }
 
-    if(amountFrom==='0') {NotificationManager.error("Can't swap a null amount"); return;}
+    if (amountFrom === '0') {
+      NotificationManager.error("Can't swap a null amount");
+      return;
+    }
 
     //We need details to know the minimum amount the user will receive
-    const {call,details} = poolId ? (await protocolInstance.swap(starknetConnector, swapParameters, poolId)) : (await protocolInstance.swap(starknetConnector, swapParameters))
+    const {call, details} = await protocolInstance.swap(starknetConnector, swapParameters)
 
     //Add item to the recap DS
     addItem({
@@ -210,7 +214,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
         actionType: props.actionName,
         tokens: {
           [tokenFromSelector.name]: parseFloat(amountFrom),
-          [tokenToSelector.name]: parseFloat(formatToDecimal(details.amountOutMin,tokenTo.decimals))
+          [tokenToSelector.name]: parseFloat(formatToDecimal(details.amountOutMin, tokenTo.decimals))
         }
       }
     });
