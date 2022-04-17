@@ -68,10 +68,12 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     unsetItem();
     const fetchPair = async () => {
       setLoading(true);
-      const {
-        tokenFrom: token0,
-        tokenTo: token1
-      } = await createTokenObjects(starknetConnector, token0Selector.address, token1Selector.address);
+      const [token0,token1] = [token0Selector,token1Selector];
+
+      // const {
+      //   tokenFrom: token0,
+      //   tokenTo: token1
+      // } = await createTokenObjects(starknetConnector, token0Selector.address, token1Selector.address);
       setToken0(token0);
       setToken1(token1)
       const poolDetails = await protocolInstance.getPoolDetails(token0, token1, provider);
@@ -116,6 +118,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   }
 
   const setQuoteTokenAmount = (value, priceWanted) => {
+    if(value==='') value = '0';
     if (isNaN(value as any)) return;
     let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price,
       reserveFrom: TokenAmount;

@@ -4,7 +4,7 @@ import {ChainId, CurrencyAmount, Token} from "@jediswap/sdk";
 import {StarknetConnector} from "./constants/interfaces";
 import {add} from "@noble/hashes/_u64";
 import {ethers} from "ethers";
-import {getTokenContract} from "./jediswap/contracts";
+import {getTokenContract} from "../protocols/jediswap/contracts";
 import {uint256ToBN} from "starknet/dist/utils/uint256";
 
 export async function getErc20Decimals(starknetConnector: StarknetConnector, address: string) {

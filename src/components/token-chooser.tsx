@@ -4,6 +4,7 @@ import {Btc, Usdt} from 'react-cryptocoins';
 import {inspect} from "util";
 import styles  from './token-chooser.module.css';
 import dynamic from "next/dynamic";
+import {Token} from "@jediswap/sdk";
 
 const TokenChooser = (props: any) => {
 
@@ -22,7 +23,7 @@ const TokenChooser = (props: any) => {
       <MenuList>
 
         {
-          props.selectableTokens.map((token: any) => {
+          Object.values(props.selectableTokens).map((token: Token) => {
             if (token.symbol === props.selectedToken.symbol) return null;
 
             const DynamicIconOptionComponent: any = dynamic(() => import(`react-cryptocoins/dist/icons/${token.symbol}`))

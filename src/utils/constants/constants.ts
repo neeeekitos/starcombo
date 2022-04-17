@@ -3,6 +3,7 @@ import {Call} from "starknet/src/types/lib";
 import {JediSwap} from "../../protocols/jediSwap";
 import {MySwap} from "../../protocols/mySwap";
 import styles from "../../components/select-new-action/select-new-action.module.css";
+import {jediTokensList} from "../../protocols/jediswap/constants/jediTokens";
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000000000000000000000000000'
 
@@ -58,28 +59,29 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
       ActionTypes.ADD_LIQUIDITY,
       ActionTypes.REMOVE_LIQUIDITY
     ],
-    tokens: [
-      {
-        name: 'J23FEB0',
-        address: '0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c',
-        symbol: 'J23FEB0',
-      },
-      {
-        name: 'J23FEB1',
-        address: '0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756',
-        symbol: 'J23FEB1',
-      },
-      {
-        name: 'J23FEB2',
-        address: '0x024da028e8176afd3219fbeafb17c49624af9b86dcbe81007ae40d93f741617d',
-        symbol: 'J23FEB2',
-      },
-      {
-        name: 'J23FEB3',
-        address: '0x01ca5dedf1612b1ffb035e838ac09d70e500d22cf9cd0de4bebcef8553506fdb',
-        symbol: 'J23FEB3',
-      }
-    ],
+    // tokens: [
+    //   {
+    //     name: 'J23FEB0',
+    //     address: '0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c',
+    //     symbol: 'J23FEB0',
+    //   },
+    //   {
+    //     name: 'J23FEB1',
+    //     address: '0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756',
+    //     symbol: 'J23FEB1',
+    //   },
+    //   {
+    //     name: 'J23FEB2',
+    //     address: '0x024da028e8176afd3219fbeafb17c49624af9b86dcbe81007ae40d93f741617d',
+    //     symbol: 'J23FEB2',
+    //   },
+    //   {
+    //     name: 'J23FEB3',
+    //     address: '0x01ca5dedf1612b1ffb035e838ac09d70e500d22cf9cd0de4bebcef8553506fdb',
+    //     symbol: 'J23FEB3',
+    //   }
+    // ],
+    tokens:jediTokensList,
     instance:JediSwap.getInstance(),
 
 
@@ -260,7 +262,9 @@ export const JEDI_TOKENS = [
 
 export const MY_SWAP_ROUTER_ADDRESS = '0x071faa7d6c3ddb081395574c5a6904f4458ff648b66e2123b877555d9ae0260e';
 export const JEDI_ROUTER_ADDRESS = '0x01ea2f12a70ad6a052f99a49dace349996a8e968a0d6d4e9ec34e0991e6d5e5e';
-export const JEDI_REGISTRY_ADDRESS = '0x0413ba8d51ec05be863eb82314f0cf0ffceff949e76c87cae0a4bd7f89cfc2b1'
+export const JEDI_ROUTER_ADDRESS_2 = '0x16adfcc056a7d1f654feb7493b59853bef1442f109645dd97d433f71a1f6ee7';
+export const JEDI_REGISTRY_ADDRESS = '0x0413ba8d51ec05be863eb82314f0cf0ffceff949e76c87cae0a4bd7f89cfc2b1';
+export const JEDI_REGISTRY_ADDRESS_2 = '0x1a8c2876e13ebf0e2f23cc1109ad6dfd722c0bd2dbf50721ce8ad91f98c1bef';
 export const SLIPPAGE = new Percent('50', '10000'); // 0.5%
 
 export const ARF_ROUTER_ADDRESS = "0x5e4aa85e37de2cd11dcce42968055a2eff1eb090de736595ae0d299001335e0";

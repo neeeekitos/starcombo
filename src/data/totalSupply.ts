@@ -1,7 +1,7 @@
 import {BigNumber} from '@ethersproject/bignumber'
 import {Token, TokenAmount} from '@jediswap/sdk'
 import {uint256} from 'starknet'
-import {getTokenContract} from "../utils/jediswap/contracts";
+import {getTokenContract} from "../protocols/jediswap/contracts";
 import {StarknetConnector} from "../utils/constants/interfaces";
 // import { useSingleCallResult } from '../state/multicall/hooks'
 

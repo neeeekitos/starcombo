@@ -25,77 +25,6 @@ export class MySwap implements DexCombo {
     return MySwap.instance;
   }
 
-  /**
-   * Given two tokens, finds the liquidity pool and return the associated pair as well as the poolId.
-   * The pool.liauiquidityToken is incorrect.
-   * @param tokenFrom
-   * @param tokenTo
-   */
-  async getPoolDetails(tokenFrom: Token, tokenTo: Token) {
-    //format input according to decimals
-
-    const tokenFromAddress = number.toBN(tokenFrom.address)
-    const tokenToAddress = number.toBN(tokenTo.address)
-
-    const poolDetails = await this.findPool(tokenFromAddress.toString(), tokenToAddress.toString());
-    if (!poolDetails) return undefined;
-
-    const poolTokenFrom = new TokenAmount(tokenFrom, poolDetails.liqReservesTokenFrom);
-    const poolTokenTo = new TokenAmount(tokenTo, poolDetails.liqReservesTokenTo);
-    //I'm cheating here and setting poolId inside the poolAddress field :)
-    const poolPair = new Pair(poolTokenFrom, poolTokenTo, poolDetails.poolId);
-    return {poolId: poolDetails.poolId, poolPair: poolPair};
-  }
-
-  /**
-   * Given a from and two token and the pair associated to the liquidity pool, returns the execution price of the trade
-   * and the minimum amount out.
-   * @param from
-   * @param to
-   * @param pairFromTo
-   * @param amountFrom
-   * @param amountTo
-   * @param slippageTolerance
-   */
-  async findBestTrade(from: Token, to: Token, pairFromTo: Pair, amountFrom: string, amountTo: string, slippageTolerance: Percent): Promise<TradeInfo | undefined> {
-    //Create poolPair to find the best trade for this poolPair. Use liq reserves as poolPair amounts
-    let trade = Trade.bestTradeExactIn([pairFromTo], new TokenAmount(from, amountFrom), to)[0];
-
-    console.log("execution price: $" + trade.executionPrice.toSignificant(6));
-    console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
-
-    //TODO dynamic slippage value here
-    const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;
-    const amountOutMinDec = number.toBN(amountOutMin.toString());
-
-    const path = trade.route.path;
-    const pathAddresses = path.map((token: Token) => number.toBN(token.address).toString());
-    console.log(path, pathAddresses)
-
-    return {
-      pathLength: path.length.toString(),
-      pathAddresses: pathAddresses,
-      executionPrice: trade.executionPrice.toSignificant(6),
-      amountOutMin: amountOutMinDec.toString()
-    }
-
-  }
-
-  public async getSwapExecutionPrice(starknetConnector: StarknetConnector, swapParameters: SwapParameters) {
-    let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
-
-    //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
-    const amountInBN = formatToBigNumberish(amountIn, tokenFrom.decimals)
-    const amountOutBN = formatToBigNumberish(amountOut, tokenTo.decimals);
-
-    const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountInBN, amountOutBN, SLIPPAGE)
-    console.log(trade)
-    return {
-      execPrice: parseFloat(trade.executionPrice),
-      amountMin: formatToDecimal(trade.amountOutMin, tokenTo.decimals)
-    }
-  }
-
   public async swap(starknetConnector: StarknetConnector, swapParameters: SwapParameters): Promise<Action> {
     let {tokenFrom, tokenTo, amountIn, amountOut, poolPair, poolId} = swapParameters;
     const tokenFromDec = number.toBN(tokenFrom.address).toString();
@@ -211,12 +140,6 @@ export class MySwap implements DexCombo {
     });
   }
 
-  approve(): void {
-  }
-
-  mint(): void {
-  }
-
   removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Promise<Action> {
 
     const poolPair = poolPosition.poolPair;
@@ -256,7 +179,85 @@ export class MySwap implements DexCombo {
   revoke(): void {
   }
 
-  async getLiquidityPosition(starknetConnector: StarknetConnector, tokenFrom: Token, tokenTo: Token): Promise<PoolPosition> {
+  approve(): void {
+  }
+
+  mint(): void {
+  }
+
+  /**
+   * Given two tokens, finds the liquidity pool and return the associated pair as well as the poolId.
+   * The pool.liauiquidityToken is incorrect.
+   * @param tokenFrom
+   * @param tokenTo
+   */
+  public async getPoolDetails(tokenFrom: Token, tokenTo: Token) {
+    //format input according to decimals
+
+    const tokenFromAddress = number.toBN(tokenFrom.address)
+    const tokenToAddress = number.toBN(tokenTo.address)
+
+    const poolDetails = await this.findPool(tokenFromAddress.toString(), tokenToAddress.toString());
+    if (!poolDetails) return undefined;
+
+    const poolTokenFrom = new TokenAmount(tokenFrom, poolDetails.liqReservesTokenFrom);
+    const poolTokenTo = new TokenAmount(tokenTo, poolDetails.liqReservesTokenTo);
+    //I'm cheating here and setting poolId inside the poolAddress field :)
+    const poolPair = new Pair(poolTokenFrom, poolTokenTo, poolDetails.poolId);
+    return {poolId: poolDetails.poolId, poolPair: poolPair};
+  }
+
+  /**
+   * Given a from and two token and the pair associated to the liquidity pool, returns the execution price of the trade
+   * and the minimum amount out.
+   * @param from
+   * @param to
+   * @param pairFromTo
+   * @param amountFrom
+   * @param amountTo
+   * @param slippageTolerance
+   */
+  private async findBestTrade(from: Token, to: Token, pairFromTo: Pair, amountFrom: string, amountTo: string, slippageTolerance: Percent): Promise<TradeInfo | undefined> {
+    //Create poolPair to find the best trade for this poolPair. Use liq reserves as poolPair amounts
+    let trade = Trade.bestTradeExactIn([pairFromTo], new TokenAmount(from, amountFrom), to)[0];
+
+    console.log("execution price: $" + trade.executionPrice.toSignificant(6));
+    console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
+
+    //TODO dynamic slippage value here
+    const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;
+    const amountOutMinDec = number.toBN(amountOutMin.toString());
+
+    const path = trade.route.path;
+    const pathAddresses = path.map((token: Token) => number.toBN(token.address).toString());
+    console.log(path, pathAddresses)
+
+    return {
+      pathLength: path.length.toString(),
+      pathAddresses: pathAddresses,
+      executionPrice: trade.executionPrice.toSignificant(6),
+      amountOutMin: amountOutMinDec.toString()
+    }
+
+  }
+
+  public async getSwapExecutionPrice(starknetConnector: StarknetConnector, swapParameters: SwapParameters) {
+    let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
+
+    //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
+    const amountInBN = formatToBigNumberish(amountIn, tokenFrom.decimals)
+    const amountOutBN = formatToBigNumberish(amountOut, tokenTo.decimals);
+
+    const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountInBN, amountOutBN, SLIPPAGE)
+    console.log(trade)
+    return {
+      execPrice: parseFloat(trade.executionPrice),
+      amountMin: formatToDecimal(trade.amountOutMin, tokenTo.decimals)
+    }
+  }
+
+
+  public async getLiquidityPosition(starknetConnector: StarknetConnector, tokenFrom: Token, tokenTo: Token): Promise<PoolPosition> {
     const {account, provider} = starknetConnector;
 
     const poolDetails = await this.getPoolDetails(tokenFrom, tokenTo);
@@ -294,7 +295,7 @@ export class MySwap implements DexCombo {
    * @param tokenFromDecAddress
    * @param tokenToDecAddress
    */
-  async findPool(tokenFromDecAddress: string, tokenToDecAddress: string): Promise<any> {
+  private async findPool(tokenFromDecAddress: string, tokenToDecAddress: string): Promise<any> {
     const mySwapRouterContract = new Contract(mySwapRouter.abi as Abi, MY_SWAP_ROUTER_ADDRESS);
     const numberOfPools = await mySwapRouterContract.call("get_total_number_of_pools");
     console.log(`Number of pools: ${numberOfPools}`);

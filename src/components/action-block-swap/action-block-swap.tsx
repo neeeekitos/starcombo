@@ -12,7 +12,13 @@ import useComponentVisible from "../../hooks/UseComponentVisible";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useStarknet} from "../../hooks/useStarknet";
 import {DexCombo, StarknetConnector, SwapParameters} from "../../utils/constants/interfaces";
-import {createTokenObjects, formatToBigNumberish, formatToDecimal} from "../../utils/helpers";
+import {
+  createTokenObjects,
+  formatToBigNumberish,
+  formatToDecimal,
+  getBalanceOfErc20,
+  getErc20Decimals, getFloatFromBN
+} from "../../utils/helpers";
 import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {number} from "starknet";
 import {ethers} from "ethers";
@@ -56,8 +62,10 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
   const [amountTo, setAmountTo] = useState("");
 
   //token addresses
-  const [tokenFromSelector, setTokenFromSelector] = useState(protocolTokens[0]);
-  const [tokenToSelector, setTokenToSelector] = useState(protocolTokens[1]);
+  const [tokenFromSelector, setTokenFromSelector] = useState<Token>(protocolTokens[0]);
+  const [tokenToSelector, setTokenToSelector] = useState<Token>(protocolTokens[1]);
+  const [tokenFromBalance, setTokenFromBalance] = useState<number>();
+  const [tokenToBalance, setTokenToBalance] = useState<number>();
 
   // LP pair
   const [pair, setPair] = useState<Pair>();
@@ -90,12 +98,32 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
 
     //Fetch pool pair
     const fetchPair = async () => {
+      //TODO clean this properly, for example use custom hooks :)
       setLoading(true);
-      const {tokenFrom, tokenTo} =
-        await createTokenObjects(starknetConnector, tokenFromSelector.address, tokenToSelector.address);
+      const [tokenFrom, tokenTo] = [tokenFromSelector, tokenToSelector];
+
+      //TODO add support for custom tokens here (user only inputs address and data is fetched)
+      //For now, tokenFromSelector = tokenFrom because we're using hardcoded values.
+      // It avoids us to re-query the same thing multiple times
+
+      // const {tokenFrom, tokenTo} =
+      //   await createTokenObjects(starknetConnector, tokenFromSelector.address, tokenToSelector.address);
+      // console.log(tokenFrom,tokenTo);
+
+      const [tokenFromBalanceBN, tokenToBalanceBN] = await Promise.all([getBalanceOfErc20(starknetConnector, tokenFromSelector), getBalanceOfErc20(starknetConnector, tokenToSelector)]);
+
+      setTokenFromBalance(getFloatFromBN(tokenFromBalanceBN.toString(), tokenFromSelector.decimals));
+      setTokenToBalance(getFloatFromBN(tokenToBalanceBN.toString(), tokenToSelector.decimals));
+
+      console.log(tokenFromBalance, tokenToBalance)
       setTokenFrom(tokenFrom);
       setTokenTo(tokenTo);
       const poolDetails = await protocolInstance.getPoolDetails(tokenFrom, tokenTo, provider);
+      if (!poolDetails) {
+        NotificationManager.error("No pool found");
+        return;
+      }
+
       const poolPair: Pair = poolDetails.poolPair;
       if (poolDetails.poolId) setPoolId(poolDetails.poolId)
       setPair(poolPair);
@@ -106,8 +134,9 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
         tokenTo: tokenTo,
         amountIn: '1',
         amountOut: "0", //TODO support for this
-        poolPair: pair,
+        poolPair: poolPair,
       }
+      console.log(swapParameters)
       const {execPrice} = await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters);
       const priceAtoB = execPrice;
       const priceBtoA = 1 / execPrice;
@@ -297,12 +326,15 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
           </div>
 
           <div className={styles.modalBody}>
-            <h2 className={styles.h2Modal}>From: </h2>
+            <Flex marginRight={'20px'} flexDir={'row'} justifyContent={"space-between"}>
+              <h2 className={styles.h2Modal}>From: </h2>
+              Balance : {tokenFromBalance}
+            </Flex>
             <div className={styles.inputToken}>
               <TokenChooser
                 selectedToken={tokenFromSelector}
                 setSelectedToken={setTokenFromSelector}
-                selectableTokens={protocolTokens.filter((token) => token !== tokenToSelector)}
+                selectableTokens={protocolTokens.filter((token) => token.address !== tokenToSelector.address)}
               />
               <Input
                 placeholder="Input amount"
@@ -333,12 +365,15 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
                 fill="white"/>
             </svg>
 
-            <h2 className={styles.h2Modal}>To: </h2>
+            <Flex marginRight={'20px'} flexDir={'row'} justifyContent={"space-between"}>
+              <h2 className={styles.h2Modal}>To: </h2>
+              Balance : {tokenToBalance}
+            </Flex>
             <div className={styles.inputToken}>
               <TokenChooser
                 selectedToken={tokenToSelector}
                 setSelectedToken={setTokenToSelector}
-                selectableTokens={protocolTokens.filter((token) => token !== tokenFromSelector)}
+                selectableTokens={protocolTokens.filter((token) => token.address !== tokenFromSelector.address)}
               />
               <Input
                 placeholder="Input amount"
