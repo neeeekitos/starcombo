@@ -16,12 +16,12 @@ import {
 } from '@chakra-ui/react';
 import {createTokenObjects} from "../../utils/helpers";
 import {Fraction, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
-import {MySwap} from "../../hooks/mySwap";
+import {MySwap} from "../../protocols/mySwap";
 import {useStarknet} from "../../hooks/useStarknet";
 import {DexCombo, StarknetConnector} from "../../utils/constants/interfaces";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useTransactions} from "../../hooks/useTransactions";
-import {PoolPosition} from "../../hooks/jediSwap";
+import {PoolPosition} from "../../protocols/jediSwap";
 import {ethers} from "ethers";
 
 interface ActionBlockProps {
@@ -61,7 +61,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [amountToken1, setAmountToken1] = useState("");
   const [poolPosition, setPoolPosition] = useState<PoolPosition>();
 
-  const [poolShare, setPoolShare] = useState<number>();
+  const [userPoolTokenAmount, setUserPoolTokenAmount] = useState<TokenAmount>();
   const [estimation, setEstimation] = useState("");
   const [sliderValue, setSliderValue] = useState(0);
   const [liqToRemove, setLiqToRemove] = useState<Fraction>();
@@ -108,6 +108,9 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
     //liq to remove
     const sliderPercent = new Percent(sliderValue.toString(), "100");
+
+    setUserPoolTokenAmount(poolPosition.userLiquidity)
+
     const liqToRemove = poolPosition.userLiquidity.multiply(sliderPercent);
     let poolShare = liqToRemove.divide(poolPosition.poolSupply);
     setLiqToRemove(liqToRemove)
@@ -119,6 +122,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     setAmountToken0(token0Amount.toSignificant(6))
     setAmountToken1(token1Amount.toSignificant(6))
   }, [sliderValue])
+
 
   const setAction = async () => {
     //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
@@ -243,6 +247,12 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
               setSelectedToken={setToken1Selector}
               selectableTokens={protocolTokens.filter((token) => token !== token0Selector)}
             />
+            {userPoolTokenAmount &&
+            <div>
+              Your position
+              : {parseFloat(ethers.utils.formatUnits(userPoolTokenAmount.raw.toString(), userPoolTokenAmount.token.decimals)).toPrecision(4)}
+            </div>
+            }
 
           </div>
 
@@ -285,8 +295,17 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
 
           <div className={styles.whiteLine}/>
+          Output estimates :
           <div className={styles.totalLiquidityWrapper}>
-            <p>Estimation: <span>{estimation}</span></p>
+            <div className={styles.tokenWrapperAdd}>
+              <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
+              <p className={styles.tokenAmount}>{amountToken0}</p>
+            </div>
+            <div className={styles.space}/>
+            <div className={styles.tokenWrapperAdd}>
+              <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
+              <p className={styles.tokenAmount}>{amountToken1}</p>
+            </div>
           </div>
           {loading &&
           <Flex alignItems={"center"} className={styles.submitButton}>Fetching route &nbsp; <Spinner/></Flex>

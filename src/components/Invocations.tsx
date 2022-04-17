@@ -9,14 +9,14 @@ import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json"
 import {ethers} from "ethers";
 import {JEDI_ROUTER_ADDRESS, JEDI_TOKENS, JEDI_REGISTRY_ADDRESS, SLIPPAGE} from "../utils/constants/constants";
 import {ChainId, Fetcher, Pair, Percent, Route, Token, TokenAmount, Trade} from "@jediswap/sdk";
-import {MySwap} from "../hooks/mySwap";
-import {JediSwap} from "../hooks/jediSwap";
+import {MySwap} from "../protocols/mySwap";
+import {JediSwap} from "../protocols/jediSwap";
 import {useStarknet} from "../hooks/useStarknet";
 import {add} from "@noble/hashes/_u64";
 import {createTokenObjects, getErc20Decimals} from "../utils/helpers";
 import {LiquidityPoolInputs, StarknetConnector, SwapParameters} from "../utils/constants/interfaces";
-import {ArfSwap} from "../hooks/arfSwap";
-import {getPair} from "../hooks/dexTools";
+import {ArfSwap} from "../protocols/arfSwap";
+import {getPair} from "../protocols/dexTools";
 
 
 const Invocations = () => {

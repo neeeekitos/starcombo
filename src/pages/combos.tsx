@@ -18,8 +18,8 @@ import styles from "./combos.module.css";
 import {Action, ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../utils/constants/constants";
 import Invocations from "../components/Invocations";
 import {StarknetConnector, SwapParameters} from "../utils/constants/interfaces";
-import {createTokenObjects} from "../utils/helpers";
-import {JediSwap} from "../hooks/jediSwap";
+import {createTokenObjects, getFloatFromBN} from "../utils/helpers";
+import {JediSwap} from "../protocols/jediSwap";
 import {Pair, Token} from "@jediswap/sdk";
 import alert from "@chakra-ui/theme/src/components/alert";
 import AddAction from "../hooks/AddAction";
@@ -36,6 +36,7 @@ import FundsRecap from "../components/FundsRecap";
 import SelectNewAction from "../components/select-new-action/select-new-action";
 
 import useComponentVisible from "../hooks/UseComponentVisible";
+import {ethers} from "ethers";
 
 const Combos: NextPage = () => {
 
@@ -85,7 +86,8 @@ const Combos: NextPage = () => {
       for (const [key, value] of Object.entries(initialFunds)) {
         const token: Token = tokenInfos[key]
         //TODO check if its w or w/o decimals\
-        const userBalance = parseFloat(await getBalanceOfErc20(starknetConnector, token))
+        const userBalanceBN = await getBalanceOfErc20(starknetConnector,token)
+        const userBalance =  getFloatFromBN(userBalanceBN.toString(),token.decimals);
         if (userBalance < value) {
           NotificationManager.error(`Insufficient ${key} in your wallet`)
           error = true;

@@ -1,7 +1,7 @@
 import {AccountInterface, Call} from "starknet";
 import {Provider} from "starknet";
 import {BigintIsh, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
-import {PoolPosition} from "../../hooks/jediSwap";
+import {PoolPosition} from "../../protocols/jediSwap";
 import {Action} from "./constants";
 
 export interface DexCombo {
@@ -12,6 +12,8 @@ export interface DexCombo {
   getPoolDetails(tokenFrom: Token, tokenTo: Token, provider?: Provider)
 
   getLiquidityPosition(starknetConnector: StarknetConnector, token0: Token, token1: Token, poolPair?: Pair)
+
+  getSwapExecutionPrice(starknetConnector: StarknetConnector, swapParameters: SwapParameters);
 
   /**
    * Returns the transaction for a swap operation

@@ -12,7 +12,7 @@ import useComponentVisible from "../../hooks/UseComponentVisible";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useStarknet} from "../../hooks/useStarknet";
 import {DexCombo, StarknetConnector, SwapParameters} from "../../utils/constants/interfaces";
-import {createTokenObjects} from "../../utils/helpers";
+import {createTokenObjects, formatToBigNumberish, formatToDecimal} from "../../utils/helpers";
 import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {number} from "starknet";
 import {ethers} from "ethers";
@@ -25,6 +25,11 @@ interface ActionBlockProps {
   protocolName: string,
   action: any,
   handleRemoveAction: (actionId: number) => void,
+}
+
+interface ExecutionPrices {
+  priceAtoB:number,
+  priceBtoA:number
 }
 
 const ActionBlockSwap = (props: ActionBlockProps) => {
@@ -43,6 +48,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
   const {ref, isComponentVisible, setIsComponentVisible} =
     useComponentVisible(false);
 
+
   //States//
 
   //token amounts
@@ -55,6 +61,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
 
   // LP pair
   const [pair, setPair] = useState<Pair>();
+  const [prices,setPrices] = useState<ExecutionPrices>();
 
   //poolId required to use with mySwap
   const [poolId, setPoolId] = useState<string>();
@@ -74,9 +81,13 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
 
   //When changing tokens in swap component
   useEffect(() => {
+
+    //Reset states
+    setPrices({priceAtoB:0,priceBtoA:0})
     setAmountFrom('0')
     setAmountTo('0')
     unsetItem();
+
     //Fetch pool pair
     const fetchPair = async () => {
       setLoading(true);
@@ -88,6 +99,20 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
       const poolPair: Pair = poolDetails.poolPair;
       if (poolDetails.poolId) setPoolId(poolDetails.poolId)
       setPair(poolPair);
+
+      //get execution prices when interacting with pool
+      const swapParameters: SwapParameters = {
+        tokenFrom: tokenFrom,
+        tokenTo: tokenTo,
+        amountIn: '1',
+        amountOut: "0", //TODO support for this
+        poolPair: pair,
+      }
+      const {execPrice} = await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters);
+      const priceAtoB = execPrice;
+      const priceBtoA = 1/execPrice;
+      setPrices({priceAtoB: priceAtoB,priceBtoA: priceBtoA})
+
       setLoading(false);
     }
     fetchPair();
@@ -142,23 +167,13 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
     if (value === '') value = '0'
     if (isNaN(value as any)) return;
 
-    let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price;
-    tokenFromSelector.address === pair.token0.address ?
-      [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, tokenFromIsToken0] = [pair.token0, pair.token1, pair.token0Price, pair.token1Price, true] :
-      [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, tokenFromIsToken0] = [pair.token1, pair.token0, pair.token1Price, pair.token0Price, false];
-
     if (priceWanted === "from") {
-      const parsedValue = ethers.utils.parseUnits(value, tokenTo.decimals)
-      const parsedFromAmount = tokenToPrice.raw.multiply(parsedValue.toString())
-      const amountFrom = parseFloat(ethers.utils.formatUnits(parsedFromAmount.toFixed(0), tokenFrom.decimals)).toPrecision(6)
-      setAmountFrom(amountFrom)
+      const amountFrom = value*prices.priceBtoA
+      setAmountFrom(amountFrom.toPrecision(6))
     } else {
       // to
-      const parsedValue = ethers.utils.parseUnits(value, tokenFrom.decimals)
-      const parsedToAmount = tokenFromPrice.raw.multiply(parsedValue.toString())
-      const amountTo = parseFloat(ethers.utils.formatUnits(parsedToAmount.toFixed(0), tokenTo.decimals)).toPrecision(6)
-      setAmountTo(amountTo)
-
+      const amountTo = value*prices.priceAtoB
+      setAmountTo(amountTo.toPrecision(6))
     }
   }
 
@@ -175,19 +190,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
 
   //Sets the action, meaning that it will be executed when the user clicks on 'send'
   const setAction = async () => {
-    //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
-    // So here it only works for swaps now. We need to integrate add and remove liq in the action blocks.
-    addItem({
-      [props.action.id]: {
-        actionType: props.actionName,
-        tokens: {
-          [tokenFromSelector.name]: parseFloat(amountFrom),
-          [tokenToSelector.name]: parseFloat(amountTo)
-        }
-      }
-    });
-    addToken(tokenFromSelector.name, tokenFrom);
-    addToken(tokenToSelector.name, tokenTo);
+
     const swapParameters: SwapParameters = {
       tokenFrom: tokenFrom,
       tokenTo: tokenTo,
@@ -195,8 +198,26 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
       amountOut: "0", //TODO support for this
       poolPair: pair,
     }
+
     if(amountFrom==='0') {NotificationManager.error("Can't swap a null amount"); return;}
-    const call = poolId ? (await protocolInstance.swap(starknetConnector, swapParameters, poolId)).call : (await protocolInstance.swap(starknetConnector, swapParameters)).call
+
+    //We need details to know the minimum amount the user will receive
+    const {call,details} = poolId ? (await protocolInstance.swap(starknetConnector, swapParameters, poolId)) : (await protocolInstance.swap(starknetConnector, swapParameters))
+
+    //Add item to the recap DS
+    addItem({
+      [props.action.id]: {
+        actionType: props.actionName,
+        tokens: {
+          [tokenFromSelector.name]: parseFloat(amountFrom),
+          [tokenToSelector.name]: parseFloat(formatToDecimal(details.amountOutMin,tokenTo.decimals))
+        }
+      }
+    });
+    addToken(tokenFromSelector.name, tokenFrom);
+    addToken(tokenToSelector.name, tokenTo);
+
+    //Add call to the transactions DS.
     addTransaction({
       [props.action.id]: call
     })
