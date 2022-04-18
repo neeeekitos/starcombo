@@ -26,9 +26,12 @@ interface AmountsState {
   tokenInfos: {
     [key: string]: Token
   },
+  itemsIdOrder: any[],
   addItem: (item: ItemProps) => void,
   addToken: (address: string, token: Token) => void,
   removeItem: (itemId: number) => void,
+  reorderAmounts: (newOrder: any[]) => void,
+
 }
 
 interface ActionOptions {
@@ -104,53 +107,126 @@ const calculateFunds = (appItems) => {
   let receivedFunds = {};
 
   const actions: ActionOptions[] = Object.values(appItems);
+
+  const handleAction: ActionOptions = {
+    [ACTIONS[ActionTypes.SWAP].name]: handleSwap,
+    [ACTIONS[ActionTypes.ADD_LIQUIDITY].name]: handleAddLiquidity,
+    [ACTIONS[ActionTypes.REMOVE_LIQUIDITY].name]: handleRemoveLiquidity,
+  }
+
   for (const action of actions) {
-    let handleAction: ActionOptions = {
-      [ACTIONS[ActionTypes.SWAP].name]: handleSwap,
-      [ACTIONS[ActionTypes.ADD_LIQUIDITY].name]: handleAddLiquidity,
-      [ACTIONS[ActionTypes.REMOVE_LIQUIDITY].name]: handleRemoveLiquidity,
-    }
     handleAction[action.actionType](initialFunds, receivedFunds, action.tokens);
   }
   return [initialFunds, receivedFunds]
 }
 
+const testCalc = (actions: ActionOptions[]) => {
+  let initialFunds = {};
+  let receivedFunds = {};
+  const handleAction: ActionOptions = {
+    [ACTIONS[ActionTypes.SWAP].name]: handleSwap,
+    [ACTIONS[ActionTypes.ADD_LIQUIDITY].name]: handleAddLiquidity,
+    [ACTIONS[ActionTypes.REMOVE_LIQUIDITY].name]: handleRemoveLiquidity,
+  }
+
+  for (const action of actions) {
+    handleAction[action.actionType](initialFunds, receivedFunds, action.tokens);
+  }
+  return [initialFunds, receivedFunds]
+}
+
+
 export const useAmounts = create<AmountsState>((set, get) => ({
-    appItems: {},
-    initialFunds: {},
-    receivedFunds: {},
-    tokenInfos: {},
-    addItem: (item) => {
-      //First we store this item inside the item structure.
-      const itemNumber = Object.keys(item)[0]; // This is the item id.
-      const {actionType, tokens} = item[itemNumber];
-      const [itemTokenFrom, itemTokenTo] = Object.keys(tokens);
-      const [itemValueFrom, itemValueTo] = Object.values(tokens);
-      let appItems = get().appItems;
-      appItems[itemNumber] = {
-        actionType: actionType,
-        tokens: {
-          [itemTokenFrom]: itemValueFrom, [itemTokenTo]: itemValueTo,
-        }
+  appItems: {},
+  initialFunds: {},
+  receivedFunds: {},
+  tokenInfos: {},
+  itemsIdOrder: [], //array of block ids
+  addItem: (item) => {
+    //When adding an item  :
+    // 1 - Add its id and data to the mapping
+    // 2 - re-compute funds from re-ordered array
+    console.log('add')
+    console.log(item)
+
+    //First we store this item inside the item structure. It's a simple mapping id=>item props
+    //That allows us to quickly edit/delete items.
+    const itemNumber = Object.keys(item)[0]; // This is the item id.
+    const {actionType, tokens} = item[itemNumber];
+    const [itemTokenFrom, itemTokenTo] = Object.keys(tokens);
+    const [itemValueFrom, itemValueTo] = Object.values(tokens);
+    let appItems = get().appItems;
+    appItems[itemNumber] = {
+      id: itemNumber,
+      actionType: actionType,
+      tokens: {
+        [itemTokenFrom]: itemValueFrom, [itemTokenTo]: itemValueTo,
       }
-      set((state) => ({...state, appItems: appItems}));
-      const [initialFunds, receivedFunds] = calculateFunds(appItems)
-      set((state) => ({...state, initialFunds: initialFunds}));
-      set((state) => ({...state, receivedFunds: receivedFunds}));
-    },
-    addToken: (address, token) => {
-      let tokenInfos = get().tokenInfos;
-      tokenInfos[address] = token
-      set((state) => ({...state, tokenInfos: tokenInfos}));
-    },
-    removeItem: (itemNumber) => {
-      let appItems = get().appItems;
-      delete appItems[itemNumber];
-      const [initialFunds, receivedFunds] = calculateFunds(appItems)
-      set((state) => ({...state, initialFunds: initialFunds}));
-      set((state) => ({...state, receivedFunds: receivedFunds}));
-      set((state) => ({...state, appItems: appItems}));
     }
 
-  }))
-;
+    //To calculate the funds received and provided, we need to keep in mind the order of the items.
+    //So we have to get the orderedItemsIds in our app and create an array that is in the correct order from our appItems DS.
+
+    //Get the items id order array and try to find this item. If it's there, no updates to do. Otherwise push it to the end.
+    let itemsIdOrder = get().itemsIdOrder;
+    console.log(itemsIdOrder)
+    //this is actually useless cause it is always ordered the right way
+    // const isItemOrdered = itemsIdOrder.find((elem)=>elem.id===itemNumber)
+    // console.log(itemsIdOrder)
+    // if(!isItemOrdered){
+    //   itemsIdOrder.push(appItems[itemNumber]);
+    //   set((state) => ({...state, itemsIdOrder: [...state.itemsIdOrder,appItems[itemNumber]]}));
+    // }
+
+    //calculate funds change
+    const newItemsOrder = itemsIdOrder.flatMap((item) => {
+      if(!appItems[item.id]) return [];
+      return appItems[item.id]
+    })
+    const [initialFunds, receivedFunds] = testCalc(newItemsOrder);
+    //set new states
+    set((state) => ({...state, appItems: appItems}));
+    set((state) => ({...state, initialFunds: initialFunds}));
+    set((state) => ({...state, receivedFunds: receivedFunds}));
+  },
+  addToken: (address, token) => {
+    let tokenInfos = get().tokenInfos;
+    tokenInfos[address] = token
+    set((state) => ({...state, tokenInfos: tokenInfos}));
+  },
+  removeItem: (itemNumber) => {
+    //When removing item :
+    // 1 - Remove key from mapping id => itemData
+    // 2 - Remove entry from ordered item array
+    // 3 - re-compute funds
+
+    let appItems = get().appItems;
+    delete appItems[itemNumber];
+
+    let itemsOrder = get().itemsIdOrder;
+    itemsOrder = itemsOrder.filter((item) => item.id !== itemNumber)
+
+    const [initialFunds, receivedFunds] = calculateFunds(appItems)
+    set((state) => ({...state, initialFunds: initialFunds}));
+    set((state) => ({...state, receivedFunds: receivedFunds}));
+    set((state) => ({...state, appItems: appItems}));
+    set((state) => ({...state, itemsOrder: itemsOrder}));
+
+  },
+  reorderAmounts: (newOrder) => {
+    //When reordering :
+    // 1 - Re-compute new itemsData ordered
+    // 2 - set new ordered items array
+    // 3 - compute new funds
+    let appItems = get().appItems;
+    const newItemsOrder = newOrder.flatMap((item) => {
+      if(!appItems[item.id]) return [];
+      return appItems[item.id]
+    })
+    set((state) => ({...state, itemsIdOrder: [...newOrder]})); //JS objects passed by ref so make a copy :)
+    const [initialFunds, receivedFunds] = testCalc(newItemsOrder)
+    set((state) => ({...state, initialFunds: initialFunds}));
+    set((state) => ({...state, receivedFunds: receivedFunds}));
+  }
+
+}));

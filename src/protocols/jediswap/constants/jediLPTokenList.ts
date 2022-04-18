@@ -50,13 +50,11 @@ export const jediLPMapping = () =>{
   jediTokensList.forEach((token)=>{
     jediLPAddresses[token.address]={};
   })
-  console.log(jediTokensList)
   jediLPAddresses[J23FEB0_ADDRESS][J23FEB1_ADDRESS]=  jediLPAddresses[J23FEB1_ADDRESS][J23FEB0_ADDRESS]=jediPairAddresses.J23FEB0_J23FEB1;
   jediLPAddresses[J23FEB0_ADDRESS][J23FEB2_ADDRESS]=  jediLPAddresses[J23FEB2_ADDRESS][J23FEB0_ADDRESS]=jediPairAddresses.J23FEB0_J23FEB2;
   jediLPAddresses[J23FEB0_ADDRESS][J23FEB3_ADDRESS]=  jediLPAddresses[J23FEB3_ADDRESS][J23FEB0_ADDRESS]=jediPairAddresses.J23FEB0_J23FEB3;
 
   // jediLPAddresses[WBTC_ADDRESS][USDC_ADDRESS] = jediLPAddresses[USDC_ADDRESS][WBTC_ADDRESS] = LP_WBTC_USDC;
   // jediLPAddresses[DAI_ADDRESS][USDC_ADDRESS] = jediLPAddresses[USDC_ADDRESS][DAI_ADDRESS] = LP_DAI_USDC;
-  console.log(jediLPAddresses)
   return jediLPAddresses
 }

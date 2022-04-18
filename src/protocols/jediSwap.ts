@@ -67,7 +67,6 @@ export class JediSwap implements DexCombo {
     const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountInBN, amountOutBN, SLIPPAGE)
     if (!trade) return undefined;
 
-    console.log(bnToUint256(trade.amountOutMin));
 
 
     //flatten the array because and uint256 and trade.pathAddresses is a subarray
@@ -77,7 +76,7 @@ export class JediSwap implements DexCombo {
         Object.values(bnToUint256(trade.amountOutMin)),
         trade.pathLength,
         trade.pathAddresses,
-        number.toBN(starknetConnector.account.address).toString(),
+        number.toBN(starknetConnector.account.address),
         Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
       ].flatMap((x) => x);
 
@@ -141,24 +140,23 @@ export class JediSwap implements DexCombo {
 
     const callData: Array<string> =
       [
-        tokenFromIsToken0 ? tokenFromDec.toString() : tokenToDec.toString(),
-        tokenFromIsToken0 ? tokenToDec.toString() : tokenFromDec.toString(),
+        tokenFromIsToken0 ? tokenFromDec : tokenToDec,
+        tokenFromIsToken0 ? tokenToDec : tokenFromDec,
         tokenFromIsToken0 ? Object.values(bnToUint256(desiredAmountFrom.toString())) : Object.values(bnToUint256(desiredAmountTo.toFixed(0))),
         tokenFromIsToken0 ? Object.values(bnToUint256(desiredAmountTo.toFixed(0))) : Object.values(bnToUint256(desiredAmountFrom.toString())),
         tokenFromIsToken0 ? Object.values(bnToUint256(minAmountFrom)) : Object.values(bnToUint256(minAmountTo)),
         tokenFromIsToken0 ? Object.values(bnToUint256(minAmountTo)) : Object.values(bnToUint256(minAmountFrom)),
-        number.toBN(starknetConnector.account.address).toString(),
+        number.toBN(starknetConnector.account.address),
         Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
       ].flatMap((x) => x);
 
 
-    console.log(callData)
     const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
         calldata: bigNumberishArrayToDecimalStringArray([
-            number.toBN(JEDI_ROUTER_ADDRESS).toString(), // router address decimal
+            number.toBN(JEDI_ROUTER_ADDRESS), // router address decimal
             Object.values(bnToUint256(desiredAmountFrom.toString()))
           ].flatMap((x) => x)
         )
@@ -167,7 +165,7 @@ export class JediSwap implements DexCombo {
         contractAddress: tokenTo.address,
         entrypoint: 'approve',
         calldata: bigNumberishArrayToDecimalStringArray([
-            number.toBN(JEDI_ROUTER_ADDRESS).toString(), // router address decimal
+            number.toBN(JEDI_ROUTER_ADDRESS), // router address decimal
             Object.values(bnToUint256(desiredAmountTo.toFixed(0))),
           ].flatMap((x) => x)
         )
@@ -206,17 +204,17 @@ export class JediSwap implements DexCombo {
     let token1min = ethers.utils.parseUnits(token1Amount.subtract(token1Amount.multiply(SLIPPAGE)).toFixed(poolPair.token1.decimals), poolPair.token1.decimals);
 
     const approvalCallData = [
-      number.toBN(JEDI_ROUTER_ADDRESS).toString(), // router address decimal
+      number.toBN(JEDI_ROUTER_ADDRESS), // router address decimal
       Object.values(bnToUint256(liqToRemove.raw.toString())),
     ].flatMap((x) => x)
 
     const removeLiqCallData = [
-      number.toBN(poolPair.token0.address).toString(),
-      number.toBN(poolPair.token1.address).toString(),
+      number.toBN(poolPair.token0.address),
+      number.toBN(poolPair.token1.address),
       Object.values(bnToUint256(liqToRemove.raw.toString())),
       Object.values(bnToUint256(token0min.toString())),
       Object.values(bnToUint256(token1min.toString())),
-      number.toBN(starknetConnector.account.address).toString(),
+      number.toBN(starknetConnector.account.address),
       Math.floor((Date.now() / 1000) + 3600).toString() // default timeout is 1 hour
     ].flatMap((x) => x);
 
@@ -259,12 +257,10 @@ export class JediSwap implements DexCombo {
 
     const liquidityPool = await this.findPool(provider, tokenFrom, tokenTo)
     if (!liquidityPool) return undefined;
-    console.log(liquidityPool)
 
     const poolToken0 = new TokenAmount(tokenFrom, liquidityPool.liqReservesTokenFrom);
     const poolToken1 = new TokenAmount(tokenTo, liquidityPool.liqReservesTokenTo);
     const poolPair = new Pair(poolToken0, poolToken1, liquidityPool.liqPoolAddress);
-    console.log(poolPair)
 
     return {poolPair: poolPair};
   }
@@ -324,8 +320,7 @@ export class JediSwap implements DexCombo {
 
     let liquidityPoolForTokens = jediLPMapping()[tokenFrom.address] ? jediLPMapping()[tokenFrom.address][tokenTo.address] : undefined
     if (!liquidityPoolForTokens) {
-      console.log(tokenFrom.address)
-      console.log(number.toBN(tokenFrom.address))
+      //TODO search in registry 2 if not found
       liquidityPoolForTokens = await provider.callContract({
         contractAddress: JEDI_REGISTRY_ADDRESS_2,
         entrypoint: "get_pair_for",
@@ -335,7 +330,6 @@ export class JediSwap implements DexCombo {
         ]
       }).then((res) => res.result[0])
     }
-    console.log(liquidityPoolForTokens)
     if (liquidityPoolForTokens === '0x0') return undefined
 
     //Gets address of pool's token0

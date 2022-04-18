@@ -16,13 +16,9 @@ import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
 import {Action, ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../utils/constants/constants";
-import Invocations from "../components/Invocations";
 import {StarknetConnector, SwapParameters} from "../utils/constants/interfaces";
 import {createTokenObjects, getFloatFromBN} from "../utils/helpers";
-import {JediSwap} from "../protocols/jediSwap";
 import {Pair, Token} from "@jediswap/sdk";
-import alert from "@chakra-ui/theme/src/components/alert";
-import AddAction from "../hooks/AddAction";
 import {useAmounts} from "../hooks/useAmounts";
 import {getBalanceOfErc20} from "../utils/helpers";
 import {NotificationContainer, NotificationManager} from 'react-notifications';
@@ -36,7 +32,7 @@ import FundsRecap from "../components/FundsRecap";
 import SelectNewAction from "../components/select-new-action/select-new-action";
 
 import useComponentVisible from "../hooks/UseComponentVisible";
-import {ethers} from "ethers";
+import {act} from "react-dom/test-utils";
 
 const Combos: NextPage = () => {
 
@@ -45,10 +41,19 @@ const Combos: NextPage = () => {
     account: account,
     provider: provider
   }
-  const {transactionItems, transactionHistory, addTransactionHistory, removeTransaction} = useTransactions();
+  const {
+    transactionItems,
+    transactionHistory,
+    addTransactionHistory,
+    removeTransaction,
+    reorderTransactions,
+    orderedTransactionData
+  } = useTransactions();
   const [error, setError] = useState(false);
-  const {initialFunds, receivedFunds, tokenInfos, removeItem} = useAmounts();
+  const {initialFunds, receivedFunds, tokenInfos, removeItem, reorderAmounts} = useAmounts();
   const [actions, setActions] = useState<Action[]>([]);
+
+  const [moved, setMoved] = useState<boolean>(false);
 
   const [hash, setHash] = useState<string>();
   const [pair, setPair] = useState<Pair>();
@@ -62,12 +67,23 @@ const Combos: NextPage = () => {
     footerRef.current?.scrollIntoView({behavior: "smooth"})
   }
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [actions]);
+  // useEffect(() => {
+  //   // scrollToBottom()
+  //   console.log(actions)
+  // }, [actions]);
+
+  //When reordering, reorderAmounts from
+  const handleReorder = (newOrder) => {
+    reorderAmounts(newOrder);
+    reorderTransactions(newOrder);
+    setActions(newOrder);
+  }
 
   const handleAddAction = (action: Action) => {
+    reorderAmounts([...actions, action]);
+    reorderTransactions([...actions, action]);
     setActions([...actions, action]);
+    scrollToBottom()
   }
 
   const handleRemoveAction = (actionId: number) => {
@@ -86,8 +102,8 @@ const Combos: NextPage = () => {
       for (const [key, value] of Object.entries(initialFunds)) {
         const token: Token = tokenInfos[key]
         //TODO check if its w or w/o decimals\
-        const userBalanceBN = await getBalanceOfErc20(starknetConnector,token)
-        const userBalance =  getFloatFromBN(userBalanceBN.toString(),token.decimals);
+        const userBalanceBN = await getBalanceOfErc20(starknetConnector, token)
+        const userBalance = getFloatFromBN(userBalanceBN.toString(), token.decimals);
         if (userBalance < value) {
           NotificationManager.error(`Insufficient ${key} in your wallet`)
           error = true;
@@ -95,7 +111,8 @@ const Combos: NextPage = () => {
       }
 
       if (!error) {
-        const transactions = Object.values(transactionItems).flat();
+        const transactions = orderedTransactionData
+        console.log(transactions)
         const tx_data = await account.execute(transactions);
         console.log(tx_data)
         NotificationManager.success("Transaction Sent!", 'Transaction sent', 5000, () => window.open(`https://goerli.voyager.online/tx/${tx_data.transaction_hash}`));
@@ -169,7 +186,9 @@ const Combos: NextPage = () => {
             className={styles.actionsWrapper}
             axis="y"
             values={actions}
-            onReorder={setActions}
+            onReorder={(newOrder) => {
+              handleReorder(newOrder);
+            }}
             layoutScroll
             style={{overflowY: "hidden"}}
           >

@@ -31,6 +31,7 @@ interface ActionBlockProps {
   protocolName: string,
   action: any,
   handleRemoveAction: (actionId: number) => void,
+  moved?: any
 }
 
 interface ExecutionPrices {
@@ -115,7 +116,6 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
       setTokenFromBalance(getFloatFromBN(tokenFromBalanceBN.toString(), tokenFromSelector.decimals));
       setTokenToBalance(getFloatFromBN(tokenToBalanceBN.toString(), tokenToSelector.decimals));
 
-      console.log(tokenFromBalance, tokenToBalance)
       setTokenFrom(tokenFrom);
       setTokenTo(tokenTo);
       const poolDetails = await protocolInstance.getPoolDetails(tokenFrom, tokenTo, provider);
@@ -136,7 +136,6 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
         amountOut: "0", //TODO support for this
         poolPair: poolPair,
       }
-      console.log(swapParameters)
       const {execPrice} = await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters);
       const priceAtoB = execPrice;
       const priceBtoA = 1 / execPrice;
@@ -160,6 +159,15 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
     }
     setQuoteTokenAmount(value, direction)
   }, [pair])
+
+  //
+  // useEffect(() => {
+  //
+  //   if (set) setAction();
+  //   console.log(props.action.id)
+  // }, [props.moved])
+
+
 
 
   //Removes item from set.
@@ -249,7 +257,6 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
     });
     addToken(tokenFromSelector.name, tokenFrom);
     addToken(tokenToSelector.name, tokenTo);
-
     //Add call to the transactions DS.
     addTransaction({
       [props.action.id]: call
