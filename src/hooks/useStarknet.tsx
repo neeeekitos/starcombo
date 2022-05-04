@@ -1,6 +1,6 @@
 import create from "zustand";
 import {AccountInterface, Provider} from "starknet";
-import {getStarknet} from "@argent/get-starknet/dist";
+import {getStarknet} from "get-starknet";
 
 interface StarknetState {
   account: AccountInterface | undefined,

@@ -9,6 +9,10 @@ interface TransactionItem {
 interface SentTransactions {
   tx_hash: string,
   status: Status,
+  failureReason?:{
+    message:string,
+    code:string
+  }
 }
 
 interface TransactionState {
@@ -78,9 +82,16 @@ export const useTransactions = create<TransactionState>((set, get) => ({
     updateTransactionStatus: async (provider) => {
       let transactionHistory = get().transactionHistory;
       await Promise.all(transactionHistory.map(async (transaction) => {
-        const updatedStatus = (await provider.getTransactionStatus(transaction.tx_hash)).tx_status
+        const updatedResponse = (await provider.getTransactionStatus(transaction.tx_hash))
+        const updatedStatus = updatedResponse.tx_status
+        let failureReason;
+        if(updatedResponse.tx_failure_reason) failureReason = {
+          message: updatedResponse.tx_failure_reason?.error_message,
+          code: updatedResponse.tx_failure_reason?.code
+        }
         transaction.status = updatedStatus
-        console.log(updatedStatus, transaction.status)
+        transaction.failureReason = failureReason
+        console.log(transaction);
       }));
       set((state) => ({...state, transactionHistory: transactionHistory}));
     },

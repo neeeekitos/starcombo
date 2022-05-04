@@ -1,23 +1,15 @@
 import {NextPage} from "next";
 import {useStarknet} from "../hooks/useStarknet";
 
-import {Button, Flex, Heading, MenuItem} from "@chakra-ui/react"
-import {Abi, AccountInterface, AddTransactionResponse, Contract} from 'starknet'
-import {toBN} from 'starknet/utils/number'
-
-import BalancesAbi from '../contracts/artifacts/abis/balances.json'
-import {defaultProvider, ec, hash} from "starknet/src/index";
-import {transformCallsToMulticallArrays} from "starknet/src/utils/transaction";
-import {getStarknet} from "@argent/get-starknet";
-import {StarknetWindowObject} from "@argent/get-starknet/dist/extension.model";
-import React, {useEffect, useState, useRef} from "react";
+import {Button, Flex} from "@chakra-ui/react"
+import React, {useState, useRef} from "react";
 import ActionBlockSwap from "../components/action-block-swap/action-block-swap";
 import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
-import {Action, ACTIONS, ActionTypes, ProtocolNames, PROTOCOLS} from "../utils/constants/constants";
-import {StarknetConnector, SwapParameters} from "../utils/constants/interfaces";
-import {createTokenObjects, getFloatFromBN} from "../utils/helpers";
+import {Action, ACTIONS, ActionTypes, PROTOCOLS} from "../utils/constants/constants";
+import {StarknetConnector} from "../utils/constants/interfaces";
+import {getFloatFromBN} from "../utils/helpers";
 import {Pair, Token} from "@jediswap/sdk";
 import {useAmounts} from "../hooks/useAmounts";
 import {getBalanceOfErc20} from "../utils/helpers";
@@ -32,7 +24,6 @@ import FundsRecap from "../components/FundsRecap";
 import SelectNewAction from "../components/select-new-action/select-new-action";
 
 import useComponentVisible from "../hooks/UseComponentVisible";
-import {act} from "react-dom/test-utils";
 
 const Combos: NextPage = () => {
 

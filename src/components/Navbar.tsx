@@ -134,7 +134,7 @@ const Navbar = () => {
                       return (
                         <div onClick={() => window.open(`https://goerli.voyager.online/tx/${transaction.tx_hash}`)}
                              key={transaction.tx_hash}>
-                          {transaction.tx_hash} - {transaction.status}
+                          {transaction.tx_hash} - {transaction.status} - {transaction.status==="REJECTED" }
                         </div>
                       )
                     })
