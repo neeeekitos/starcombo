@@ -4,6 +4,7 @@ import {JediSwap} from "../../protocols/jediSwap";
 import {MySwap} from "../../protocols/mySwap";
 import styles from "../../components/select-new-action/select-new-action.module.css";
 import {jediTokensList} from "../../protocols/jediswap/constants/jediTokens";
+import {myswapTokenList} from "../../protocols/myswap/constants/myswapTokens";
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000000000000000000000000000'
 
@@ -98,28 +99,7 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
       ActionTypes.ADD_LIQUIDITY,
       ActionTypes.REMOVE_LIQUIDITY
     ],
-    tokens: [
-      {
-        name: 'Test Token',
-        address: '0x07394cbe418daa16e42b87ba67372d4ab4a5df0b05c6e554d158458ce245bc10',
-        symbol: 'TST',
-      },
-      {
-        name: 'Test USDC',
-        address: '0x44e592375a34fb4fdd3a5e2694cd2cbbcd61305b95cfac9d40c1f02ac64aa66',
-        symbol: 'tUSDC',
-      },
-      {
-        name: 'Test WETH',
-        address: '0x02c03d22f43898f146e026a72f4cf37b9e898b70a11c4731665e0d75ce87700d',
-        symbol: 'tWETH',
-      },
-      {
-        name: 'Test Compound',
-        address: '0x07f6e6a3b90ebe02190fba0269becaf8828b9219e92a7a041fa6da3ef11d0c6a',
-        symbol: 'tCOMP',
-      },
-    ],
+    tokens:myswapTokenList,
     instance:MySwap.getInstance(),
   },
   // [ProtocolNames.ZK_LEND]: {
