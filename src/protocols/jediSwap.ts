@@ -138,6 +138,7 @@ export class JediSwap implements DexCombo {
     minAmountTo = desiredAmountTo.subtract(SLIPPAGE.multiply(desiredAmountTo).toFixed(0)).toFixed(0)
 
 
+    // Build tx details
     const callData: Array<string> =
       [
         tokenFromIsToken0 ? tokenFromDec : tokenToDec,
@@ -187,8 +188,8 @@ export class JediSwap implements DexCombo {
   /**
    * Removes liquidity from the pool
    * @param starknetConnector
-   * @param poolPosition
-   * @param liqToRemove
+   * @param poolPosition poolPosition object - with total pooly liq, user's liq and pair.
+   * @param liqToRemove amount of liquidity to remove.
    */
   public removeLiquidity(starknetConnector: StarknetConnector, poolPosition: PoolPosition, liqToRemove: TokenAmount): Promise<Action> {
 
@@ -287,10 +288,14 @@ export class JediSwap implements DexCombo {
       userLiquidity: liquidity,
       poolPair: poolPair,
     }
-
   }
 
 
+  /**
+   * Returns the execution price for a swap.
+   * @param starknetConnector
+   * @param swapParameters parameters of the swap to execute
+   */
   public async getSwapExecutionPrice(starknetConnector: StarknetConnector, swapParameters: SwapParameters) {
     let {tokenFrom, tokenTo, amountIn, amountOut, poolPair} = swapParameters;
     //DONT USE PARSE ETHER BECAUSE OUR TOKENS ARE NOT 18 DEC
@@ -306,18 +311,20 @@ export class JediSwap implements DexCombo {
 
 
   /**
-   * Given two decimal tokens addresses, finds the associated pool and returns details about the liquidity pool (address, token0, reserves).
-   * @param provider
-   * @param tokenFrom
-   * @param tokenTo
+   * Given two Tokens, finds the associated pool
+   * and returns details about the liquidity pool (address, token0, reserves).
+   * @param provider starknet provider
+   * @param tokenFrom one pool token
+   * @param tokenTo another token
    */
   private async findPool(provider: Provider, tokenFrom: Token, tokenTo: Token): Promise<findPoolRes | undefined> {
 
-    //Gets liq pool address for tokenFrom - tokenTo pool
 
+    //Convert addresses to BN
     const tokenFromDec = number.toBN(tokenFrom.address)
     const tokenToDec = number.toBN(tokenTo.address)
 
+    //Check for hardcoded pool addresses. If they don't exist, query the network.
     let liquidityPoolForTokens = jediLPMapping()[tokenFrom.address] ? jediLPMapping()[tokenFrom.address][tokenTo.address] : undefined
     if (!liquidityPoolForTokens) {
       //TODO search in registry 2 if not found
@@ -330,6 +337,8 @@ export class JediSwap implements DexCombo {
         ]
       }).then((res) => res.result[0])
     }
+
+    //Return code if pool isn't found.
     if (liquidityPoolForTokens === '0x0') return undefined
 
     //Gets address of pool's token0
@@ -346,7 +355,7 @@ export class JediSwap implements DexCombo {
     }).then((res) => res.result);
     if (!liqPoolToken0) return undefined
 
-    //Correctly map our token0 (tokenFrom) to the pool's token0
+    //Correctly map our function's tokenFrom argument to the pool's token0
     let liqReservesTokenFrom = liqPoolToken0 === tokenFromDec.toString() ? liqReserves[0] : liqReserves[2];
     let liqReservesTokenTo = liqPoolToken0 === tokenFromDec.toString() ? liqReserves[2] : liqReserves[0];
 
@@ -358,6 +367,16 @@ export class JediSwap implements DexCombo {
     }
   }
 
+  /**
+   *
+   * @param from Token from
+   * @param to Token To
+   * @param pairFromTo Pair from/to
+   * @param amountFrom amount tokenFrom to swap
+   * @param amountTo amount tokenTo desired (always true for now0
+   * @param slippageTolerance user-defined slippage tolerance
+   * @private
+   */
   private async findBestTrade(from: Token, to: Token, pairFromTo: Pair, amountFrom: string, amountTo: string, slippageTolerance: Percent): Promise<TradeInfo | undefined> {
     //Create poolPair to find the best trade for this poolPair. Use liq reserves as poolPair amounts
     let trade: Trade;

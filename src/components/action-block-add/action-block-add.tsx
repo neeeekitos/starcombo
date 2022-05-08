@@ -60,8 +60,11 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   //REFS//
   const outsideSetButton = useRef(null);
 
+  //EFFECTS//
 
-  //effects
+  /**
+   * When changing one end of the pair, query the network to get pool details
+   */
   useEffect(() => {
     setAmountToken0('0')
     setAmountToken1('0')
@@ -69,11 +72,6 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     const fetchPair = async () => {
       setLoading(true);
       const [token0,token1] = [token0Selector,token1Selector];
-
-      // const {
-      //   tokenFrom: token0,
-      //   tokenTo: token1
-      // } = await createTokenObjects(starknetConnector, token0Selector.address, token1Selector.address);
       setToken0(token0);
       setToken1(token1)
       const poolDetails = await protocolInstance.getPoolDetails(token0, token1, provider);
@@ -86,6 +84,10 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
   }, [token0Selector, token1Selector])
 
+  /**
+   * When the pair changes, unlock the item (remove it from current transaction)
+   * And calculate new quote amount for given input
+   */
   useEffect(() => {
     unsetItem();
     if (pair === undefined) return;
@@ -99,6 +101,10 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   }, [pair])
 
 
+  /**
+   * When token0 amount changes, unset item and calculate token1 corresponding value
+   * @param e
+   */
   const handleAmountToken0 = (e: ChangeEvent<HTMLInputElement>) => {
     unsetItem();
     const value = e.target.value;
@@ -108,6 +114,10 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     setQuoteTokenAmount(value, "to")
   }
 
+  /**
+   * When token1 amount changes, unset item and calculate token0 corres. value.
+   * @param e
+   */
   const handleAmountToken1 = (e: ChangeEvent<HTMLInputElement>) => {
     unsetItem();
     const value = e.target.value;
@@ -117,7 +127,13 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     setQuoteTokenAmount(value, "from")
   }
 
-  const setQuoteTokenAmount = (value, priceWanted) => {
+  /**
+   *
+   * @param value input amount value
+   * @param priceWanted price that we want ("from" for token0, "to" from token1).
+   * eg. if we have an input for token0 we want token1
+   */
+  const setQuoteTokenAmount = (value:string, priceWanted:string) => {
     if(value==='') value = '0';
     if (isNaN(value as any)) return;
     let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price,
@@ -146,6 +162,9 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
   }
 
+  /**
+   * Inverts two tokens
+   */
   const switchTokens = () => {
     unsetItem();
     const token1Temp = token0Selector;
@@ -156,6 +175,9 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     setAmountToken1(amount1Temp);
   }
 
+  /**
+   * Sets the action in state. calculates required data and builds the transaction calldata.
+   */
   const setAction = async () => {
     //TODO depending on the props.actionName this should change because the tokens involved will not be the same.
     // So here it only works for swaps now. We need to integrate add and remove liq in the action blocks.
@@ -180,7 +202,9 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     setSet(true);
   }
 
-  //Removes item from set.
+  /**
+   * Removes the item from the set Items.
+   */
   const unsetItem = () => {
     if (set) {
       setSet(false);

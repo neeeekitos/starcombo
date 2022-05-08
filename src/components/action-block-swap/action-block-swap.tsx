@@ -20,8 +20,6 @@ import {
   getErc20Decimals, getFloatFromBN
 } from "../../utils/helpers";
 import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
-import {number} from "starknet";
-import {ethers} from "ethers";
 import {useTransactions} from "../../hooks/useTransactions";
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
@@ -147,7 +145,10 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
 
   }, [tokenFromSelector, tokenToSelector])
 
-  //When changing pair
+  /**
+   * When the pair changes, unlock the item (remove it from current transaction)
+   * And calculate new quote amount for given input
+   */
   useEffect(() => {
     unsetItem();
     if (pair === undefined) return;
@@ -160,17 +161,9 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
     setQuoteTokenAmount(value, direction)
   }, [pair])
 
-  //
-  // useEffect(() => {
-  //
-  //   if (set) setAction();
-  //   console.log(props.action.id)
-  // }, [props.moved])
-
-
-
-
-  //Removes item from set.
+  /**
+   * Removes the item from the set Items.
+   */
   const unsetItem = () => {
     if (set) {
       setSet(false);
