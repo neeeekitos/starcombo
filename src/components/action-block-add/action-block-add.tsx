@@ -13,8 +13,9 @@ import {useAmounts} from "../../hooks/useAmounts";
 import {useTransactions} from "../../hooks/useTransactions";
 import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {createTokenObjects} from "../../utils/helpers";
-import {ethers} from "ethers";
+import {BigNumberish, ethers} from "ethers";
 import {getTotalSupply} from "../../data/totalSupply";
+import BigNumber from "bignumber.js";
 
 
 interface ActionBlockProps {
@@ -52,7 +53,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [token1Selector, setToken1Selector] = useState(protocolTokens[1]);
   const [amountToken0, setAmountToken0] = useState("");
   const [amountToken1, setAmountToken1] = useState("");
-  const [poolShare, setPoolShare] = useState<string>();
+  const [poolShare, setPoolShare] = useState<string>("0");
   const [lpAmount,setLpAmount] = useState<string>(); // lp token amount
   const [lpTokenSupply,setLpTokenSupply] = useState<string>();
 
@@ -82,11 +83,11 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
       const poolPair: Pair = poolDetails.poolPair;
       if (poolDetails.poolId) setPoolId(poolDetails.poolId)
       setPair(poolPair);
-      console.log(poolPair)
-      const lpTokenSupply = await getTotalSupply(poolPair.liquidityToken,starknetConnector)
-      console.log(lpTokenSupply)
-      const strSupply =
-      setLpTokenSupply(strSupply);
+      // console.log(poolPair)
+      // const lpTokenSupply = await getTotalSupply(poolPair.liquidityToken,starknetConnector)
+      // console.log(lpTokenSupply)
+      // const strSupply =
+      // setLpTokenSupply(strSupply);
       setLoading(false);
     }
     fetchPair();
@@ -158,17 +159,16 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
         ethers.utils.parseUnits(reserveFrom.toFixed(0), tokenFrom.decimals),
         ethers.utils.parseUnits(reserveTo.toFixed(), tokenTo.decimals)
       ]
-    let poolShareCalc:Fraction;
+    let poolShareCalc:BigNumberish;
+    let BNPercent:BigNumber
     if (priceWanted === "from") {
       const parsedValue = ethers.utils.parseUnits(value, tokenTo.decimals)
       const parsedFromAmount = tokenToPrice.raw.multiply(parsedValue.toString())
       const amountFrom = parseFloat(ethers.utils.formatUnits(parsedFromAmount.toFixed(0), tokenFrom.decimals))
       setAmountToken0(amountFrom.toPrecision(6))
       //pool share is : your liq/(old liq+your liq)*100
-      console.log(parsedFromAmount.toFixed(0))
-      console.log(parsedFromAmount.add(reserveFrom).toFixed(0))
-      console.log(reserveFrom.toFixed(0))
-      poolShareCalc = parsedFromAmount.divide(parsedFromAmount.add(parsedReserveFrom.toString()))
+      const BNvalue = new BigNumber(parsedValue.toString());
+      BNPercent = BNvalue.div(BNvalue.plus(new BigNumber(parsedReserveTo.toString())))
     } else {
       // to
       const parsedValue = ethers.utils.parseUnits(value, tokenFrom.decimals)
@@ -176,20 +176,22 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
       const amountTo = parseFloat(ethers.utils.formatUnits(parsedToAmount.toFixed(0), tokenTo.decimals))
       setAmountToken1(amountTo.toPrecision(6))
       // poolShare = new Fraction(parsedValue.toString()).divide(reserveFrom).toFixed(0);
-      poolShareCalc = parsedToAmount.divide(parsedToAmount.add(parsedReserveTo.toString()))
+      const BNvalue = new BigNumber(parsedValue.toString());
+      BNPercent = BNvalue.div(BNvalue.plus(new BigNumber(parsedReserveFrom.toString())))
+      // poolShareCalc = BNPercent
     }
-    //TODO if time get poolshare
-    console.log(poolShareCalc.toFixed(4))
-    console.log(lpTokenSupply)
-    const lpamt = poolShareCalc.multiply(lpTokenSupply||'0').toFixed(4) || "0"
-
-    console.log(pair.liquidityToken)
-    console.log(lpamt)
-    const fmtLpAmt = ethers.utils.formatUnits(lpamt,pair.liquidityToken.decimals).toString()
-    console.log(fmtLpAmt)
-    setLpAmount(fmtLpAmt)
-    setPoolShare(poolShareCalc.toFixed(4));
-
+    //TODO if time get how much lp tokens user gets
+    // console.log(poolShareCalc.toFixed(4))
+    // console.log(lpTokenSupply)
+    // const lpamt = poolShareCalc.multiply(lpTokenSupply||'0').toFixed(4) || "0"
+    //
+    // console.log(pair.liquidityToken)
+    // console.log(lpamt)
+    // const fmtLpAmt = ethers.utils.formatUnits(lpamt,pair.liquidityToken.decimals).toString()
+    // console.log(fmtLpAmt)
+    // setLpAmount(fmtLpAmt)
+    console.log(BNPercent.toString())
+    setPoolShare(BNPercent.multipliedBy(100).toFixed(4));
   }
 
   /**
@@ -273,7 +275,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
               <div className={styles.tokenLogo}>
                 <span>{token0Selector.symbol}</span>
               </div>
-              <p className={styles.tokenAmount}>{amountToken1}</p>
+              <p className={styles.tokenAmount}>{amountToken0}</p>
             </div>
             <div className={styles.space}/>
             <div className={styles.tokenWrapperAdd}>
@@ -299,10 +301,10 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
                         strokeLinecap="round"/>
                 </svg>
                 <div className={styles.tokenLogo}>
-                  <span>{token0Selector.symbol}</span>
+                  <span>{token1Selector.symbol}</span>
                 </div>
               </div>
-              <p>{estimation}</p>
+              <p>{poolShare && poolShare.toString()}%</p>
             </div>
 
           </div>
@@ -383,8 +385,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
           </div>
           <div className={styles.whiteLine}/>
           <div className={styles.totalLiquidityWrapper}>
-            {poolShare && <p>Your pool share: <span>{poolShare.toString()}</span></p>}
-            {lpAmount && <p>Received LP tokens: <span>{lpAmount.toString()}</span></p>}
+            {poolShare && <p>Your pool share: <span>~ {poolShare.toString()}</span></p>}
+            {/*{lpAmount && <p>Received LP tokens: <span>{lpAmount.toString()}</span></p>}*/}
 
           </div>
           {loading &&

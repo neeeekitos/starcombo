@@ -121,8 +121,9 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     const token0isPoolToken0 = token0.address === poolPair.token0.address;
     let token0Amount = token0isPoolToken0 ? poolPair.reserve0.multiply(poolShare) : poolPair.reserve1.multiply(poolShare);
     let token1Amount = token0isPoolToken0 ? poolPair.reserve1.multiply(poolShare) : poolPair.reserve0.multiply(poolShare);
-    setAmountToken0(token0Amount.toSignificant(6))
-    setAmountToken1(token1Amount.toSignificant(6))
+    setAmountToken0(token0Amount.subtract(token0Amount.multiply(SLIPPAGE)).toSignificant(6))
+    setAmountToken1(token1Amount.subtract(token1Amount.multiply(SLIPPAGE)).toSignificant(6))
+
   }, [sliderValue,loading])
 
 
@@ -191,7 +192,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
               <div>
                 {/*<Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>*/}
                 <div className={styles.tokenLogo}>
-                  <span>{token1Selector.symbol}</span>
+                  <span>{token0Selector.symbol}</span>
                 </div>
                 <svg width="20" height="31" viewBox="0 0 29 46" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <line x1="2.45162" y1="43.9508" x2="26.9508" y2="1.54838" stroke="white" strokeWidth="3"

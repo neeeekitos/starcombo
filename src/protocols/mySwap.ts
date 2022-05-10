@@ -110,22 +110,29 @@ export class MySwap implements DexCombo {
         tokenFromIsToken0 ? Object.values(bnToUint256(minAmountTo)) : Object.values(bnToUint256(minAmountFrom)),
       ].flatMap((x) => x);
 
+    console.log(desiredAmountTo.toFixed(0));
+    console.log(bnToUint256(desiredAmountTo.toFixed(0)));
+    console.log(Object.values(bnToUint256(desiredAmountTo.toFixed(0))));
+
+
     const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
-        calldata: [
-          number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
-          Object.values(bnToUint256(desiredAmountFrom.toString()))
-        ].flatMap((x) => x)
+        calldata: bigNumberishArrayToDecimalStringArray([
+            number.toBN(MY_SWAP_ROUTER_ADDRESS),// router address decimal
+            Object.values(bnToUint256(desiredAmountFrom.toString()))
+          ].flatMap((x) => x)
+        )
       },
       {
         contractAddress: tokenTo.address,
         entrypoint: 'approve',
-        calldata: [
-          number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
-          Object.values(desiredAmountTo.toFixed(0)),
-        ].flatMap((x) => x)
+        calldata: bigNumberishArrayToDecimalStringArray([
+            number.toBN(MY_SWAP_ROUTER_ADDRESS), // router address decimal
+            Object.values(bnToUint256(desiredAmountTo.toFixed(0))),
+          ].flatMap((x) => x)
+        )
       },
       {
         contractAddress: MY_SWAP_ROUTER_ADDRESS,
