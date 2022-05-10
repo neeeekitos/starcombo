@@ -280,18 +280,18 @@
 }
 
 .tokenLogo {
-    height: 60px;
-    width: 60px;
+    height: 45px;
+    width: 45px;
     display: flex;
     justify-content:center;
     align-items: center;
     border: 1px solid #025629;
     border-radius: 50%;
     background: rgba(11, 33, 40, 0.31);
-    margin-right: 10px;
+    margin-right: 3px;
 }
 
 .tokenLogo span{
     word-break: break-all;
-    font-size: 13px;
+    font-size: 10px;
 }

@@ -286,7 +286,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
                 <span>{tokenFromSelector.symbol}</span>
               </div>
               <div className={styles.shadow}/>
-              <p>{amountTo} {tokenFromSelector.symbol}</p>
+              <span className={styles.amount}>{amountFrom}</span>
             </div>
             <svg width="50" height="70" viewBox="0 0 80 72" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -302,7 +302,7 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
                 <span>{tokenToSelector.symbol}</span>
               </div>
               <div className={styles.shadow}/>
-              <p>{amountTo} {tokenToSelector.symbol}</p>
+              <span className={styles.amount}>{amountTo}</span>
             </div>
           </>
         </div>

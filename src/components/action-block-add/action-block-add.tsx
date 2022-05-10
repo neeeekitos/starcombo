@@ -239,13 +239,19 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
         <div className={styles.actionBlockBody}>
           <div className={styles.addLiquidity}>
             <div className={styles.tokenWrapperAdd}>
-              <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
-              <p className={styles.tokenAmount}>{amountToken0 === "" ? 0 : amountToken0}</p>
+              {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
+              <div className={styles.tokenLogo}>
+                <span>{token0Selector.symbol}</span>
+              </div>
+              <p className={styles.tokenAmount}>{amountToken1}</p>
             </div>
             <div className={styles.space}/>
             <div className={styles.tokenWrapperAdd}>
-              <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
-              <p className={styles.tokenAmount}>{amountToken1 === "" ? 0 : amountToken1}</p>
+              {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
+              <div className={styles.tokenLogo}>
+                <span>{token1Selector.symbol}</span>
+              </div>
+              <p className={styles.tokenAmount}>{amountToken1}</p>
             </div>
             <svg className={styles.addLiquidityArrow} width="61" height="24" viewBox="0 0 61 24" fill="none"
                  xmlns="http://www.w3.org/2000/svg">
@@ -255,12 +261,16 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
             </svg>
             <div className={styles.poolWrapper}>
               <div>
-                <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
+                <div className={styles.tokenLogo}>
+                  <span>{token0Selector.symbol}</span>
+                </div>
                 <svg width="29" height="46" viewBox="0 0 29 46" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <line x1="2.45162" y1="43.9508" x2="26.9508" y2="1.54838" stroke="white" strokeWidth="3"
                         strokeLinecap="round"/>
                 </svg>
-                <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
+                <div className={styles.tokenLogo}>
+                  <span>{token0Selector.symbol}</span>
+                </div>
               </div>
               <p>{estimation}</p>
             </div>

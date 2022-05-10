@@ -221,7 +221,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
             <div className={styles.tokenWrapperAdd}>
               {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
               <div className={styles.tokenLogo}>
-                <span>{token0Selector.symbol}</span>
+                <span>{token1Selector.symbol}</span>
               </div>
               <p className={styles.tokenAmount}>{amountToken1}</p>
             </div>
