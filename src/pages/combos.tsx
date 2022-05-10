@@ -13,7 +13,7 @@ import {getFloatFromBN} from "../utils/helpers";
 import {Pair, Token} from "@jediswap/sdk";
 import {useAmounts} from "../hooks/useAmounts";
 import {getBalanceOfErc20} from "../utils/helpers";
-import {NotificationContainer, NotificationManager} from 'react-notifications';
+import {NotificationManager} from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
 
 import {useTransactions} from "../hooks/useTransactions";
@@ -83,6 +83,12 @@ const Combos: NextPage = () => {
     removeTransaction(actionId)
   }
 
+  const walletConnection = async () => {
+    const error = await connectWallet()
+    if (error) NotificationManager.error(error);
+    if (!error) NotificationManager.success('Connected');
+  }
+
 
   /**
    * Sends the transactions. Verifies is the user has the initial funds required.
@@ -143,7 +149,7 @@ const Combos: NextPage = () => {
             background="transparent"
             _hover={{bg: "brand.body"}}
             _active={{bg: "brand.navbar"}}
-            onClick={() => connectWallet()}>Connect Wallet to start</Button>
+            onClick={() => walletConnection()}>Connect Wallet to start</Button>
         </Flex>
       </div>
     )
@@ -151,7 +157,6 @@ const Combos: NextPage = () => {
   const renderConnected = () => {
     return (
       <div className={styles.container}>
-        <NotificationContainer/>
         <FundsRecap/>
         <div className={styles.container}>
 

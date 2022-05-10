@@ -13,11 +13,9 @@ import {useAmounts} from "../../hooks/useAmounts";
 import {useStarknet} from "../../hooks/useStarknet";
 import {DexCombo, StarknetConnector, SwapParameters} from "../../utils/constants/interfaces";
 import {
-  createTokenObjects,
-  formatToBigNumberish,
   formatToDecimal,
   getBalanceOfErc20,
-  getErc20Decimals, getFloatFromBN
+  getFloatFromBN
 } from "../../utils/helpers";
 import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {useTransactions} from "../../hooks/useTransactions";
@@ -283,9 +281,12 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
         <div className={styles.actionBlockBody}>
           <>
             <div className={styles.tokenWrapper}>
-              <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
+              {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
+              <div className={styles.tokenLogo}>
+                <span>{tokenFromSelector.symbol}</span>
+              </div>
               <div className={styles.shadow}/>
-              <p>{amountFrom} {tokenFromSelector.symbol}</p>
+              <p>{amountTo} {tokenFromSelector.symbol}</p>
             </div>
             <svg width="50" height="70" viewBox="0 0 80 72" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -296,7 +297,10 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
                 fill="white"/>
             </svg>
             <div className={styles.tokenWrapper}>
-              <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
+              {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
+              <div className={styles.tokenLogo}>
+                <span>{tokenToSelector.symbol}</span>
+              </div>
               <div className={styles.shadow}/>
               <p>{amountTo} {tokenToSelector.symbol}</p>
             </div>

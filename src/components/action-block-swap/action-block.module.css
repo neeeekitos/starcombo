@@ -69,7 +69,7 @@
   z-index: 2;
 }
 
-.tokenWrapper span{
+.tokenWrapper .tokenLogo{
   z-index: 2;
   animation-name: upDown;
   animation-iteration-count: infinite;
@@ -271,4 +271,21 @@
   top: 20px;
   right: 20px;
   font-size: 1.2rem;
+}
+
+.tokenLogo {
+  height: 50px;
+  width: 50px;
+  display: flex;
+  justify-content:center;
+  align-items: center;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #025629;
+  border-radius: 50%;
+  background: rgba(11, 33, 40, 0.31);
+}
+
+.tokenLogo span{
+ font-size: 15px;
 }

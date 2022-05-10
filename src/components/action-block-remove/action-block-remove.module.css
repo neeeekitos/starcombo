@@ -3,7 +3,7 @@
     position: relative;
     background-color: var(--block-color);
     border-radius: var(--border-radius);
-    max-width: 350px;
+    width: 400px;
     padding: 10px;
     box-shadow: rgb(255 255 255 / 50%) 0px 30.0211px 43.1072px -27.7118px inset,
     rgb(255 255 255) 0px 5.38841px 8.46749px -3.07909px inset,
@@ -277,4 +277,21 @@
     top: 20px;
     right: 20px;
     font-size: 1.2rem;
+}
+
+.tokenLogo {
+    height: 60px;
+    width: 60px;
+    display: flex;
+    justify-content:center;
+    align-items: center;
+    border: 1px solid #025629;
+    border-radius: 50%;
+    background: rgba(11, 33, 40, 0.31);
+    margin-right: 10px;
+}
+
+.tokenLogo span{
+    word-break: break-all;
+    font-size: 13px;
 }
