@@ -14,6 +14,7 @@ import {useTransactions} from "../../hooks/useTransactions";
 import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {createTokenObjects} from "../../utils/helpers";
 import {ethers} from "ethers";
+import {getTotalSupply} from "../../data/totalSupply";
 
 
 interface ActionBlockProps {
@@ -51,7 +52,10 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [token1Selector, setToken1Selector] = useState(protocolTokens[1]);
   const [amountToken0, setAmountToken0] = useState("");
   const [amountToken1, setAmountToken1] = useState("");
-  const [poolShare, setPoolShare] = useState<number>();
+  const [poolShare, setPoolShare] = useState<string>();
+  const [lpAmount,setLpAmount] = useState<string>(); // lp token amount
+  const [lpTokenSupply,setLpTokenSupply] = useState<string>();
+
   const [estimation, setEstimation] = useState("");
 
   //If the component has been set by the user
@@ -71,13 +75,18 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     unsetItem();
     const fetchPair = async () => {
       setLoading(true);
-      const [token0,token1] = [token0Selector,token1Selector];
+      const [token0, token1] = [token0Selector, token1Selector];
       setToken0(token0);
       setToken1(token1)
       const poolDetails = await protocolInstance.getPoolDetails(token0, token1, provider);
       const poolPair: Pair = poolDetails.poolPair;
       if (poolDetails.poolId) setPoolId(poolDetails.poolId)
       setPair(poolPair);
+      console.log(poolPair)
+      const lpTokenSupply = await getTotalSupply(poolPair.liquidityToken,starknetConnector)
+      console.log(lpTokenSupply)
+      const strSupply =
+      setLpTokenSupply(strSupply);
       setLoading(false);
     }
     fetchPair();
@@ -90,7 +99,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
    */
   useEffect(() => {
     unsetItem();
-    if (pair === undefined) return;
+    if (!pair  || !lpTokenSupply) return;
     let value = amountToken0;
     let direction = "to"
     if (isNaN(value as any)) {
@@ -133,22 +142,33 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
    * @param priceWanted price that we want ("from" for token0, "to" from token1).
    * eg. if we have an input for token0 we want token1
    */
-  const setQuoteTokenAmount = (value:string, priceWanted:string) => {
-    if(value==='') value = '0';
+  const setQuoteTokenAmount = (value: string, priceWanted: string) => {
+    if (value === '') value = '0';
     if (isNaN(value as any)) return;
     let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price,
-      reserveFrom: TokenAmount;
+      reserveFrom: TokenAmount, reserveTo: TokenAmount;
     token0Selector.address === pair.token0.address ?
-      [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, reserveFrom, tokenFromIsToken0] = [pair.token0, pair.token1, pair.token0Price, pair.token1Price, pair.reserve0, true] :
-      [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, reserveFrom, tokenFromIsToken0] = [pair.token1, pair.token0, pair.token1Price, pair.token0Price, pair.reserve1, false];
+      [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, reserveFrom, reserveTo, tokenFromIsToken0] =
+        [pair.token0, pair.token1, pair.token0Price, pair.token1Price, pair.reserve0, pair.reserve1, true] :
+      [tokenFrom, tokenTo, tokenFromPrice, tokenToPrice, reserveFrom, reserveTo, tokenFromIsToken0] =
+        [pair.token1, pair.token0, pair.token1Price, pair.token0Price, pair.reserve1, pair.reserve0, false];
 
-    let poolShare;
+    const [parsedReserveFrom, parsedReserveTo] =
+      [
+        ethers.utils.parseUnits(reserveFrom.toFixed(0), tokenFrom.decimals),
+        ethers.utils.parseUnits(reserveTo.toFixed(), tokenTo.decimals)
+      ]
+    let poolShareCalc:Fraction;
     if (priceWanted === "from") {
       const parsedValue = ethers.utils.parseUnits(value, tokenTo.decimals)
       const parsedFromAmount = tokenToPrice.raw.multiply(parsedValue.toString())
       const amountFrom = parseFloat(ethers.utils.formatUnits(parsedFromAmount.toFixed(0), tokenFrom.decimals))
       setAmountToken0(amountFrom.toPrecision(6))
-      // poolShare = parsedFromAmount.divide(reserveFrom).toFixed(0);
+      //pool share is : your liq/(old liq+your liq)*100
+      console.log(parsedFromAmount.toFixed(0))
+      console.log(parsedFromAmount.add(reserveFrom).toFixed(0))
+      console.log(reserveFrom.toFixed(0))
+      poolShareCalc = parsedFromAmount.divide(parsedFromAmount.add(parsedReserveFrom.toString()))
     } else {
       // to
       const parsedValue = ethers.utils.parseUnits(value, tokenFrom.decimals)
@@ -156,9 +176,19 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
       const amountTo = parseFloat(ethers.utils.formatUnits(parsedToAmount.toFixed(0), tokenTo.decimals))
       setAmountToken1(amountTo.toPrecision(6))
       // poolShare = new Fraction(parsedValue.toString()).divide(reserveFrom).toFixed(0);
+      poolShareCalc = parsedToAmount.divide(parsedToAmount.add(parsedReserveTo.toString()))
     }
-    //TODO if time
-    setPoolShare(poolShare)
+    //TODO if time get poolshare
+    console.log(poolShareCalc.toFixed(4))
+    console.log(lpTokenSupply)
+    const lpamt = poolShareCalc.multiply(lpTokenSupply||'0').toFixed(4) || "0"
+
+    console.log(pair.liquidityToken)
+    console.log(lpamt)
+    const fmtLpAmt = ethers.utils.formatUnits(lpamt,pair.liquidityToken.decimals).toString()
+    console.log(fmtLpAmt)
+    setLpAmount(fmtLpAmt)
+    setPoolShare(poolShareCalc.toFixed(4));
 
   }
 
@@ -217,7 +247,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   return (
     <>
       <div className={styles.actionBlockWrapper} onClick={(e) => {
-        console.log(outsideSetButton.current,e.target)
+        console.log(outsideSetButton.current, e.target)
         if (outsideSetButton.current === e.target) return;
         setIsComponentVisible(true)
       }}
@@ -354,6 +384,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
           <div className={styles.whiteLine}/>
           <div className={styles.totalLiquidityWrapper}>
             {poolShare && <p>Your pool share: <span>{poolShare.toString()}</span></p>}
+            {lpAmount && <p>Received LP tokens: <span>{lpAmount.toString()}</span></p>}
+
           </div>
           {loading &&
           <Flex alignItems={"center"} className={styles.submitButton}>Fetching route &nbsp; <Spinner/></Flex>

@@ -128,7 +128,6 @@ export class JediSwap implements DexCombo {
 
     let desiredAmountFrom: ethers.BigNumber, minAmountFrom: string, desiredAmountTo: Fraction, minAmountTo: string;
 
-
     // from
     desiredAmountFrom = ethers.BigNumber.from(tokenAmountFrom.raw.toString());
     minAmountFrom = desiredAmountFrom.sub(SLIPPAGE.multiply(desiredAmountFrom.toBigInt()).toFixed(0)).toString()
