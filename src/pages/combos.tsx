@@ -24,6 +24,7 @@ import FundsRecap from "../components/FundsRecap";
 import SelectNewAction from "../components/select-new-action/select-new-action";
 
 import useComponentVisible from "../hooks/UseComponentVisible";
+import Swap from "../components/swapv2/swap";
 
 const Combos: NextPage = () => {
 
@@ -125,7 +126,7 @@ const Combos: NextPage = () => {
     const actionBlocks = {
       [ActionTypes.ADD_LIQUIDITY]: ActionBlockAdd,
       [ActionTypes.REMOVE_LIQUIDITY]: ActionBlockRemove,
-      [ActionTypes.SWAP]: ActionBlockSwap
+      [ActionTypes.SWAP]: Swap,
     }
     let Component = actionBlocks[action.actionType];
     return (
