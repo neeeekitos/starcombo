@@ -1,4 +1,4 @@
-import {ReactNode, useEffect, useRef} from 'react';
+import {useEffect, useRef} from 'react';
 import {
   Box,
   Flex,
@@ -12,22 +12,17 @@ import {
   MenuItem,
   MenuDivider,
   useDisclosure,
-  useColorModeValue,
-  Stack, Heading, Tooltip
+  Stack, Heading
 } from '@chakra-ui/react';
 import {HamburgerIcon, CloseIcon} from '@chakra-ui/icons';
 import Link from "next/link"
 import {useStarknet} from "../hooks/useStarknet";
-import argentLogo from "../utils/assets/logo/argent.png"
 import {useTransactions} from "../hooks/useTransactions";
-import theme from "../styles/Theme";
 import starcomboLogo from "../utils/assets/logo/starcombo.png"
+import {NotificationManager} from 'react-notifications';
 import Image from "next/image";
+
 const Links = [
-  // {
-  //   name: 'Home',
-  //   target: '/'
-  // },
   {
     name: 'Combos',
     target: '/combos'
@@ -59,7 +54,13 @@ const Navbar = () => {
     return () => {
       if (timer.current !== null) clearInterval(timer.current);
     };
-  }, [provider  ]);
+  }, [provider]);
+
+  const walletConnection = async () => {
+    const error = await connectWallet()
+    if (error) NotificationManager.error(error);
+    if (!error) NotificationManager.success('Connected');
+  }
 
   return (
     <>
@@ -134,7 +135,7 @@ const Navbar = () => {
                       return (
                         <div onClick={() => window.open(`https://goerli.voyager.online/tx/${transaction.tx_hash}`)}
                              key={transaction.tx_hash}>
-                          {transaction.tx_hash} - {transaction.status} - {transaction.status==="REJECTED" }
+                          {transaction.tx_hash} - {transaction.status} - {transaction.status === "REJECTED"}
                         </div>
                       )
                     })
@@ -158,7 +159,7 @@ const Navbar = () => {
                 background="transparent"
                 _hover={{bg: "brand.body"}}
                 _active={{bg: "brand.navbar"}}
-                onClick={() => connectWallet()}
+                onClick={() => walletConnection()}
               >
                 Connect Wallet
               </Button>

@@ -23,6 +23,8 @@ import {useAmounts} from "../../hooks/useAmounts";
 import {useTransactions} from "../../hooks/useTransactions";
 import {PoolPosition} from "../../protocols/jediSwap";
 import {ethers} from "ethers";
+import {Simulate} from "react-dom/test-utils";
+import load = Simulate.load;
 
 interface ActionBlockProps {
   actionName: string,
@@ -31,7 +33,7 @@ interface ActionBlockProps {
   handleRemoveAction: (actionId: number) => void
 }
 
-const ActionBlockAdd = (props: ActionBlockProps) => {
+const ActionBlockRemove = (props: ActionBlockProps) => {
 
   //custom hooks
   const {account, provider} = useStarknet();
@@ -119,9 +121,10 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     const token0isPoolToken0 = token0.address === poolPair.token0.address;
     let token0Amount = token0isPoolToken0 ? poolPair.reserve0.multiply(poolShare) : poolPair.reserve1.multiply(poolShare);
     let token1Amount = token0isPoolToken0 ? poolPair.reserve1.multiply(poolShare) : poolPair.reserve0.multiply(poolShare);
-    setAmountToken0(token0Amount.toSignificant(6))
-    setAmountToken1(token1Amount.toSignificant(6))
-  }, [sliderValue])
+    setAmountToken0(token0Amount.subtract(token0Amount.multiply(SLIPPAGE)).toSignificant(6))
+    setAmountToken1(token1Amount.subtract(token1Amount.multiply(SLIPPAGE)).toSignificant(6))
+
+  }, [sliderValue,loading])
 
 
   const setAction = async () => {
@@ -187,28 +190,40 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
             <div className={styles.poolWrapper}>
               <div>
-                <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
-                <svg width="29" height="46" viewBox="0 0 29 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/*<Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>*/}
+                <div className={styles.tokenLogo}>
+                  <span>{token0Selector.symbol}</span>
+                </div>
+                <svg width="20" height="31" viewBox="0 0 29 46" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <line x1="2.45162" y1="43.9508" x2="26.9508" y2="1.54838" stroke="white" strokeWidth="3"
                         strokeLinecap="round"/>
                 </svg>
-                <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
+                {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
+                <div className={styles.tokenLogo}>
+                  <span>{token1Selector.symbol}</span>
+                </div>
               </div>
               <p>{sliderValue}%</p>
             </div>
-            <svg className={styles.addLiquidityArrow} width="61" height="24" viewBox="0 0 61 24" fill="none"
+            <svg className={styles.addLiquidityArrow} width="41" height="18" viewBox="0 0 61 24" fill="none"
                  xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M2 10.5C1.17157 10.5 0.5 11.1716 0.5 12C0.5 12.8284 1.17157 13.5 2 13.5V10.5ZM60.0607 13.0607C60.6464 12.4749 60.6464 11.5251 60.0607 10.9393L50.5147 1.3934C49.9289 0.807612 48.9792 0.807612 48.3934 1.3934C47.8076 1.97918 47.8076 2.92893 48.3934 3.51472L56.8787 12L48.3934 20.4853C47.8076 21.0711 47.8076 22.0208 48.3934 22.6066C48.9792 23.1924 49.9289 23.1924 50.5147 22.6066L60.0607 13.0607ZM2 13.5H59V10.5H2V13.5Z"
                 fill="white"/>
             </svg>
             <div className={styles.tokenWrapperAdd}>
-              <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
+              {/*<Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>*/}
+              <div className={styles.tokenLogo}>
+                <span>{token0Selector.symbol}</span>
+              </div>
               <p className={styles.tokenAmount}>{amountToken0}</p>
             </div>
             <div className={styles.space}/>
             <div className={styles.tokenWrapperAdd}>
-              <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
+              {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
+              <div className={styles.tokenLogo}>
+                <span>{token1Selector.symbol}</span>
+              </div>
               <p className={styles.tokenAmount}>{amountToken1}</p>
             </div>
 
@@ -298,12 +313,18 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
           Output estimates :
           <div className={styles.totalLiquidityWrapper}>
             <div className={styles.tokenWrapperAdd}>
-              <Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>
+              {/*<Image className={styles.cardImage} src={BatLogo} alt="img" width="50px" height="50px"/>*/}
+              <div className={styles.tokenLogo}>
+                <span>{token0Selector.symbol}</span>
+              </div>
               <p className={styles.tokenAmount}>{amountToken0}</p>
             </div>
             <div className={styles.space}/>
             <div className={styles.tokenWrapperAdd}>
-              <Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>
+              {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
+              <div className={styles.tokenLogo}>
+                <span>{token1Selector.symbol}</span>
+              </div>
               <p className={styles.tokenAmount}>{amountToken1}</p>
             </div>
           </div>
@@ -324,4 +345,4 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 }
 
 
-export default ActionBlockAdd;
+export default ActionBlockRemove;

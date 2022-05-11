@@ -1,13 +1,8 @@
 import React, {ChangeEvent, useEffect, useRef, useState} from "react";
-import styles from "./action-block.module.css";
-import Image from "next/image";
-import EtherLogo from "../../../public/img/tokens/ether.svg";
-import BatLogo from "../../../public/img/tokens/bat.svg";
 
 import {ACTIONS, PROTOCOLS, SELECTABLE_TOKENS, SLIPPAGE} from "../../utils/constants/constants";
 
-import {Flex, Input, Spinner} from "@chakra-ui/react";
-import TokenChooser from "../token-chooser";
+import {Box, Flex, Input, Spinner} from "@chakra-ui/react";
 import useComponentVisible from "../../hooks/UseComponentVisible";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useStarknet} from "../../hooks/useStarknet";
@@ -21,6 +16,10 @@ import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {useTransactions} from "../../hooks/useTransactions";
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
+import SwapField from "./SwapField";
+import {ArrowDownIcon} from "@chakra-ui/icons";
+import BlockHeader from "../BlockHeader";
+import BlockFooter from "../BlockFooter";
 
 interface ActionBlockProps {
   actionName: string,
@@ -35,7 +34,7 @@ interface ExecutionPrices {
   priceBtoA: number
 }
 
-const ActionBlockSwap = (props: ActionBlockProps) => {
+const Swap = (props: ActionBlockProps) => {
   //custom hooks
   const {account, provider} = useStarknet();
   const starknetConnector: StarknetConnector = {
@@ -257,163 +256,22 @@ const ActionBlockSwap = (props: ActionBlockProps) => {
   }
 
   return (
-
-    <div className={styles.wrapperComponent}>
-      <div className={styles.actionBlockWrapper} onClick={(e) => {
-        if (outsideSetButton.current === e.target) return;
-        setIsComponentVisible(true)
-      }}
-           hidden={isComponentVisible}>
-        <div className={styles.actionBlockHead}>
-          <div>
-            <h3>{props.actionName} on {props.protocolName}</h3>
-            <div className={styles.underlineTitle}/>
-          </div>
-        </div>
-        <div className={styles.removeActionButton} onClick={(e) => {
-          e.stopPropagation();
-          props.handleRemoveAction(props.action.id)
-        }}>
-          <p>
-            X
-          </p>
-        </div>
-        <div className={styles.actionBlockBody}>
-          <>
-            <div className={styles.tokenWrapper}>
-              {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
-              <div className={styles.tokenLogo}>
-                <span>{tokenFromSelector.symbol}</span>
-              </div>
-              <div className={styles.shadow}/>
-              <span className={styles.amount}>{amountFrom}</span>
-            </div>
-            <svg width="50" height="70" viewBox="0 0 80 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M79.3142 16.4142C80.0952 15.6332 80.0952 14.3668 79.3142 13.5858L66.5863 0.85787C65.8052 0.0768214 64.5389 0.0768213 63.7579 0.85787C62.9768 1.63892 62.9768 2.90525 63.7579 3.6863L75.0716 15L63.7578 26.3137C62.9768 27.0948 62.9768 28.3611 63.7578 29.1421C64.5389 29.9232 65.8052 29.9232 66.5863 29.1421L79.3142 16.4142ZM2 17L77.9 17L77.9 13L2 13L2 17Z"
-                fill="white"/>
-              <path
-                d="M0.585787 58.4142C-0.195262 57.6332 -0.195262 56.3668 0.585786 55.5858L13.3137 42.8579C14.0948 42.0768 15.3611 42.0768 16.1421 42.8579C16.9232 43.6389 16.9232 44.9052 16.1421 45.6863L4.82843 57L16.1421 68.3137C16.9232 69.0948 16.9232 70.3611 16.1421 71.1421C15.3611 71.9232 14.0948 71.9232 13.3137 71.1421L0.585787 58.4142ZM77.9 59L2 59L2 55L77.9 55L77.9 59Z"
-                fill="white"/>
-            </svg>
-            <div className={styles.tokenWrapper}>
-              {/*<Image className={styles.cardImage} src={EtherLogo} alt="img" width="50px" height="50px"/>*/}
-              <div className={styles.tokenLogo}>
-                <span>{tokenToSelector.symbol}</span>
-              </div>
-              <div className={styles.shadow}/>
-              <span className={styles.amount}>{amountTo}</span>
-            </div>
-          </>
-        </div>
-        {loading ? <Spinner/> : null}
-        {!set && !loading &&
-        <Flex justifyContent={'center'}>
-          <button ref={outsideSetButton} className={styles.submitButtonExternal} onClick={(e) => {
-            setAction();
-          }}>
-            Set
-          </button>
-        </Flex>
-        }
-      </div>
-
-
-      {
-        isComponentVisible &&
-        <div className={styles.modalWrapper} ref={ref}>
-          <div className={styles.modalHead}>
-            <div>
-              <h3>Swap</h3>
-              <div className={styles.underlineTitle}/>
-            </div>
-          </div>
-
-          <div className={styles.modalBody}>
-            <Flex marginRight={'20px'} flexDir={'row'} justifyContent={"space-between"}>
-              <h2 className={styles.h2Modal}>From: </h2>
-              Balance : {tokenFromBalance}
-            </Flex>
-            <div className={styles.inputToken}>
-              <TokenChooser
-                selectedToken={tokenFromSelector}
-                setSelectedToken={setTokenFromSelector}
-                selectableTokens={protocolTokens.filter((token) => token.address !== tokenToSelector.address)}
-              />
-              <Input
-                placeholder="Input amount"
-                color="gray.300"
-                height={"3rem"}
-                borderColor="gray.300"
-                _hover={{borderColor: "gray.500"}}
-                _focus={{borderColor: "gray.500"}}
-                value={amountFrom}
-                onKeyPress={(event) => {
-                  if (!/^[0-9]+.?[0-9]*$/.test(amountFrom + event.key)) {
-                    event.preventDefault();
-                  }
-                }}
-                onChange={(e) => handleAmountFrom(e)}
-                variant='flushed'
-              />
-            </div>
-
-            <svg onClick={() => switchTokens()} className={styles.modalArrows} width="50" height="70"
-                 viewBox="0 0 80 72" fill="none"
-                 xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M79.3142 16.4142C80.0952 15.6332 80.0952 14.3668 79.3142 13.5858L66.5863 0.85787C65.8052 0.0768214 64.5389 0.0768213 63.7579 0.85787C62.9768 1.63892 62.9768 2.90525 63.7579 3.6863L75.0716 15L63.7578 26.3137C62.9768 27.0948 62.9768 28.3611 63.7578 29.1421C64.5389 29.9232 65.8052 29.9232 66.5863 29.1421L79.3142 16.4142ZM2 17L77.9 17L77.9 13L2 13L2 17Z"
-                fill="white"/>
-              <path
-                d="M0.585787 58.4142C-0.195262 57.6332 -0.195262 56.3668 0.585786 55.5858L13.3137 42.8579C14.0948 42.0768 15.3611 42.0768 16.1421 42.8579C16.9232 43.6389 16.9232 44.9052 16.1421 45.6863L4.82843 57L16.1421 68.3137C16.9232 69.0948 16.9232 70.3611 16.1421 71.1421C15.3611 71.9232 14.0948 71.9232 13.3137 71.1421L0.585787 58.4142ZM77.9 59L2 59L2 55L77.9 55L77.9 59Z"
-                fill="white"/>
-            </svg>
-
-            <Flex marginRight={'20px'} flexDir={'row'} justifyContent={"space-between"}>
-              <h2 className={styles.h2Modal}>To: </h2>
-              Balance : {tokenToBalance}
-            </Flex>
-            <div className={styles.inputToken}>
-              <TokenChooser
-                selectedToken={tokenToSelector}
-                setSelectedToken={setTokenToSelector}
-                selectableTokens={protocolTokens.filter((token) => token.address !== tokenFromSelector.address)}
-              />
-              <Input
-                placeholder="Input amount"
-                color="gray.300"
-                height={"3rem"}
-                borderColor="gray.300"
-                _hover={{borderColor: "gray.500"}}
-                _focus={{borderColor: "gray.500"}}
-                value={amountTo}
-                onKeyPress={(event) => {
-                  if (!/^[0-9]+.?[0-9]*$/.test(amountTo + event.key)) {
-                    event.preventDefault();
-                  }
-                }}
-                onChange={(e) => handleAmountTo(e)}
-                variant='flushed'
-              />
-            </div>
-            <div className={styles.modalFooter}>
-              {loading &&
-              <Flex alignItems={"center"} className={styles.submitButton}>Fetching route &nbsp; <Spinner/></Flex>
-              }
-              {!set && !loading &&
-              <button className={styles.submitButton} onClick={() => setAction()}>Set</button>
-              }
-              {set &&
-              <button className={styles.submitButton} onClick={() => unsetItem()}>Edit</button>
-              }
-            </div>
-
-          </div>
-        </div>
-      }
-    </div>
+    <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
+      <BlockHeader type={'Swap  '} protocolName={props.protocolName}
+                   handleRemoveAction={props.handleRemoveAction} action={props.action} set={set} unsetItem={unsetItem}/>
+      <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'} flexWrap={'wrap'} alignItems={'center'}>
+        <SwapField fieldType={'from'} amount={amountFrom} balance={tokenFromBalance} handleAmount={handleAmountFrom} selectedToken={tokenFrom}
+                   tokenSelector={tokenFromSelector} setTokenSelector={setTokenFromSelector} protocolTokens={protocolTokens} quoteTokenSelector={tokenToSelector}/>
+        <Box marginY={'5px'} >
+        <ArrowDownIcon/>
+        </Box>
+        <SwapField fieldType={'to'} amount={amountTo} balance={tokenToBalance} handleAmount={handleAmountTo} selectedToken={tokenTo}
+                   tokenSelector={tokenToSelector} setTokenSelector={setTokenToSelector} protocolTokens={protocolTokens} quoteTokenSelector={tokenFromSelector}/>
+      </Flex>
+      <BlockFooter loading={loading} set={set} setAction={setAction}/>
+    </Flex>
   )
 }
 
 
-export default ActionBlockSwap;
+export default Swap;

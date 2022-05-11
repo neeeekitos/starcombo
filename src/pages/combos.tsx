@@ -3,7 +3,6 @@ import {useStarknet} from "../hooks/useStarknet";
 
 import {Button, Flex} from "@chakra-ui/react"
 import React, {useState, useRef} from "react";
-import ActionBlockSwap from "../components/action-block-swap/action-block-swap";
 import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
@@ -13,17 +12,18 @@ import {getFloatFromBN} from "../utils/helpers";
 import {Pair, Token} from "@jediswap/sdk";
 import {useAmounts} from "../hooks/useAmounts";
 import {getBalanceOfErc20} from "../utils/helpers";
-import {NotificationContainer, NotificationManager} from 'react-notifications';
+import {NotificationManager} from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
 
 import {useTransactions} from "../hooks/useTransactions";
 
-import ActionBlockAdd from "../components/action-block-add/action-block-add";
-import ActionBlockRemove from "../components/action-block-remove/action-block-remove";
 import FundsRecap from "../components/FundsRecap";
 import SelectNewAction from "../components/select-new-action/select-new-action";
 
 import useComponentVisible from "../hooks/UseComponentVisible";
+import Swap from "../components/swapv2/swap";
+import Add from "../components/addv2/Add";
+import Remove from "../components/removev2/Remove";
 
 const Combos: NextPage = () => {
 
@@ -34,34 +34,22 @@ const Combos: NextPage = () => {
   }
   const {
     transactionItems,
-    transactionHistory,
     addTransactionHistory,
     removeTransaction,
     reorderTransactions,
     orderedTransactionData
   } = useTransactions();
-  const [error, setError] = useState(false);
   const {initialFunds, receivedFunds, tokenInfos, removeItem, reorderAmounts} = useAmounts();
   const [actions, setActions] = useState<Action[]>([]);
 
-  const [moved, setMoved] = useState<boolean>(false);
-
-  const [hash, setHash] = useState<string>();
-  const [pair, setPair] = useState<Pair>();
 
   const {ref, isComponentVisible, setIsComponentVisible} = useComponentVisible(false);
 
-  const [openNewActionModal, setOpenNewActionModal] = useState<boolean>(false);
   const footerRef = useRef(null);
 
   const scrollToBottom = () => {
     footerRef.current?.scrollIntoView({behavior: "smooth"})
   }
-
-  // useEffect(() => {
-  //   // scrollToBottom()
-  //   console.log(actions)
-  // }, [actions]);
 
   //When reordering, reorderAmounts from
   const handleReorder = (newOrder) => {
@@ -81,6 +69,12 @@ const Combos: NextPage = () => {
     setActions(actions.filter(a => a.id !== actionId))
     removeItem(actionId);
     removeTransaction(actionId)
+  }
+
+  const walletConnection = async () => {
+    const error = await connectWallet()
+    if (error) NotificationManager.error(error);
+    if (!error) NotificationManager.success('Connected');
   }
 
 
@@ -117,9 +111,9 @@ const Combos: NextPage = () => {
   //Render functions
   const renderCorrespondingActionBlock = (action) => {
     const actionBlocks = {
-      [ActionTypes.ADD_LIQUIDITY]: ActionBlockAdd,
-      [ActionTypes.REMOVE_LIQUIDITY]: ActionBlockRemove,
-      [ActionTypes.SWAP]: ActionBlockSwap
+      [ActionTypes.ADD_LIQUIDITY]: Add,
+      [ActionTypes.REMOVE_LIQUIDITY]: Remove,
+      [ActionTypes.SWAP]: Swap,
     }
     let Component = actionBlocks[action.actionType];
     return (
@@ -143,7 +137,7 @@ const Combos: NextPage = () => {
             background="transparent"
             _hover={{bg: "brand.body"}}
             _active={{bg: "brand.navbar"}}
-            onClick={() => connectWallet()}>Connect Wallet to start</Button>
+            onClick={() => walletConnection()}>Connect Wallet to start</Button>
         </Flex>
       </div>
     )
@@ -151,10 +145,8 @@ const Combos: NextPage = () => {
   const renderConnected = () => {
     return (
       <div className={styles.container}>
-        <NotificationContainer/>
         <FundsRecap/>
         <div className={styles.container}>
-
           <Button
             background="brand.body"
             _hover={{bg: "brand.body"}}

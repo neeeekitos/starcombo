@@ -7,10 +7,11 @@ interface StarknetState {
   provider: Provider | undefined,
   setAccount: (account: AccountInterface) => void,
   setProvider: (provider: Provider) => void,
-  connectWallet: () => void,
+  connectWallet: () => Promise<string|undefined>
   disconnect: () => void
 }
 
+const GOERLI_CHAIN_ID = "0x534e5f474f45524c49";
 export const useStarknet = create<StarknetState>((set) => ({
     account: undefined,
     provider: undefined,
@@ -23,8 +24,13 @@ export const useStarknet = create<StarknetState>((set) => ({
     connectWallet: async () => {
       const starknet = getStarknet();
       await starknet.enable();
+      // @ts-ignore
+      console.log(starknet.account.chainId)
+      console.log(GOERLI_CHAIN_ID)
+      // @ts-ignore
+      if(starknet.account.chainId!==GOERLI_CHAIN_ID) return('Wrong chain. Use your Goerli testnet account.')
+      console.log(starknet)
       set((state) => ({...state, account: starknet.account, provider: starknet.provider}))
-
     },
     disconnect: () => {
       set((state) => ({account: undefined, provider: undefined}))

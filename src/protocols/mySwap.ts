@@ -9,6 +9,8 @@ import {PoolPosition} from "./jediSwap";
 import {formatToBigNumberish, formatToDecimal} from "../utils/helpers";
 import {bnToUint256} from "starknet/utils/uint256";
 import {bigNumberishArrayToDecimalStringArray} from "starknet/utils/number";
+import {jediLPMapping} from "./jediswap/constants/jediLPTokenList";
+import {myswapLpMapping} from "./myswap/constants/myswapLPTokenList";
 
 export class MySwap implements DexCombo {
 
@@ -108,22 +110,29 @@ export class MySwap implements DexCombo {
         tokenFromIsToken0 ? Object.values(bnToUint256(minAmountTo)) : Object.values(bnToUint256(minAmountFrom)),
       ].flatMap((x) => x);
 
+    console.log(desiredAmountTo.toFixed(0));
+    console.log(bnToUint256(desiredAmountTo.toFixed(0)));
+    console.log(Object.values(bnToUint256(desiredAmountTo.toFixed(0))));
+
+
     const tx: Call | Call[] = [
       {
         contractAddress: tokenFrom.address,
         entrypoint: 'approve',
-        calldata: [
-          number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
-          Object.values(bnToUint256(desiredAmountFrom.toString()))
-        ].flatMap((x) => x)
+        calldata: bigNumberishArrayToDecimalStringArray([
+            number.toBN(MY_SWAP_ROUTER_ADDRESS),// router address decimal
+            Object.values(bnToUint256(desiredAmountFrom.toString()))
+          ].flatMap((x) => x)
+        )
       },
       {
         contractAddress: tokenTo.address,
         entrypoint: 'approve',
-        calldata: [
-          number.toBN(MY_SWAP_ROUTER_ADDRESS).toString(), // router address decimal
-          Object.values(desiredAmountTo.toFixed(0)),
-        ].flatMap((x) => x)
+        calldata: bigNumberishArrayToDecimalStringArray([
+            number.toBN(MY_SWAP_ROUTER_ADDRESS), // router address decimal
+            Object.values(bnToUint256(desiredAmountTo.toFixed(0))),
+          ].flatMap((x) => x)
+        )
       },
       {
         contractAddress: MY_SWAP_ROUTER_ADDRESS,
@@ -194,13 +203,13 @@ export class MySwap implements DexCombo {
   public async getPoolDetails(tokenFrom: Token, tokenTo: Token) {
     //format input according to decimals
 
-    const tokenFromAddress = number.toBN(tokenFrom.address)
-    const tokenToAddress = number.toBN(tokenTo.address)
-
-    const poolDetails = await this.findPool(tokenFromAddress.toString(), tokenToAddress.toString());
+    const poolDetails = await this.findPool(tokenFrom, tokenTo);
+    console.log(poolDetails)
     if (!poolDetails) return undefined;
 
+    console.log(poolDetails.liqReservesTokenFrom)
     const poolTokenFrom = new TokenAmount(tokenFrom, poolDetails.liqReservesTokenFrom);
+    console.log(poolDetails.liqReservesTokenTo);
     const poolTokenTo = new TokenAmount(tokenTo, poolDetails.liqReservesTokenTo);
     //I'm cheating here and setting poolId inside the poolAddress field :)
     const poolPair = new Pair(poolTokenFrom, poolTokenTo, poolDetails.poolId);
@@ -295,34 +304,61 @@ export class MySwap implements DexCombo {
    * @param tokenFromDecAddress
    * @param tokenToDecAddress
    */
-  private async findPool(tokenFromDecAddress: string, tokenToDecAddress: string): Promise<any> {
+  private async findPool(tokenFrom: Token, tokenTo: Token): Promise<any> {
+
+    const tokenFromDecAddress = number.toBN(tokenFrom.address);
+    const tokenToDecAddress = number.toBN(tokenTo.address);
+    console.log(tokenFrom.address)
+    console.log(tokenTo.address)
+    console.log(myswapLpMapping()[tokenFrom.address])
+    const targetPoolId = myswapLpMapping()[tokenFrom.address] ? myswapLpMapping()[tokenFrom.address][tokenTo.address] : undefined
     const mySwapRouterContract = new Contract(mySwapRouter.abi as Abi, MY_SWAP_ROUTER_ADDRESS);
-    const numberOfPools = await mySwapRouterContract.call("get_total_number_of_pools");
-    console.log(`Number of pools: ${numberOfPools}`);
-    for (let i = 1; i <= Number(numberOfPools[0]); i++) {
-      const pool = await mySwapRouterContract.call("get_pool", [i]);
-      if (pool[0].token_a_address.toString() === tokenFromDecAddress && pool[0].token_b_address.toString() === tokenToDecAddress ||
-        pool[0].token_a_address.toString() === tokenToDecAddress && pool[0].token_b_address.toString() === tokenFromDecAddress) {
 
-        let liqReservesTokenFrom;
-        let liqReservesTokenTo;
-        if (pool[0].token_a_address.toString() === tokenFromDecAddress) {
-          liqReservesTokenFrom = pool[0].token_a_reserves.low.toString();
-          liqReservesTokenTo = pool[0].token_b_reserves.low.toString();
-        } else {
-          liqReservesTokenFrom = pool[0].token_b_reserves.low.toString();
-          liqReservesTokenTo = pool[0].token_a_reserves.low.toString();
-        }
-        return Promise.resolve({
-          poolId: i.toString(),
-          poolName: pool[0].name,
-          liqReservesTokenFrom: liqReservesTokenFrom,
-          liqReservesTokenTo: liqReservesTokenTo,
-          feePercentage: pool[0].fee_percentage.toString()
-        });
-
+    /**
+     * Reads pool details and returns pool info
+     * @param pool pool to read details from
+     * @param i pool id
+     */
+    const readPoolDetails = (pool: any, i?: number) => {
+      let liqReservesTokenFrom;
+      let liqReservesTokenTo;
+      if (pool[0].token_a_address.toString() === tokenFromDecAddress) {
+        liqReservesTokenFrom = pool[0].token_a_reserves.low.toString();
+        liqReservesTokenTo = pool[0].token_b_reserves.low.toString();
+      } else {
+        liqReservesTokenFrom = pool[0].token_b_reserves.low.toString();
+        liqReservesTokenTo = pool[0].token_a_reserves.low.toString();
       }
+      return {
+        poolId: i.toString(),
+        poolName: pool[0].name,
+        liqReservesTokenFrom: liqReservesTokenFrom,
+        liqReservesTokenTo: liqReservesTokenTo,
+        feePercentage: pool[0].fee_percentage.toString()
+      };
+
     }
-    return Promise.reject("Pool not found");
+
+
+    //If not found in hardcoded values, just iterate for all pools.
+    if (targetPoolId) {
+      console.log(targetPoolId)
+      const pool = await mySwapRouterContract.call("get_pool", [targetPoolId]);
+      return readPoolDetails(pool, targetPoolId);
+    } else {
+      return undefined;
+      //For now there are only the 4 hardcoded pools
+    }
+
+    //   const numberOfPools = await mySwapRouterContract.call("get_total_number_of_pools");
+    //   console.log(`Number of pools: ${numberOfPools}`);
+    //   for (let i = 1; i <= Number(numberOfPools[0]); i++) {
+    //     const pool = await mySwapRouterContract.call("get_pool", [i]);
+    //     if (pool[0].token_a_address.toString() === tokenFromDecAddress && pool[0].token_b_address.toString() === tokenToDecAddress ||
+    //       pool[0].token_a_address.toString() === tokenToDecAddress && pool[0].token_b_address.toString() === tokenFromDecAddress) {
+    //       return readPoolDetails(pool, i);
+    //     }
+    //   }
+    // }
   }
 }

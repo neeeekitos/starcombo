@@ -1,15 +1,14 @@
 import {
-  WBTC,
-  DAI,
+  DAI, J23FEB0,
+  J23FEB0_ADDRESS, J23FEB1,
+  J23FEB1_ADDRESS, J23FEB2,
+  J23FEB2_ADDRESS, J23FEB3,
+  J23FEB3_ADDRESS,
+  jediTokensList,
   USDC,
-  J23FEB0_ADDRESS,
-  J23FEB1_ADDRESS,
-  WBTC_ADDRESS,
-  USDC_ADDRESS,
-  DAI_ADDRESS,
-  J23FEB2_ADDRESS, J23FEB3_ADDRESS, jediTokensList
+  WBTC
 } from './jediTokens'
-import { ChainId, LPToken } from '@jediswap/sdk'
+import {ChainId, LPToken} from '@jediswap/sdk'
 
 export const jediPairAddresses = {
   ETH_WBTC: '0x699b290b25c03cedf6a29e767b40420b572bee5296dd284b34304dfdf52f847',
@@ -33,6 +32,15 @@ export const LP_WBTC_USDC = new LPToken(ChainId.GÖRLI, WBTC, USDC, jediPairAddr
 
 export const LP_DAI_USDC = new LPToken(ChainId.GÖRLI, DAI, USDC, jediPairAddresses.DAI_USDC)
 
+export const LP_J23FEB0_J23FEB1 = new LPToken(ChainId.GÖRLI, J23FEB0,J23FEB1,jediPairAddresses.J23FEB0_J23FEB1);
+export const LP_J23FEB0_J23FEB2 = new LPToken(ChainId.GÖRLI, J23FEB0,J23FEB2,jediPairAddresses.J23FEB0_J23FEB1);
+export const LP_J23FEB0_J23FEB3 = new LPToken(ChainId.GÖRLI, J23FEB0,J23FEB3,jediPairAddresses.J23FEB0_J23FEB1);
+export const LP_J23FEB1_J23FEB2 = new LPToken(ChainId.GÖRLI, J23FEB1,J23FEB2,jediPairAddresses.J23FEB0_J23FEB1);
+export const LP_J23FEB1_J23FEB3 = new LPToken(ChainId.GÖRLI, J23FEB1,J23FEB3,jediPairAddresses.J23FEB0_J23FEB1);
+export const LP_J23FEB2_J23FEB3 = new LPToken(ChainId.GÖRLI, J23FEB2,J23FEB3,jediPairAddresses.J23FEB0_J23FEB1);
+
+
+
 // export const jediLPTokenList = {
 //   [LP_ETH_WBTC.address]: LP_ETH_WBTC,
 //   [LP_ETH_DAI.address]: LP_ETH_DAI,
@@ -42,7 +50,8 @@ export const LP_DAI_USDC = new LPToken(ChainId.GÖRLI, DAI, USDC, jediPairAddres
 // }
 
 export const jediLPTokenList = [
-  LP_DAI_USDC,LP_WBTC_USDC
+  // LP_DAI_USDC,LP_WBTC_USDC
+  LP_J23FEB0_J23FEB1,LP_J23FEB0_J23FEB2,LP_J23FEB0_J23FEB3,LP_J23FEB1_J23FEB2,LP_J23FEB1_J23FEB3,LP_J23FEB2_J23FEB3
 ]
 
 export const jediLPMapping = () =>{

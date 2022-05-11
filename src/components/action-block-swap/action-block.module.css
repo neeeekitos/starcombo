@@ -3,7 +3,7 @@
   position: relative;
   background-color: var(--block-color);
   border-radius: var(--border-radius);
-  max-width: 350px;
+  width: 400px;
   padding: 10px;
   box-shadow: rgb(255 255 255 / 50%) 0px 30.0211px 43.1072px -27.7118px inset,
               rgb(255 255 255) 0px 5.38841px 8.46749px -3.07909px inset,
@@ -39,6 +39,8 @@
 
 .actionBlockBody {
   display: flex;
+  width: 80%;
+  flex-grow: 1;
   justify-content: space-between;
   margin: 20px 40px 20px 40px;
   color: white;
@@ -61,15 +63,18 @@
   flex-direction: column;
   align-items: center;
   position: relative;
+  width: 60px;
 }
 
-.tokenWrapper p{
+.tokenWrapper .amount{
+  display: inline-block;
+  max-width: 50px;
   margin-top: 30px;
-  font-weight: 500;
-  z-index: 2;
+  font-weight: 400;
+  overflow-wrap: break-word;
 }
 
-.tokenWrapper span{
+.tokenWrapper .tokenLogo{
   z-index: 2;
   animation-name: upDown;
   animation-iteration-count: infinite;
@@ -271,4 +276,21 @@
   top: 20px;
   right: 20px;
   font-size: 1.2rem;
+}
+
+.tokenLogo {
+  height: 60px;
+  width: 60px;
+  display: flex;
+  justify-content:center;
+  align-items: center;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #025629;
+  border-radius: 50%;
+  background: rgba(11, 33, 40, 0.31);
+}
+
+.tokenLogo span{
+ font-size: 12px;
 }
