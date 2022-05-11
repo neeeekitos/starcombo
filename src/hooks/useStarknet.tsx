@@ -24,9 +24,7 @@ export const useStarknet = create<StarknetState>((set) => ({
     connectWallet: async () => {
       const starknet = getStarknet();
       await starknet.enable();
-      // @ts-ignore
-      console.log(starknet.account.chainId)
-      console.log(GOERLI_CHAIN_ID)
+      if(starknet.account.address==='' || !starknet.isConnected) return('Connection failed')
       // @ts-ignore
       if(starknet.account.chainId!==GOERLI_CHAIN_ID) return('Wrong chain. Use your Goerli testnet account.')
       console.log(starknet)

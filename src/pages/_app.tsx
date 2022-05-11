@@ -6,6 +6,7 @@ import theme from '../styles/Theme'
 import Navbar from "../components/Navbar";
 import React from "react";
 import {NotificationContainer} from 'react-notifications';
+import 'react-notifications/lib/notifications.css';
 
 function MyApp({Component, pageProps}: AppProps) {
   return (
