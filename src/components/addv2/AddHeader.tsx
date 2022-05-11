@@ -1,20 +1,19 @@
-import {Box, Flex, Text} from "@chakra-ui/react"
-import {DeleteIcon, SettingsIcon} from "@chakra-ui/icons";
-import styles from "../action-block-swap/action-block.module.css";
+import {Box, Flex, Text} from "@chakra-ui/react";
+import {DeleteIcon} from "@chakra-ui/icons";
 import React from "react";
 import {Action} from "../../utils/constants/constants";
 
-interface SwapHeaderProps {
+interface AddHeaderProps{
   protocolName: string | any,
   handleRemoveAction: (number) => void
   action: Action;
 }
 
-const SwapHeader = ({protocolName, handleRemoveAction, action}:SwapHeaderProps) => {
+const AddHeader= ({protocolName,handleRemoveAction,action}:AddHeaderProps) =>{
   return (
     <Flex justifyContent={'space-between'}>
       <Text margin='8px' marginLeft={'15px'}>
-        Swap on {protocolName}
+        Add liquidity on {protocolName}
       </Text>
       {/*<SettingsIcon margin={'8px'} marginRight={'15px'}/>*/}
       <Box padding={'6px'} cursor={'pointer'}
@@ -28,4 +27,4 @@ const SwapHeader = ({protocolName, handleRemoveAction, action}:SwapHeaderProps) 
   )
 }
 
-export default SwapHeader
+export default AddHeader

@@ -25,6 +25,7 @@ import SelectNewAction from "../components/select-new-action/select-new-action";
 
 import useComponentVisible from "../hooks/UseComponentVisible";
 import Swap from "../components/swapv2/swap";
+import Add from "../components/addv2/Add";
 
 const Combos: NextPage = () => {
 
@@ -124,7 +125,7 @@ const Combos: NextPage = () => {
   //Render functions
   const renderCorrespondingActionBlock = (action) => {
     const actionBlocks = {
-      [ActionTypes.ADD_LIQUIDITY]: ActionBlockAdd,
+      [ActionTypes.ADD_LIQUIDITY]: Add,
       [ActionTypes.REMOVE_LIQUIDITY]: ActionBlockRemove,
       [ActionTypes.SWAP]: Swap,
     }
