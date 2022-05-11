@@ -1,9 +1,8 @@
 import {Button, Flex, Spinner} from "@chakra-ui/react";
 import React from "react";
 
-const SwapFooter = ({loading,set,setAction,unsetItem}) => {
-
-  return (
+const BlockFooter = ({loading,set,setAction}) =>{
+  return(
     <Flex justifyContent={'center'}>
       {loading &&
       <Flex alignItems={"center"}>Fetching route &nbsp; <Spinner/></Flex>
@@ -15,4 +14,4 @@ const SwapFooter = ({loading,set,setAction,unsetItem}) => {
   )
 }
 
-export default SwapFooter;
+export default BlockFooter;
