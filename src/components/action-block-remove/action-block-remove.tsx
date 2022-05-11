@@ -33,7 +33,7 @@ interface ActionBlockProps {
   handleRemoveAction: (actionId: number) => void
 }
 
-const ActionBlockAdd = (props: ActionBlockProps) => {
+const ActionBlockRemove = (props: ActionBlockProps) => {
 
   //custom hooks
   const {account, provider} = useStarknet();
@@ -345,4 +345,4 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 }
 
 
-export default ActionBlockAdd;
+export default ActionBlockRemove;

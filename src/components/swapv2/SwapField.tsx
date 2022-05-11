@@ -1,4 +1,4 @@
-import {Box, Flex, Input, Text} from "@chakra-ui/react";
+import {Box, DarkMode, Flex, Input, Text} from "@chakra-ui/react";
 import TokenChooser from "../token-chooser";
 import {Token} from "@jediswap/sdk";
 import {Dispatch, SetStateAction} from "react";
@@ -6,7 +6,7 @@ import {Dispatch, SetStateAction} from "react";
 
 interface SwapFieldProps {
   fieldType: string;
-  balance:number,
+  balance: number,
   amount: string,
   handleAmount: (e: any) => void,
   selectedToken: Token;
@@ -19,7 +19,7 @@ interface SwapFieldProps {
 const SwapField = (props: SwapFieldProps) => {
 
   return (
-    <Flex justifyContent={'space-between'} alignItems='center' backgroundColor={'#343047'} maxWidth={'400px'}
+    <Flex justifyContent={'space-between'} alignItems='center' backgroundColor={'#343047'} width={'90%'}
           borderRadius={'20px'} padding={'10px'}>
       <Input width={'300px'} height={'50px'} variant={'unstyled'} marginLeft={'10px'} value={props.amount}
              onKeyPress={(event) => {
@@ -31,9 +31,9 @@ const SwapField = (props: SwapFieldProps) => {
       </Input>
       <Flex flexDir={'column'}>
         <Text marginLeft={'10px'} color={'grey'} fontSize={'sm'}>Balance : ~{props.balance?.toPrecision(6)}</Text>
-        <TokenChooser selectedToken={props.tokenSelector}
-                      setSelectedToken={props.setTokenSelector}
-                      selectableTokens={props.protocolTokens.filter((token) => token.address !== props.quoteTokenSelector.address)}/>
+          <TokenChooser selectedToken={props.tokenSelector}
+                        setSelectedToken={props.setTokenSelector}
+                        selectableTokens={props.protocolTokens.filter((token) => token.address !== props.quoteTokenSelector.address)}/>
       </Flex>
     </Flex>
   )

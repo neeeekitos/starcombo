@@ -17,7 +17,7 @@ interface AddFieldProps {
 
 const AddField = (props:AddFieldProps) =>{
   return(
-    <Flex justifyContent={'space-between'} alignItems='center' backgroundColor={'#343047'} maxWidth={'400px'}
+    <Flex justifyContent={'space-between'} alignItems='center' backgroundColor={'#343047'} width={'90%'}
           borderRadius={'20px'} padding={'10px'}>
       <Input width={'300px'} height={'50px'} variant={'unstyled'} marginLeft={'10px'} value={props.amount}
              onKeyPress={(event) => {

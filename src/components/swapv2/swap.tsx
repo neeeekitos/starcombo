@@ -16,12 +16,10 @@ import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {useTransactions} from "../../hooks/useTransactions";
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
-import SwapHeader from "./SwapHeader";
 import SwapField from "./SwapField";
 import {ArrowDownIcon} from "@chakra-ui/icons";
-import SwapFooter from "./SwapFooter";
-import {Simulate} from "react-dom/test-utils";
-import load = Simulate.load;
+import BlockHeader from "../BlockHeader";
+import BlockFooter from "../BlockFooter";
 
 interface ActionBlockProps {
   actionName: string,
@@ -259,7 +257,8 @@ const Swap = (props: ActionBlockProps) => {
 
   return (
     <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
-      <SwapHeader protocolName={props.protocolName} handleRemoveAction={props.handleRemoveAction} action={props.action}></SwapHeader>
+      <BlockHeader type={'Swap  '} protocolName={props.protocolName}
+                   handleRemoveAction={props.handleRemoveAction} action={props.action} set={set} unsetItem={unsetItem}/>
       <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'} flexWrap={'wrap'} alignItems={'center'}>
         <SwapField fieldType={'from'} amount={amountFrom} balance={tokenFromBalance} handleAmount={handleAmountFrom} selectedToken={tokenFrom}
                    tokenSelector={tokenFromSelector} setTokenSelector={setTokenFromSelector} protocolTokens={protocolTokens} quoteTokenSelector={tokenToSelector}/>
@@ -269,7 +268,7 @@ const Swap = (props: ActionBlockProps) => {
         <SwapField fieldType={'to'} amount={amountTo} balance={tokenToBalance} handleAmount={handleAmountTo} selectedToken={tokenTo}
                    tokenSelector={tokenToSelector} setTokenSelector={setTokenToSelector} protocolTokens={protocolTokens} quoteTokenSelector={tokenFromSelector}/>
       </Flex>
-      <SwapFooter loading={loading} set={set} setAction={setAction} unsetItem={unsetItem}/>
+      <BlockFooter loading={loading} set={set} setAction={setAction}/>
     </Flex>
   )
 }

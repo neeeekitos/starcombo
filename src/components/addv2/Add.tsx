@@ -21,6 +21,8 @@ import AddField from "./AddField";
 import AddFooter from "./AddFooter";
 import SwapFooter from "../swapv2/SwapFooter";
 import {AddIcon, ArrowDownIcon, PlusSquareIcon} from "@chakra-ui/icons";
+import BlockHeader from "../BlockHeader";
+import BlockFooter from "../BlockFooter";
 
 
 interface ActionBlockProps {
@@ -253,7 +255,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
   return (
     <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
-      <AddHeader protocolName={props.protocolName} handleRemoveAction={props.handleRemoveAction} action={props.action}/>
+      <BlockHeader type={'Add liquidity'} protocolName={props.protocolName}
+                   handleRemoveAction={props.handleRemoveAction} action={props.action} set={set} unsetItem={unsetItem}/>
       <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'} flexWrap={'wrap'}
             alignItems={'center'}>
         <AddField fieldType={'0'} balance={0} amount={amountToken0} handleAmount={handleAmountToken0} selectedToken={token0} tokenSelector={token0Selector} setTokenSelector={setToken0Selector} quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
@@ -262,7 +265,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
         </Box>
         <AddField fieldType={'1'} balance={0} amount={amountToken1} handleAmount={handleAmountToken1} selectedToken={token1} tokenSelector={token1Selector} setTokenSelector={setToken1Selector} quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
       </Flex>
-      <AddFooter loading={loading} set={set} setAction={setAction} unsetItem={unsetItem}/>
+      <BlockFooter loading={loading} set={set} setAction={setAction}/>
     </Flex>
   )
 }
