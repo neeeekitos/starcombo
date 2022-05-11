@@ -1,4 +1,4 @@
-import {ReactNode, useEffect, useRef} from 'react';
+import {useEffect, useRef} from 'react';
 import {
   Box,
   Flex,
@@ -12,8 +12,7 @@ import {
   MenuItem,
   MenuDivider,
   useDisclosure,
-  useColorModeValue,
-  Stack, Heading, Tooltip
+  Stack, Heading
 } from '@chakra-ui/react';
 import {HamburgerIcon, CloseIcon} from '@chakra-ui/icons';
 import Link from "next/link"
@@ -24,10 +23,6 @@ import {NotificationManager} from 'react-notifications';
 import Image from "next/image";
 
 const Links = [
-  // {
-  //   name: 'Home',
-  //   target: '/'
-  // },
   {
     name: 'Combos',
     target: '/combos'
