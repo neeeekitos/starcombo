@@ -1,11 +1,8 @@
 import React, {useEffect, useRef, useState} from "react";
 import styles from "./action-block-remove.module.css";
 import useComponentVisible from "../../hooks/UseComponentVisible";
-import Image from "next/image";
-import BatLogo from "../../../public/img/tokens/bat.svg";
-import EtherLogo from "../../../public/img/tokens/ether.svg";
 import TokenChooser from "../token-chooser";
-import {Flex, Input, Spinner} from "@chakra-ui/react";
+import {Flex, Spinner} from "@chakra-ui/react";
 import {ProtocolNames, PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
 import {
   Slider,
@@ -16,15 +13,14 @@ import {
 } from '@chakra-ui/react';
 import {createTokenObjects} from "../../utils/helpers";
 import {Fraction, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
-import {MySwap} from "../../protocols/mySwap";
 import {useStarknet} from "../../hooks/useStarknet";
 import {DexCombo, StarknetConnector} from "../../utils/constants/interfaces";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useTransactions} from "../../hooks/useTransactions";
 import {PoolPosition} from "../../protocols/jediSwap";
 import {ethers} from "ethers";
-import {Simulate} from "react-dom/test-utils";
-import load = Simulate.load;
+import {NotificationManager} from 'react-notifications';
+
 
 interface ActionBlockProps {
   actionName: string,
@@ -88,7 +84,8 @@ const ActionBlockRemove = (props: ActionBlockProps) => {
 
       let poolPosition: PoolPosition;
       if (props.protocolName === PROTOCOLS[ProtocolNames.JEDISWAP].name) {
-        const {poolPair}: { poolPair: Pair } = await protocolInstance.getPoolDetails(token0, token1, provider);
+        const {poolPair}: { poolPair: Pair } = (await protocolInstance.getPoolDetails(token0, token1, provider)) || {};
+        if(!poolPair) NotificationManager.error('Pool not found')
         poolPosition = await protocolInstance.getLiquidityPosition(starknetConnector, token0, token1, poolPair);
       } else {
         poolPosition = await protocolInstance.getLiquidityPosition(starknetConnector, token0, token1);

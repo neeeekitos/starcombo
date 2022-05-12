@@ -40,4 +40,7 @@ yarn-error.log*
 #packages
 yarn.lock
 
+#docs
+.retype/
+
 .idea

@@ -1,8 +1,5 @@
-import {Abi, Contract, number, Provider} from "starknet";
-import {JEDI_REGISTRY_ADDRESS} from "./constants/constants";
 import {ChainId, CurrencyAmount, Token} from "@jediswap/sdk";
 import {StarknetConnector} from "./constants/interfaces";
-import {add} from "@noble/hashes/_u64";
 import {ethers} from "ethers";
 import {getTokenContract} from "../protocols/jediswap/contracts";
 import {uint256ToBN} from "starknet/dist/utils/uint256";

@@ -1,7 +1,20 @@
-# Starcombo
-Starcombo is a Furocombo-like web app that allows users to do multiple invokes inside a single L2 transaction on Starknet ✨.
+# Starcombo Introduction
 
-Users will be able to manipulate basic blocks that represent an interaction with a smart contract, such as the **approval** for a token, a **swap**, a **transfer**, or providing **liquidity** to a liquidity pool. It's easy enough to drag&drop these blocks to chain them in a specific order, allowing them to interact with several protocols inside a single app. 
+## What is Starcombo?
 
-We have already begun integrating several AMM protocols into our app such as [JediSwap](https://app.testnet.jediswap.xyz/) and [MySwap](https://www.myswap.xyz/#/), and we plan to add more protocols once they go live. With incoming protocols on Starknet such as Aave, using **flashloans** and making **complex transactions** will be much easier with Starcombo thanks to a user-friendly graphical interface.
+Starcombo is a tool allowing users to build their DeFi strategy on Starknet simply by drag&drop.
 
+When creating a __combo__, users can access multiple DeFi protocols and select which action they want to do.
+Users will then need to fill in the required inputs, and Starcombo will bundle them into a _combo_, which is a single transaction
+sent on the Starknet network.
+
+## Which protocols can I use with Starcombo?
+
+For now, only [Jediswap](https://app.testnet.jediswap.xyz/) and [Myswap](https://www.myswap.xyz/) are supported.
+Want to add your favorite DeFi protocol to Starcombo? Let us know!
+
+## Does Starcombo charge fees?
+Starcombo does not charge any fees on any operation.
+
+## Is Starcombo open-sourced?
+You can find all of our code on [Github](https://github.com/CeDe-Keyper/starcombo).

@@ -1,0 +1,12 @@
+input: .
+output: .retype
+url: testnet.starcombo.xyz
+branding:
+  title: Starcombo
+  label: Docs
+  logo : src/utils/assets/logo/starcombo.png
+links:
+- text: App
+  link: https://testnet.starcombo.xyz
+footer:
+  copyright: "&copy; Copyright {{ year }}. All rights reserved."

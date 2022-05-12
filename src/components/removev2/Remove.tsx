@@ -161,7 +161,9 @@ const Remove = (props: ActionBlockProps) => {
       <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'}
             alignItems={'center'}>
         <RemoveSlider sliderValue={sliderValue} setSliderValue={setSliderValue}/>
-        <ArrowDownIcon/>
+        <Box marginY={'5px'} >
+          <ArrowDownIcon/>
+        </Box>
         <Flex justifyContent={'space-between'} alignItems='center' flexDir={'column'} backgroundColor={'#343047'}
               width={'90%'}
               borderRadius={'20px'} padding={'10px'}>

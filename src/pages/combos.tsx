@@ -1,7 +1,7 @@
 import {NextPage} from "next";
 import {useStarknet} from "../hooks/useStarknet";
 
-import {Button, Flex} from "@chakra-ui/react"
+import {Icon, Button, Flex} from "@chakra-ui/react"
 import React, {useState, useRef} from "react";
 import {Reorder} from "framer-motion"
 
@@ -24,6 +24,7 @@ import useComponentVisible from "../hooks/UseComponentVisible";
 import Swap from "../components/swapv2/swap";
 import Add from "../components/addv2/Add";
 import Remove from "../components/removev2/Remove";
+import {BsPlusCircle} from "react-icons/bs";
 
 const Combos: NextPage = () => {
 
@@ -148,13 +149,14 @@ const Combos: NextPage = () => {
         <FundsRecap/>
         <div className={styles.container}>
           <Button
-            background="brand.body"
-            _hover={{bg: "brand.body"}}
-            _active={{bg: "brand.navbar"}}
+            w={10} h={10}
+            variant={'unstyled'}
             onClick={() => setIsComponentVisible(true)}
             hidden={isComponentVisible}
           >
-            Add action
+            <Icon w={10} h={10} as={BsPlusCircle} _active={{bg: "brand.navbar"}}
+
+            />
           </Button>
           {
             isComponentVisible &&

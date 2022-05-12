@@ -11,8 +11,8 @@ import {
   ProtocolNames,
   SLIPPAGE
 } from "../utils/constants/constants";
-import {BigNumber, ethers} from "ethers";
-import {BigintIsh, ChainId, Fraction, JSBI, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
+import {ethers} from "ethers";
+import {Fraction, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {number} from "starknet";
 import {
   formatToBigNumberish,
@@ -326,7 +326,7 @@ export class JediSwap implements DexCombo {
     //Check for hardcoded pool addresses. If they don't exist, query the network.
     let liquidityPoolForTokens = jediLPMapping()[tokenFrom.address] ? jediLPMapping()[tokenFrom.address][tokenTo.address] : undefined
     if (!liquidityPoolForTokens) {
-      //TODO search in registry 2 if not found
+      //TODO search in registry 2 if not found => we also need to user Router2 when generating transac :)
       liquidityPoolForTokens = await provider.callContract({
         contractAddress: JEDI_REGISTRY_ADDRESS_2,
         entrypoint: "get_pair_for",
