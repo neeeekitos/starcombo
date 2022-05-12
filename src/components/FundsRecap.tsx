@@ -20,7 +20,7 @@ const FundsRecap = () => {
           })}
         </Flex>
         <Flex flexDir={"column"}>
-          <Heading as={"h2"} size={"sm"}>Minimum received funds</Heading>
+          <Heading as={"h2"} size={"sm"}>Received funds</Heading>
           {Object.entries(receivedFunds).map(([key, value]) => {
             return (
               <Flex marginLeft={"20px"} justifyContent={"space-between"} key={key}>

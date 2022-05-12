@@ -248,7 +248,7 @@ const Swap = (props: ActionBlockProps) => {
         actionType: props.actionName,
         tokens: {
           [tokenFromSelector.name]: parseFloat(amountFrom),
-          [tokenToSelector.name]: parseFloat(formatToDecimal(details.amountOutMin, tokenTo.decimals))
+          [tokenToSelector.name]: parseFloat(amountTo)
         }
       }
     });
