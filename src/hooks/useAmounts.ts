@@ -1,6 +1,4 @@
 import create from "zustand";
-import {AccountInterface, Provider} from "starknet";
-import {useCallback} from "react";
 import {ACTIONS, ActionTypes} from "../utils/constants/constants";
 import {Token} from "@jediswap/sdk";
 
@@ -146,8 +144,6 @@ export const useAmounts = create<AmountsState>((set, get) => ({
     //When adding an item  :
     // 1 - Add its id and data to the mapping
     // 2 - re-compute funds from re-ordered array
-    console.log('add')
-    console.log(item)
 
     //First we store this item inside the item structure. It's a simple mapping id=>item props
     //That allows us to quickly edit/delete items.
@@ -169,7 +165,6 @@ export const useAmounts = create<AmountsState>((set, get) => ({
 
     //Get the items id order array and try to find this item. If it's there, no updates to do. Otherwise push it to the end.
     let itemsIdOrder = get().itemsIdOrder;
-    console.log(itemsIdOrder)
     //this is actually useless cause it is always ordered the right way
     // const isItemOrdered = itemsIdOrder.find((elem)=>elem.id===itemNumber)
     // console.log(itemsIdOrder)

@@ -1,13 +1,4 @@
-import {
-  myswapTokenList,
-  TCOMP,
-  TCOMP_ADDRESS,
-  TST,
-  TST_ADDRESS,
-  TUSDC,
-  TUSDC_ADDRESS,
-  TWETH_ADDRESS
-} from "./myswapTokens";
+import {myswapTokenList, TCOMP_ADDRESS, TST_ADDRESS, TUSDC_ADDRESS, TWETH_ADDRESS} from "./myswapTokens";
 
 export const myswapPoolIds = {
   TST_TUSDC: 4,

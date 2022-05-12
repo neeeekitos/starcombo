@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import useComponentVisible from "../../hooks/UseComponentVisible";
-import {Box, Flex, Input, Spinner} from "@chakra-ui/react";
+import {Box, Flex} from "@chakra-ui/react";
 import {ProtocolNames, PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
 import {createTokenObjects} from "../../utils/helpers";
 import {Fraction, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
@@ -133,7 +133,6 @@ const Remove = (props: ActionBlockProps) => {
     addToken(token1Selector.name, token1);
     const {liquidityToken} = poolPosition.poolPair;
     const tokenLiqToRemove = new TokenAmount(liquidityToken, ethers.utils.parseUnits(liqToRemove.toFixed(liquidityToken.decimals), liquidityToken.decimals).toString());
-    console.log(tokenLiqToRemove.raw.toString())
     const txLiq = await protocolInstance.removeLiquidity(starknetConnector, poolPosition, tokenLiqToRemove)
 
     addTransaction({
@@ -176,7 +175,7 @@ const Remove = (props: ActionBlockProps) => {
         </Flex>
 
       </Flex>
-      <BlockFooter loading={loading} set={set} setAction={setAction}/>
+      <BlockFooter loading={loading} set={set} setAction={setAction} disabled={false}/>
     </Flex>
   )
 }

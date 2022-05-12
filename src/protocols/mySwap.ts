@@ -1,15 +1,14 @@
 import {DexCombo, StarknetConnector, SwapParameters, TradeInfo} from "../utils/constants/interfaces";
 import {ethers} from "ethers";
 
-import {Abi, Call, Contract, number, Provider} from "starknet";
+import {Abi, Call, Contract, number} from "starknet";
 import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
 import {ChainId, Fraction, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
 import {Action, ActionTypes, MY_SWAP_ROUTER_ADDRESS, ProtocolNames, SLIPPAGE} from "../utils/constants/constants";
 import {PoolPosition} from "./jediSwap";
 import {formatToBigNumberish, formatToDecimal} from "../utils/helpers";
-import {bnToUint256} from "starknet/utils/uint256";
+import {bnToUint256, uint256ToBN} from "starknet/utils/uint256";
 import {bigNumberishArrayToDecimalStringArray} from "starknet/utils/number";
-import {jediLPMapping} from "./jediswap/constants/jediLPTokenList";
 import {myswapLpMapping} from "./myswap/constants/myswapLPTokenList";
 
 export class MySwap implements DexCombo {
@@ -64,7 +63,6 @@ export class MySwap implements DexCombo {
       }
     ]
 
-    console.log(tx)
 
     return Promise.resolve({
       actionType: ActionTypes.SWAP,
@@ -109,10 +107,6 @@ export class MySwap implements DexCombo {
         tokenFromIsToken0 ? Object.values(bnToUint256(desiredAmountTo.toFixed(0))) : Object.values(bnToUint256(desiredAmountFrom.toString())),
         tokenFromIsToken0 ? Object.values(bnToUint256(minAmountTo)) : Object.values(bnToUint256(minAmountFrom)),
       ].flatMap((x) => x);
-
-    console.log(desiredAmountTo.toFixed(0));
-    console.log(bnToUint256(desiredAmountTo.toFixed(0)));
-    console.log(Object.values(bnToUint256(desiredAmountTo.toFixed(0))));
 
 
     const tx: Call | Call[] = [
@@ -176,7 +170,6 @@ export class MySwap implements DexCombo {
       calldata: bigNumberishArrayToDecimalStringArray(removeLiqCallData)
     };
 
-    console.log(tx)
 
     return Promise.resolve({
       actionType: ActionTypes.REMOVE_LIQUIDITY,
@@ -204,12 +197,9 @@ export class MySwap implements DexCombo {
     //format input according to decimals
 
     const poolDetails = await this.findPool(tokenFrom, tokenTo);
-    console.log(poolDetails)
     if (!poolDetails) return undefined;
 
-    console.log(poolDetails.liqReservesTokenFrom)
     const poolTokenFrom = new TokenAmount(tokenFrom, poolDetails.liqReservesTokenFrom);
-    console.log(poolDetails.liqReservesTokenTo);
     const poolTokenTo = new TokenAmount(tokenTo, poolDetails.liqReservesTokenTo);
     //I'm cheating here and setting poolId inside the poolAddress field :)
     const poolPair = new Pair(poolTokenFrom, poolTokenTo, poolDetails.poolId);
@@ -230,8 +220,6 @@ export class MySwap implements DexCombo {
     //Create poolPair to find the best trade for this poolPair. Use liq reserves as poolPair amounts
     let trade = Trade.bestTradeExactIn([pairFromTo], new TokenAmount(from, amountFrom), to)[0];
 
-    console.log("execution price: $" + trade.executionPrice.toSignificant(6));
-    console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
 
     //TODO dynamic slippage value here
     const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;
@@ -239,7 +227,6 @@ export class MySwap implements DexCombo {
 
     const path = trade.route.path;
     const pathAddresses = path.map((token: Token) => number.toBN(token.address).toString());
-    console.log(path, pathAddresses)
 
     return {
       pathLength: path.length.toString(),
@@ -258,7 +245,6 @@ export class MySwap implements DexCombo {
     const amountOutBN = formatToBigNumberish(amountOut, tokenTo.decimals);
 
     const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountInBN, amountOutBN, SLIPPAGE)
-    console.log(trade)
     return {
       execPrice: parseFloat(trade.executionPrice),
       amountMin: formatToDecimal(trade.amountOutMin, tokenTo.decimals)
@@ -306,11 +292,10 @@ export class MySwap implements DexCombo {
    */
   private async findPool(tokenFrom: Token, tokenTo: Token): Promise<any> {
 
-    const tokenFromDecAddress = number.toBN(tokenFrom.address);
-    const tokenToDecAddress = number.toBN(tokenTo.address);
-    console.log(tokenFrom.address)
-    console.log(tokenTo.address)
-    console.log(myswapLpMapping()[tokenFrom.address])
+    //Convert addresses to BN
+    const tokenFromDec = number.toBN(tokenFrom.address).toString()
+    const tokenToDec = number.toBN(tokenTo.address)
+
     const targetPoolId = myswapLpMapping()[tokenFrom.address] ? myswapLpMapping()[tokenFrom.address][tokenTo.address] : undefined
     const mySwapRouterContract = new Contract(mySwapRouter.abi as Abi, MY_SWAP_ROUTER_ADDRESS);
 
@@ -322,12 +307,12 @@ export class MySwap implements DexCombo {
     const readPoolDetails = (pool: any, i?: number) => {
       let liqReservesTokenFrom;
       let liqReservesTokenTo;
-      if (pool[0].token_a_address.toString() === tokenFromDecAddress) {
-        liqReservesTokenFrom = pool[0].token_a_reserves.low.toString();
-        liqReservesTokenTo = pool[0].token_b_reserves.low.toString();
+      if (pool[0].token_a_address.toString() === tokenFromDec) {
+        liqReservesTokenFrom = uint256ToBN(pool[0].token_a_reserves).toString()
+        liqReservesTokenTo = uint256ToBN(pool[0].token_b_reserves).toString()
       } else {
-        liqReservesTokenFrom = pool[0].token_b_reserves.low.toString();
-        liqReservesTokenTo = pool[0].token_a_reserves.low.toString();
+        liqReservesTokenFrom = uint256ToBN(pool[0].token_b_reserves).toString()
+        liqReservesTokenTo = uint256ToBN(pool[0].token_a_reserves).toString()
       }
       return {
         poolId: i.toString(),
@@ -342,7 +327,6 @@ export class MySwap implements DexCombo {
 
     //If not found in hardcoded values, just iterate for all pools.
     if (targetPoolId) {
-      console.log(targetPoolId)
       const pool = await mySwapRouterContract.call("get_pool", [targetPoolId]);
       return readPoolDetails(pool, targetPoolId);
     } else {

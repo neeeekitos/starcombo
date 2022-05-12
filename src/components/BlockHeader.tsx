@@ -1,6 +1,5 @@
 import {Box, Flex, Text} from "@chakra-ui/react"
-import {DeleteIcon, EditIcon, SettingsIcon} from "@chakra-ui/icons";
-import styles from "./action-block-swap/action-block.module.css";
+import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
 import React from "react";
 import {Action} from "../utils/constants/constants";
 

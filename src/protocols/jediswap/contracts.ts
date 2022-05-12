@@ -3,7 +3,7 @@ import JediswapPairABI from '../../contracts/artifacts/abis/jediswap/Pair.json'
 import ERC20_ABI from '../../contracts/artifacts/abis/jediswap/erc20.json'
 import {isAddress} from '../../utils'
 import REGISTRY_ABI from '../../contracts/artifacts/abis/jediswap/Registry.json'
-import {REGISTRY_ADDRESS, ROUTER_ADDRESS, ZAP_IN_ADDRESS} from './constants';
+import {REGISTRY_ADDRESS, ROUTER_ADDRESS} from './constants';
 import JediSwapRouterABI from '../../contracts/artifacts/abis/jediswap/Router.json'
 import {StarknetConnector} from "../../utils/constants/interfaces";
 import {ZERO_ADDRESS} from "../../utils/constants/constants";

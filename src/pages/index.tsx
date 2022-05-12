@@ -1,5 +1,5 @@
 import type {NextPage} from 'next'
-import {Flex, Text, chakra,Button, Heading, ScaleFade} from "@chakra-ui/react";
+import {Button, chakra, Flex, Heading, ScaleFade, Text} from "@chakra-ui/react";
 import Link from 'next/link'
 
 const Home: NextPage = () => {

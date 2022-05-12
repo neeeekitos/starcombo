@@ -27,7 +27,6 @@ export const useStarknet = create<StarknetState>((set) => ({
       if(starknet.account.address==='' || !starknet.isConnected) return('Connection failed')
       // @ts-ignore
       if(starknet.account.chainId!==GOERLI_CHAIN_ID) return('Wrong chain. Use your Goerli testnet account.')
-      console.log(starknet)
       set((state) => ({...state, account: starknet.account, provider: starknet.provider}))
     },
     disconnect: () => {

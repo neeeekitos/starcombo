@@ -1,26 +1,16 @@
 import React, {ChangeEvent, useEffect, useRef, useState} from "react";
-import styles from "./action-block-add.module.css";
 import useComponentVisible from "../../hooks/UseComponentVisible";
-import Image from "next/image";
-import BatLogo from "../../../public/img/tokens/bat.svg";
-import EtherLogo from "../../../public/img/tokens/ether.svg";
-import TokenChooser from "../token-chooser";
-import {Box, Flex, Input, Spinner} from "@chakra-ui/react";
+import {Box, Flex} from "@chakra-ui/react";
 import {PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
 import {useStarknet} from "../../hooks/useStarknet";
-import {DexCombo, StarknetConnector, SwapParameters} from "../../utils/constants/interfaces";
+import {DexCombo, StarknetConnector} from "../../utils/constants/interfaces";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useTransactions} from "../../hooks/useTransactions";
-import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
-import {createTokenObjects} from "../../utils/helpers";
+import {Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {BigNumberish, ethers} from "ethers";
-import {getTotalSupply} from "../../data/totalSupply";
 import BigNumber from "bignumber.js";
-import AddHeader from "./AddHeader";
 import AddField from "./AddField";
-import AddFooter from "./AddFooter";
-import SwapFooter from "../swapv2/SwapFooter";
-import {AddIcon, ArrowDownIcon, PlusSquareIcon} from "@chakra-ui/icons";
+import {AddIcon} from "@chakra-ui/icons";
 import BlockHeader from "../BlockHeader";
 import BlockFooter from "../BlockFooter";
 
@@ -63,6 +53,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [poolShare, setPoolShare] = useState<string>("0");
   const [lpAmount, setLpAmount] = useState<string>(); // lp token amount
   const [lpTokenSupply, setLpTokenSupply] = useState<string>();
+
+  const [disabled, setDisabled] = useState<boolean>(true);
 
   const [estimation, setEstimation] = useState("");
 
@@ -115,8 +107,11 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
       direction = "from";
     }
     setQuoteTokenAmount(value, direction)
-  }, [pair])
+  }, [pair, loading])
 
+  useEffect(() => {
+    setDisabled(isNaN(parseFloat(amountToken0)) || isNaN(parseFloat(amountToken1)))
+  }, [amountToken0, amountToken1])
 
   /**
    * When token0 amount changes, unset item and calculate token1 corresponding value
@@ -124,9 +119,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
    */
   const handleAmountToken0 = (e: ChangeEvent<HTMLInputElement>) => {
     unsetItem();
-    const value = e.target.value;
-    if (isNaN(value as any)) return;
-    setAmountToken0(value);
+    const value = e.target.value
+    value === "" ? setAmountToken0("") : setAmountToken0(parseFloat(value).toString());
     if (!pair) return;
     setQuoteTokenAmount(value, "to")
   }
@@ -139,7 +133,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     unsetItem();
     const value = e.target.value;
     if (isNaN(value as any)) return;
-    setAmountToken1(value);
+    value === "" ? setAmountToken1("") : setAmountToken1(parseFloat(value).toString());
     if (!pair) return;
     setQuoteTokenAmount(value, "from")
   }
@@ -197,7 +191,6 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     // const fmtLpAmt = ethers.utils.formatUnits(lpamt,pair.liquidityToken.decimals).toString()
     // console.log(fmtLpAmt)
     // setLpAmount(fmtLpAmt)
-    console.log(BNPercent.toString())
     setPoolShare(BNPercent.multipliedBy(100).toFixed(4));
   }
 
@@ -259,13 +252,19 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
                    handleRemoveAction={props.handleRemoveAction} action={props.action} set={set} unsetItem={unsetItem}/>
       <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'} flexWrap={'wrap'}
             alignItems={'center'}>
-        <AddField fieldType={'0'} balance={0} amount={amountToken0} handleAmount={handleAmountToken0} selectedToken={token0} tokenSelector={token0Selector} setTokenSelector={setToken0Selector} quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
-        <Box marginY={'5px'} >
-          <AddIcon/>
+        <AddField fieldType={'0'} balance={0} amount={amountToken0} handleAmount={handleAmountToken0}
+                  selectedToken={token0} tokenSelector={token0Selector} setTokenSelector={setToken0Selector}
+                  quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
+        <Box marginY={'5px'}>
+          <AddIcon
+            cursor={'pointer'}
+            onClick={switchTokens}/>
         </Box>
-        <AddField fieldType={'1'} balance={0} amount={amountToken1} handleAmount={handleAmountToken1} selectedToken={token1} tokenSelector={token1Selector} setTokenSelector={setToken1Selector} quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
+        <AddField fieldType={'1'} balance={0} amount={amountToken1} handleAmount={handleAmountToken1}
+                  selectedToken={token1} tokenSelector={token1Selector} setTokenSelector={setToken1Selector}
+                  quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
       </Flex>
-      <BlockFooter loading={loading} set={set} setAction={setAction}/>
+      <BlockFooter loading={loading} set={set} setAction={setAction} disabled={disabled}/>
     </Flex>
   )
 }

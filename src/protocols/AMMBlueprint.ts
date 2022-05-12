@@ -1,5 +1,4 @@
-import {AccountInterface, Call} from "starknet";
-import {Provider} from "starknet";
+import {AccountInterface, Provider} from "starknet";
 import {BigintIsh, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
 import {PoolPosition} from "./jediSwap";
 import {Action} from "../utils/constants/constants";

@@ -1,7 +1,6 @@
 import React from "react";
 import styles from "./select-new-action.module.css";
 import {ACTIONS, PROTOCOLS} from "../../utils/constants/constants";
-import {MenuItem} from "@chakra-ui/react";
 
 const SelectNewAction = (props: any) => {
 

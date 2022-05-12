@@ -1,17 +1,16 @@
 import {NextPage} from "next";
 import {useStarknet} from "../hooks/useStarknet";
 
-import {Icon, Button, Flex} from "@chakra-ui/react"
-import React, {useState, useRef} from "react";
+import {Button, Flex, Icon} from "@chakra-ui/react"
+import React, {useRef, useState} from "react";
 import {Reorder} from "framer-motion"
 
 import styles from "./combos.module.css";
 import {Action, ACTIONS, ActionTypes, PROTOCOLS} from "../utils/constants/constants";
 import {StarknetConnector} from "../utils/constants/interfaces";
-import {getFloatFromBN} from "../utils/helpers";
-import {Pair, Token} from "@jediswap/sdk";
+import {getBalanceOfErc20, getFloatFromBN} from "../utils/helpers";
+import {Token} from "@jediswap/sdk";
 import {useAmounts} from "../hooks/useAmounts";
-import {getBalanceOfErc20} from "../utils/helpers";
 import {NotificationManager} from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
 
@@ -98,9 +97,7 @@ const Combos: NextPage = () => {
 
       if (!error) {
         const transactions = orderedTransactionData
-        console.log(transactions)
         const tx_data = await account.execute(transactions);
-        console.log(tx_data)
         NotificationManager.success("Transaction Sent!", 'Transaction sent', 5000, () => window.open(`https://goerli.voyager.online/tx/${tx_data.transaction_hash}`));
         addTransactionHistory(tx_data.transaction_hash);
       }

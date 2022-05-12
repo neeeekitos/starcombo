@@ -1,25 +1,16 @@
+import {DexCombo, findPoolRes, StarknetConnector, SwapParameters, TradeInfo} from "../utils/constants/interfaces";
+import {Call, number, Provider} from "starknet";
 import {
-  DexCombo,
-  findPoolRes,
-  StarknetConnector, SwapParameters, TradeInfo
-} from "../utils/constants/interfaces";
-import {Call, Provider} from "starknet";
-import {
-  Action, ActionTypes,
-  JEDI_REGISTRY_ADDRESS, JEDI_REGISTRY_ADDRESS_2,
+  Action,
+  ActionTypes,
+  JEDI_REGISTRY_ADDRESS,
   JEDI_ROUTER_ADDRESS,
   ProtocolNames,
   SLIPPAGE
 } from "../utils/constants/constants";
 import {ethers} from "ethers";
 import {Fraction, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
-import {number} from "starknet";
-import {
-  formatToBigNumberish,
-  formatToDecimal,
-  getBalanceOfErc20,
-  getTotalSupplyOfErc20
-} from "../utils/helpers";
+import {formatToBigNumberish, formatToDecimal, getBalanceOfErc20, getTotalSupplyOfErc20} from "../utils/helpers";
 import {bnToUint256} from "starknet/utils/uint256";
 import {bigNumberishArrayToDecimalStringArray} from "starknet/utils/number";
 import {jediLPMapping} from "./jediswap/constants/jediLPTokenList";
@@ -327,8 +318,9 @@ export class JediSwap implements DexCombo {
     let liquidityPoolForTokens = jediLPMapping()[tokenFrom.address] ? jediLPMapping()[tokenFrom.address][tokenTo.address] : undefined
     if (!liquidityPoolForTokens) {
       //TODO search in registry 2 if not found => we also need to user Router2 when generating transac :)
+      //THIS will be used when adding support for bridged tokens.
       liquidityPoolForTokens = await provider.callContract({
-        contractAddress: JEDI_REGISTRY_ADDRESS_2,
+        contractAddress: JEDI_REGISTRY_ADDRESS,
         entrypoint: "get_pair_for",
         calldata: [
           tokenFromDec.toString(),
@@ -384,8 +376,8 @@ export class JediSwap implements DexCombo {
     } else {
       trade = Trade.bestTradeExactOut([pairFromTo], from, new TokenAmount(from, amountFrom))[0];
     }
-    console.log("execution price: $" + trade.executionPrice.toSignificant(6));
-    console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
+    // console.log("execution price: $" + trade.executionPrice.toSignificant(6));
+    // console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
 
     //TODO dynamic slippage value here
     const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;

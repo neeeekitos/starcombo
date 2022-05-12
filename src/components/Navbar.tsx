@@ -1,20 +1,21 @@
 import {useEffect, useRef} from 'react';
 import {
-  Box,
-  Flex,
   Avatar,
+  Box,
+  Button,
+  Flex,
+  Heading,
   HStack,
   IconButton,
-  Button,
   Menu,
   MenuButton,
-  MenuList,
-  MenuItem,
   MenuDivider,
-  useDisclosure,
-  Stack, Heading
+  MenuItem,
+  MenuList,
+  Stack,
+  useDisclosure
 } from '@chakra-ui/react';
-import {HamburgerIcon, CloseIcon} from '@chakra-ui/icons';
+import {CloseIcon, HamburgerIcon} from '@chakra-ui/icons';
 import Link from "next/link"
 import {useStarknet} from "../hooks/useStarknet";
 import {useTransactions} from "../hooks/useTransactions";

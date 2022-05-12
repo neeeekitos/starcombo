@@ -79,6 +79,8 @@ const Swap = (props: ActionBlockProps) => {
 
   //If the component has been set by the user
   const [set, setSet] = useState<boolean>(false)
+  const [disabled, setDisabled] = useState<boolean>(true);
+
 
   //REFS//
   const outsideSetButton = useRef(null);
@@ -122,7 +124,6 @@ const Swap = (props: ActionBlockProps) => {
       const poolPair: Pair = poolDetails.poolPair;
       if (poolDetails.poolId) setPoolId(poolDetails.poolId)
       setPair(poolPair);
-
       //get execution prices when interacting with pool
       const swapParameters: SwapParameters = {
         tokenFrom: tokenFrom,
@@ -148,7 +149,7 @@ const Swap = (props: ActionBlockProps) => {
    */
   useEffect(() => {
     unsetItem();
-    if (pair === undefined) return;
+    if (!pair) return;
     let value = amountFrom;
     let direction = "to"
     if (isNaN(parseFloat(value))) {
@@ -156,7 +157,11 @@ const Swap = (props: ActionBlockProps) => {
       direction = "from";
     }
     setQuoteTokenAmount(value, direction)
-  }, [pair])
+  }, [pair,loading])
+
+  useEffect(() => {
+    setDisabled(isNaN(parseFloat(amountFrom)) || isNaN(parseFloat(amountTo)))
+  }, [amountFrom, amountTo])
 
   /**
    * Removes the item from the set Items.
@@ -174,7 +179,9 @@ const Swap = (props: ActionBlockProps) => {
     unsetItem();
     let value = e.target.value;
     if (isNaN(value as any)) return;
-    setAmountFrom(value);
+    //to avoid scientific notation bugs, we parseFloat user's value
+    //and if value is empty string we just let it be
+    value === "" ? setAmountFrom  ("") : setAmountFrom(parseFloat(value).toString());
     if (!pair) return;
     setQuoteTokenAmount(value, "to")
   }
@@ -184,7 +191,7 @@ const Swap = (props: ActionBlockProps) => {
     unsetItem();
     let value = e.target.value;
     if (isNaN(value as any)) return;
-    setAmountTo(value);
+    value === "" ? setAmountTo("") : setAmountTo(parseFloat(value).toString());
     if (!pair) return;
     setQuoteTokenAmount(value, "from")
   }
@@ -196,11 +203,11 @@ const Swap = (props: ActionBlockProps) => {
 
     if (priceWanted === "from") {
       const amountFrom = value * prices.priceBtoA
-      setAmountFrom(amountFrom.toPrecision(6))
+      setAmountFrom(amountFrom.toString())
     } else {
       // to
       const amountTo = value * prices.priceAtoB
-      setAmountTo(amountTo.toPrecision(6))
+      setAmountTo(amountTo.toString())
     }
   }
 
@@ -263,12 +270,14 @@ const Swap = (props: ActionBlockProps) => {
         <SwapField fieldType={'from'} amount={amountFrom} balance={tokenFromBalance} handleAmount={handleAmountFrom} selectedToken={tokenFrom}
                    tokenSelector={tokenFromSelector} setTokenSelector={setTokenFromSelector} protocolTokens={protocolTokens} quoteTokenSelector={tokenToSelector}/>
         <Box marginY={'5px'} >
-        <ArrowDownIcon/>
+        <ArrowDownIcon
+          cursor={'pointer'}
+          onClick={switchTokens}/>
         </Box>
         <SwapField fieldType={'to'} amount={amountTo} balance={tokenToBalance} handleAmount={handleAmountTo} selectedToken={tokenTo}
                    tokenSelector={tokenToSelector} setTokenSelector={setTokenToSelector} protocolTokens={protocolTokens} quoteTokenSelector={tokenFromSelector}/>
       </Flex>
-      <BlockFooter loading={loading} set={set} setAction={setAction}/>
+      <BlockFooter loading={loading} set={set} setAction={setAction} disabled={disabled}/>
     </Flex>
   )
 }

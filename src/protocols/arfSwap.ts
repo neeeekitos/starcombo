@@ -7,10 +7,9 @@ import {
   ActionTypes,
   ARF_FACTORY_ADDRESS,
   ARF_ROUTER_ADDRESS,
-  ProtocolNames, SLIPPAGE
+  ProtocolNames
 } from "../utils/constants/constants";
 import {PoolPosition} from "./jediSwap";
-import {formatToBigNumberish, formatToDecimal} from "../utils/helpers";
 
 
 interface findPoolRes {

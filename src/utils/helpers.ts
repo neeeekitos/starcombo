@@ -1,4 +1,4 @@
-import {ChainId, CurrencyAmount, Token} from "@jediswap/sdk";
+import {ChainId, Token} from "@jediswap/sdk";
 import {StarknetConnector} from "./constants/interfaces";
 import {ethers} from "ethers";
 import {getTokenContract} from "../protocols/jediswap/contracts";

@@ -1,5 +1,4 @@
-import styles from "../action-block-remove/action-block-remove.module.css";
-import {Box, Flex, Slider, SliderFilledTrack, SliderMark, SliderThumb, SliderTrack, Text} from "@chakra-ui/react";
+import {Flex, Slider, SliderFilledTrack, SliderMark, SliderThumb, SliderTrack, Text} from "@chakra-ui/react";
 import {Dispatch, SetStateAction} from "react";
 
 interface RemoveSliderProps {

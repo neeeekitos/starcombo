@@ -130,7 +130,6 @@ export const useTransactions = create<TransactionState>((set, get) => ({
         if (!transactionItems[item.id]) return [];
         return transactionItems[item.id]
       })
-      console.log(newTransactionOrder)
       set((state) => ({...state, orderedItemsIds: [...newOrder]})); //JS objects passed by ref so make a copy :)
       set((state) => ({...state, orderedTransactionData: newTransactionOrder}));
 

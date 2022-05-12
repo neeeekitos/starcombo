@@ -1,8 +1,7 @@
-import {Box, Flex, Input, Text} from "@chakra-ui/react";
+import {Box, Flex} from "@chakra-ui/react";
 import TokenChooser from "../token-chooser";
-import {Token, TokenAmount} from "@jediswap/sdk";
-import React, {Dispatch, SetStateAction} from "react";
-import {ethers} from "ethers";
+import {Token} from "@jediswap/sdk";
+import React from "react";
 
 interface RemoveFieldProps {
   tokenSelector:Token
