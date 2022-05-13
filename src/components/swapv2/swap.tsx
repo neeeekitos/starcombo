@@ -1,25 +1,22 @@
 import React, {ChangeEvent, useEffect, useRef, useState} from "react";
 
-import {ACTIONS, PROTOCOLS, SELECTABLE_TOKENS, SLIPPAGE} from "../../utils/constants/constants";
+import {PROTOCOLS} from "../../utils/constants/constants";
 
-import {Box, Flex, Input, Spinner} from "@chakra-ui/react";
+import {Box, Flex} from "@chakra-ui/react";
 import useComponentVisible from "../../hooks/UseComponentVisible";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useStarknet} from "../../hooks/useStarknet";
 import {DexCombo, StarknetConnector, SwapParameters} from "../../utils/constants/interfaces";
-import {
-  formatToDecimal,
-  getBalanceOfErc20,
-  getFloatFromBN
-} from "../../utils/helpers";
-import {Fraction, Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
+import {getBalanceOfErc20, getFloatFromBN} from "../../utils/helpers";
+import {Pair, Token} from "@jediswap/sdk";
 import {useTransactions} from "../../hooks/useTransactions";
-import {NotificationContainer, NotificationManager} from 'react-notifications';
+import {NotificationManager} from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
 import SwapField from "./SwapField";
 import {ArrowDownIcon} from "@chakra-ui/icons";
 import BlockHeader from "../BlockHeader";
 import BlockFooter from "../BlockFooter";
+import LockedSwapInput from "./LockedSwapInput";
 
 interface ActionBlockProps {
   actionName: string,
@@ -157,7 +154,7 @@ const Swap = (props: ActionBlockProps) => {
       direction = "from";
     }
     setQuoteTokenAmount(value, direction)
-  }, [pair,loading])
+  }, [pair, loading])
 
   useEffect(() => {
     setDisabled(isNaN(parseFloat(amountFrom)) || isNaN(parseFloat(amountTo)))
@@ -175,23 +172,15 @@ const Swap = (props: ActionBlockProps) => {
   }
 
   //User input inside amount from
-  const handleAmountFrom = (e: ChangeEvent<HTMLInputElement>) => {
-    unsetItem();
-    let value = e.target.value;
-    if (isNaN(value as any)) return;
-    //to avoid scientific notation bugs, we parseFloat user's value
-    //and if value is empty string we just let it be
-    value === "" ? setAmountFrom  ("") : setAmountFrom(parseFloat(value).toString());
+  const handleAmountFrom = (value) => {
+    setAmountFrom(value);
     if (!pair) return;
     setQuoteTokenAmount(value, "to")
   }
 
   //User input inside amount to
-  const handleAmountTo = (e: ChangeEvent<HTMLInputElement>) => {
-    unsetItem();
-    let value = e.target.value;
-    if (isNaN(value as any)) return;
-    value === "" ? setAmountTo("") : setAmountTo(parseFloat(value).toString());
+  const handleAmountTo = (value) => {
+    setAmountTo(value);
     if (!pair) return;
     setQuoteTokenAmount(value, "from")
   }
@@ -262,23 +251,59 @@ const Swap = (props: ActionBlockProps) => {
     setSet(true);
   }
 
-  return (
-    <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
-      <BlockHeader type={'Swap  '} protocolName={props.protocolName}
-                   handleRemoveAction={props.handleRemoveAction} action={props.action} set={set} unsetItem={unsetItem}/>
-      <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'} flexWrap={'wrap'} alignItems={'center'}>
-        <SwapField fieldType={'from'} amount={amountFrom} balance={tokenFromBalance} handleAmount={handleAmountFrom} selectedToken={tokenFrom}
-                   tokenSelector={tokenFromSelector} setTokenSelector={setTokenFromSelector} protocolTokens={protocolTokens} quoteTokenSelector={tokenToSelector}/>
-        <Box marginY={'5px'} >
-        <ArrowDownIcon
-          cursor={'pointer'}
-          onClick={switchTokens}/>
-        </Box>
-        <SwapField fieldType={'to'} amount={amountTo} balance={tokenToBalance} handleAmount={handleAmountTo} selectedToken={tokenTo}
-                   tokenSelector={tokenToSelector} setTokenSelector={setTokenToSelector} protocolTokens={protocolTokens} quoteTokenSelector={tokenFromSelector}/>
+  const renderUnset = () =>{
+    return (
+      <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
+        <BlockHeader type={'Swap  '} protocolName={props.protocolName}
+                     handleRemoveAction={props.handleRemoveAction} action={props.action} set={set}
+                     unsetItem={unsetItem}/>
+        <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'} flexWrap={'wrap'}
+              alignItems={'center'}>
+          <SwapField fieldType={'from'} amount={amountFrom} balance={tokenFromBalance} handleAmount={handleAmountFrom}
+                     selectedToken={tokenFrom}
+                     tokenSelector={tokenFromSelector} setTokenSelector={setTokenFromSelector}
+                     protocolTokens={protocolTokens} quoteTokenSelector={tokenToSelector}/>
+          <Box marginY={'5px'}>
+            <ArrowDownIcon
+              cursor={'pointer'}
+              onClick={switchTokens}/>
+          </Box>
+          <SwapField fieldType={'to'} amount={amountTo} balance={tokenToBalance} handleAmount={handleAmountTo}
+                     selectedToken={tokenTo}
+                     tokenSelector={tokenToSelector} setTokenSelector={setTokenToSelector}
+                     protocolTokens={protocolTokens}
+                     quoteTokenSelector={tokenFromSelector}/>
+        </Flex>
+        <BlockFooter loading={loading} set={set} setAction={setAction} disabled={disabled}/>
       </Flex>
-      <BlockFooter loading={loading} set={set} setAction={setAction} disabled={disabled}/>
-    </Flex>
+    )
+  }
+
+  const renderSet = () =>{
+    return(
+      <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
+        <BlockHeader type={'Swap'} protocolName={props.protocolName}
+                     handleRemoveAction={props.handleRemoveAction} action={props.action} set={set}
+                     unsetItem={unsetItem}/>
+        <Flex padding='5px' marginTop='5px' marginBottom={'5px'} flexDir={'column'} flexWrap={'wrap'}
+              alignItems={'center'}>
+          <LockedSwapInput amount={amountFrom} selectedToken={tokenFrom}/>
+          <Box marginTop={'2px'}>
+            <ArrowDownIcon/>
+          </Box>
+          <LockedSwapInput amount={amountTo} selectedToken={tokenTo}/>
+        </Flex>
+      </Flex>
+    )
+  }
+
+  return (
+    <>
+      {!set && renderUnset()}
+
+      {set && renderSet()}
+
+    </>
   )
 }
 

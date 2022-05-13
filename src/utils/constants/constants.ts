@@ -12,13 +12,8 @@ export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000000000000
 export enum ActionTypes {
   ADD_LIQUIDITY,
   REMOVE_LIQUIDITY,
-  APPROVE,
   SWAP,
-  APPROVE_AND_SWAP,
-  APPROVE_AND_ADD_LIQUIDITY,
-  REVOKE_APPROVAL,
   TRANSFER,
-  WITHDRAW,
 }
 
 export enum ProtocolNames {
@@ -60,28 +55,6 @@ export const PROTOCOLS: { [key in keyof typeof ProtocolNames]?: any } = {
       ActionTypes.ADD_LIQUIDITY,
       ActionTypes.REMOVE_LIQUIDITY
     ],
-    // tokens: [
-    //   {
-    //     name: 'J23FEB0',
-    //     address: '0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c',
-    //     symbol: 'J23FEB0',
-    //   },
-    //   {
-    //     name: 'J23FEB1',
-    //     address: '0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756',
-    //     symbol: 'J23FEB1',
-    //   },
-    //   {
-    //     name: 'J23FEB2',
-    //     address: '0x024da028e8176afd3219fbeafb17c49624af9b86dcbe81007ae40d93f741617d',
-    //     symbol: 'J23FEB2',
-    //   },
-    //   {
-    //     name: 'J23FEB3',
-    //     address: '0x01ca5dedf1612b1ffb035e838ac09d70e500d22cf9cd0de4bebcef8553506fdb',
-    //     symbol: 'J23FEB3',
-    //   }
-    // ],
     tokens:jediTokensList,
     instance:JediSwap.getInstance(),
 
@@ -185,60 +158,6 @@ export const ACTIONS: { [key in keyof typeof ActionTypes]?: any } = {
   //   ],
   // },
 };
-
-export const SELECTABLE_TOKENS = [
-  {
-    name: 'BTC',
-    address: '',
-    decimals: 18,
-    symbol: 'BTC',
-  },
-  {
-    name: 'USDT',
-    address: '',
-    decimals: 18,
-    symbol: 'USDT',
-  },
-  {
-    name: 'ETH',
-    address: '',
-    decimals: 18,
-    symbol: 'ETH',
-  },
-  {
-    name: 'DAO',
-    address: '',
-    decimals: 18,
-    symbol: 'DAO',
-  },
-];
-
-export const JEDI_TOKENS = [
-  {
-    name: 'J23FEB0',
-    address: '0x04bc8ac16658025bff4a3bd0760e84fcf075417a4c55c6fae716efdd8f1ed26c',
-    decimals: 18,
-    symbol: 'J23FEB0',
-  },
-  {
-    name: 'J23FEB1',
-    address: '0x05f405f9650c7ef663c87352d280f8d359ad07d200c0e5450cb9d222092dc756',
-    decimals: 18,
-    symbol: 'J23FEB1',
-  },
-  {
-    name: 'J23FEB2',
-    address: '0x024da028e8176afd3219fbeafb17c49624af9b86dcbe81007ae40d93f741617d',
-    decimals: 18,
-    symbol: 'J23FEB2',
-  },
-  {
-    name: 'J23FEB3',
-    address: '0x01ca5dedf1612b1ffb035e838ac09d70e500d22cf9cd0de4bebcef8553506fdb',
-    decimals: 18,
-    symbol: 'J23FEB3',
-  },
-];
 
 export const MY_SWAP_ROUTER_ADDRESS = '0x071faa7d6c3ddb081395574c5a6904f4458ff648b66e2123b877555d9ae0260e';
 export const JEDI_ROUTER_ADDRESS = '0x01ea2f12a70ad6a052f99a49dace349996a8e968a0d6d4e9ec34e0991e6d5e5e';

@@ -3,16 +3,17 @@ import useComponentVisible from "../../hooks/UseComponentVisible";
 import {Box, Flex} from "@chakra-ui/react";
 import {PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
 import {useStarknet} from "../../hooks/useStarknet";
-import {DexCombo, StarknetConnector} from "../../utils/constants/interfaces";
+import {DexCombo, StarknetConnector, SwapParameters} from "../../utils/constants/interfaces";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useTransactions} from "../../hooks/useTransactions";
 import {Pair, Price, Token, TokenAmount} from "@jediswap/sdk";
 import {BigNumberish, ethers} from "ethers";
 import BigNumber from "bignumber.js";
 import AddField from "./AddField";
-import {AddIcon} from "@chakra-ui/icons";
+import {AddIcon, ArrowDownIcon} from "@chakra-ui/icons";
 import BlockHeader from "../BlockHeader";
 import BlockFooter from "../BlockFooter";
+import LockedAddInput from "./LockedAddInput";
 
 
 interface ActionBlockProps {
@@ -20,6 +21,11 @@ interface ActionBlockProps {
   protocolName: string,
   action: any,
   handleRemoveAction: (actionId: number) => void,
+}
+
+interface ExecutionPrices {
+  priceAtoB: number,
+  priceBtoA: number
 }
 
 const ActionBlockAdd = (props: ActionBlockProps) => {
@@ -54,6 +60,9 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [lpAmount, setLpAmount] = useState<string>(); // lp token amount
   const [lpTokenSupply, setLpTokenSupply] = useState<string>();
 
+  const [prices, setPrices] = useState<ExecutionPrices>();
+
+
   const [disabled, setDisabled] = useState<boolean>(true);
 
   const [estimation, setEstimation] = useState("");
@@ -82,6 +91,19 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
       const poolPair: Pair = poolDetails.poolPair;
       if (poolDetails.poolId) setPoolId(poolDetails.poolId)
       setPair(poolPair);
+
+      //get prices in pool
+      const swapParameters: SwapParameters = {
+        tokenFrom: token0,
+        tokenTo: token1,
+        amountIn: '1',
+        amountOut: "0", //TODO support for this
+        poolPair: poolPair,
+      }
+      const {execPrice} = await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters);
+      const priceAtoB = execPrice;
+      const priceBtoA = 1 / execPrice;
+      setPrices({priceAtoB: priceAtoB, priceBtoA: priceBtoA})
       // console.log(poolPair)
       // const lpTokenSupply = await getTotalSupply(poolPair.liquidityToken,starknetConnector)
       // console.log(lpTokenSupply)
@@ -117,10 +139,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
    * When token0 amount changes, unset item and calculate token1 corresponding value
    * @param e
    */
-  const handleAmountToken0 = (e: ChangeEvent<HTMLInputElement>) => {
-    unsetItem();
-    const value = e.target.value
-    value === "" ? setAmountToken0("") : setAmountToken0(parseFloat(value).toString());
+  const handleAmountToken0 = (value) => {
+    setAmountToken0(value)
     if (!pair) return;
     setQuoteTokenAmount(value, "to")
   }
@@ -129,11 +149,8 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
    * When token1 amount changes, unset item and calculate token0 corres. value.
    * @param e
    */
-  const handleAmountToken1 = (e: ChangeEvent<HTMLInputElement>) => {
-    unsetItem();
-    const value = e.target.value;
-    if (isNaN(value as any)) return;
-    value === "" ? setAmountToken1("") : setAmountToken1(parseFloat(value).toString());
+  const handleAmountToken1 = (value) => {
+    setAmountToken1(value)
     if (!pair) return;
     setQuoteTokenAmount(value, "from")
   }
@@ -144,9 +161,11 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
    * @param priceWanted price that we want ("from" for token0, "to" from token1).
    * eg. if we have an input for token0 we want token1
    */
-  const setQuoteTokenAmount = (value: string, priceWanted: string) => {
-    if (value === '') value = '0';
+  const setQuoteTokenAmount = (value, priceWanted) => {
+    if (value === '') value = '0'
     if (isNaN(value as any)) return;
+
+
     let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price,
       reserveFrom: TokenAmount, reserveTo: TokenAmount;
     token0Selector.address === pair.token0.address ?
@@ -160,26 +179,24 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
         ethers.utils.parseUnits(reserveFrom.toFixed(0), tokenFrom.decimals),
         ethers.utils.parseUnits(reserveTo.toFixed(), tokenTo.decimals)
       ]
-    let poolShareCalc: BigNumberish;
+
     let BNPercent: BigNumber
+
     if (priceWanted === "from") {
+      const amountFrom = value * prices.priceBtoA
+      setAmountToken0(amountFrom.toString())
+
       const parsedValue = ethers.utils.parseUnits(value, tokenTo.decimals)
-      const parsedFromAmount = tokenToPrice.raw.multiply(parsedValue.toString())
-      const amountFrom = parseFloat(ethers.utils.formatUnits(parsedFromAmount.toFixed(0), tokenFrom.decimals))
-      setAmountToken0(amountFrom.toPrecision(6))
-      //pool share is : your liq/(old liq+your liq)*100
       const BNvalue = new BigNumber(parsedValue.toString());
       BNPercent = BNvalue.div(BNvalue.plus(new BigNumber(parsedReserveTo.toString())))
     } else {
       // to
+      const amountTo = value * prices.priceAtoB
+      setAmountToken1(amountTo.toString())
+
       const parsedValue = ethers.utils.parseUnits(value, tokenFrom.decimals)
-      const parsedToAmount = tokenFromPrice.raw.multiply(parsedValue.toString())
-      const amountTo = parseFloat(ethers.utils.formatUnits(parsedToAmount.toFixed(0), tokenTo.decimals))
-      setAmountToken1(amountTo.toPrecision(6))
-      // poolShare = new Fraction(parsedValue.toString()).divide(reserveFrom).toFixed(0);
       const BNvalue = new BigNumber(parsedValue.toString());
       BNPercent = BNvalue.div(BNvalue.plus(new BigNumber(parsedReserveFrom.toString())))
-      // poolShareCalc = BNPercent
     }
     //TODO if time get how much lp tokens user gets
     // console.log(poolShareCalc.toFixed(4))
@@ -191,7 +208,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     // const fmtLpAmt = ethers.utils.formatUnits(lpamt,pair.liquidityToken.decimals).toString()
     // console.log(fmtLpAmt)
     // setLpAmount(fmtLpAmt)
-    setPoolShare(BNPercent.multipliedBy(100).toFixed(4));
+    setPoolShare(BNPercent.multipliedBy(100).toFixed(6  ));
   }
 
   /**
@@ -245,27 +262,61 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     }
   }
 
+  const renderUnset = () => {
+    return (
+      <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
+        <BlockHeader type={'Add liquidity'} protocolName={props.protocolName}
+                     handleRemoveAction={props.handleRemoveAction} action={props.action} set={set}
+                     unsetItem={unsetItem}/>
+        <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'} flexWrap={'wrap'}
+              alignItems={'center'}>
+          <AddField fieldType={'0'} balance={0} amount={amountToken0} handleAmount={handleAmountToken0}
+                    selectedToken={token0} tokenSelector={token0Selector} setTokenSelector={setToken0Selector}
+                    quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
+          <Box marginY={'5px'}>
+            <AddIcon
+              cursor={'pointer'}
+              onClick={switchTokens}/>
+          </Box>
+          <AddField fieldType={'1'} balance={0} amount={amountToken1} handleAmount={handleAmountToken1}
+                    selectedToken={token1} tokenSelector={token1Selector} setTokenSelector={setToken1Selector}
+                    quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
+          <Box marginY={'5px'}>
+            <ArrowDownIcon/>
+          </Box>
+          <Box borderBottom={'1px solid #343047'}>Pool share : {poolShare} %</Box>
+        </Flex>
+        <BlockFooter loading={loading} set={set} setAction={setAction} disabled={disabled}/>
+      </Flex>
+    )
+  }
+
+  const renderSet = () => {
+    return (
+      <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
+        <BlockHeader type={'Add liquidity'} protocolName={props.protocolName}
+                     handleRemoveAction={props.handleRemoveAction} action={props.action} set={set}
+                     unsetItem={unsetItem}/>
+        <Flex padding='5px' marginTop='5px' marginBottom={'5px'} flexDir={'column'} flexWrap={'wrap'}
+              alignItems={'center'}>
+          <LockedAddInput amount={amountToken0} selectedToken={token0}/>
+          <Box marginTop={'2px'}>
+            <AddIcon
+              cursor={'pointer'}
+              onClick={switchTokens}/>
+          </Box>
+          <LockedAddInput amount={amountToken1} selectedToken={token1}/>
+        </Flex>
+      </Flex>
+    )
+  }
+
 
   return (
-    <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
-      <BlockHeader type={'Add liquidity'} protocolName={props.protocolName}
-                   handleRemoveAction={props.handleRemoveAction} action={props.action} set={set} unsetItem={unsetItem}/>
-      <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'} flexWrap={'wrap'}
-            alignItems={'center'}>
-        <AddField fieldType={'0'} balance={0} amount={amountToken0} handleAmount={handleAmountToken0}
-                  selectedToken={token0} tokenSelector={token0Selector} setTokenSelector={setToken0Selector}
-                  quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
-        <Box marginY={'5px'}>
-          <AddIcon
-            cursor={'pointer'}
-            onClick={switchTokens}/>
-        </Box>
-        <AddField fieldType={'1'} balance={0} amount={amountToken1} handleAmount={handleAmountToken1}
-                  selectedToken={token1} tokenSelector={token1Selector} setTokenSelector={setToken1Selector}
-                  quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
-      </Flex>
-      <BlockFooter loading={loading} set={set} setAction={setAction} disabled={disabled}/>
-    </Flex>
+    <>
+      {!set && renderUnset()}
+      {set && renderSet()}
+    </>
   )
 }
 

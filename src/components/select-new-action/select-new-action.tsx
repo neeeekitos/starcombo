@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./select-new-action.module.css";
 import {ACTIONS, PROTOCOLS} from "../../utils/constants/constants";
+import {Image} from "@chakra-ui/image";
 
 const SelectNewAction = (props: any) => {
 
@@ -13,6 +14,7 @@ const SelectNewAction = (props: any) => {
           Object.keys(PROTOCOLS).map((protocolKey: string) => {
               return (
                 <div key={protocolKey}>
+                  {PROTOCOLS[protocolKey].logo && <Image src={PROTOCOLS[protocolKey].logo}/>}
                   <h3 className={PROTOCOLS[protocolKey].stylesTitle}>{PROTOCOLS[protocolKey].name}:</h3>
                   <div className={styles.listAction}>
                     {

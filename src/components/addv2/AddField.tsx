@@ -1,11 +1,11 @@
-import {Flex, Input, Text} from "@chakra-ui/react";
+import {Flex, Input, NumberInput, NumberInputField, Text} from "@chakra-ui/react";
 import TokenChooser from "../token-chooser";
 import {Token} from "@jediswap/sdk";
 import {Dispatch, SetStateAction} from "react";
 
 interface AddFieldProps {
   fieldType: string;
-  balance:number,
+  balance: number,
   amount: string,
   handleAmount: (e: any) => void,
   selectedToken: Token;
@@ -15,18 +15,20 @@ interface AddFieldProps {
   protocolTokens: Token[],
 }
 
-const AddField = (props:AddFieldProps) =>{
-  return(
+const AddField = (props: AddFieldProps) => {
+  return (
     <Flex justifyContent={'space-between'} alignItems='center' backgroundColor={'#343047'} width={'90%'}
           borderRadius={'20px'} padding={'10px'}>
-      <Input width={'300px'} height={'50px'} variant={'unstyled'} marginLeft={'10px'} value={props.amount}
-             onKeyPress={(event) => {
-               if (!/^[0-9]+.?[0-9]*$/.test(props.amount + event.key)) {
-                 event.preventDefault();
-               }
-             }}
-             onChange={(e) => props.handleAmount(e)}>
-      </Input>
+      <NumberInput width={'300px'} height={'50px'} variant={'unstyled'} fontFamily={'IBM Plex Mono, sans-serif'}
+                   marginLeft={'10px'} value={props.amount}
+                   onKeyPress={(event) => {
+                     if (!/^\d*\.?\d*$/.test(props.amount + event.key)) {
+                       event.preventDefault();
+                     }
+                   }}
+                   onChange={(e) => props.handleAmount(e)}>
+        <NumberInputField height='100%' value={props.amount}/>
+      </NumberInput>
       <Flex flexDir={'column'}>
         <Text marginLeft={'10px'} color={'grey'} fontSize={'sm'}>Balance : ~{props.balance?.toPrecision(6)}</Text>
         <TokenChooser selectedToken={props.tokenSelector}

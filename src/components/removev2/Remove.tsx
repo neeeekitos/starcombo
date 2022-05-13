@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import useComponentVisible from "../../hooks/UseComponentVisible";
-import {Box, Flex} from "@chakra-ui/react";
+import {Box, Flex, Grid} from "@chakra-ui/react";
 import {ProtocolNames, PROTOCOLS, SLIPPAGE} from "../../utils/constants/constants";
 import {createTokenObjects} from "../../utils/helpers";
 import {Fraction, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
@@ -15,6 +15,7 @@ import RemoveField from "./RemoveField";
 import BlockFooter from "../BlockFooter";
 import RemoveSlider from "./RemoveSlider";
 import BlockHeader from "../BlockHeader";
+import LockedRemoveToken from "./LockedRemoveToken";
 
 interface ActionBlockProps {
   actionName: string,
@@ -152,31 +153,64 @@ const Remove = (props: ActionBlockProps) => {
     }
   }
 
+  const renderUnset = () => {
+    return (
+      <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
+        <BlockHeader type={'Remove liquidity'} protocolName={props.protocolName}
+                     handleRemoveAction={props.handleRemoveAction} action={props.action} set={set}
+                     unsetItem={unsetItem}/>
+        <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'}
+              alignItems={'center'}>
+          <RemoveSlider sliderValue={sliderValue} setSliderValue={setSliderValue}/>
+          <Box marginY={'5px'}>
+            <ArrowDownIcon/>
+          </Box>
+          <Flex justifyContent={'space-between'} alignItems='center' flexDir={'column'} backgroundColor={'#343047'}
+                width={'90%'}
+                borderRadius={'20px'} padding={'10px'}>
+            <RemoveField tokenSelector={token0Selector} setTokenSelector={setToken0Selector} amountToken={amountToken0}
+                         protocolTokens={protocolTokens} quoteTokenSelector={token1Selector}/>
+            <Box height={'10px'}></Box>
+            <RemoveField tokenSelector={token1Selector} setTokenSelector={setToken1Selector} amountToken={amountToken1}
+                         protocolTokens={protocolTokens} quoteTokenSelector={token1Selector}/>
 
-  return (
-    <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
-      <BlockHeader type={'Remove liquidity'} protocolName={props.protocolName}
-                   handleRemoveAction={props.handleRemoveAction} action={props.action} set={set} unsetItem={unsetItem}/>
-      <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'}
-            alignItems={'center'}>
-        <RemoveSlider sliderValue={sliderValue} setSliderValue={setSliderValue}/>
-        <Box marginY={'5px'} >
-          <ArrowDownIcon/>
-        </Box>
-        <Flex justifyContent={'space-between'} alignItems='center' flexDir={'column'} backgroundColor={'#343047'}
-              width={'90%'}
-              borderRadius={'20px'} padding={'10px'}>
-          <RemoveField tokenSelector={token0Selector} setTokenSelector={setToken0Selector} amountToken={amountToken0}
-                       protocolTokens={protocolTokens} quoteTokenSelector={token1Selector}/>
-          <Box height={'10px'}></Box>
-          <RemoveField tokenSelector={token1Selector} setTokenSelector={setToken1Selector} amountToken={amountToken1}
-                       protocolTokens={protocolTokens} quoteTokenSelector={token1Selector}/>
+          </Flex>
 
         </Flex>
-
+        <BlockFooter loading={loading} set={set} setAction={setAction} disabled={false}/>
       </Flex>
-      <BlockFooter loading={loading} set={set} setAction={setAction} disabled={false}/>
-    </Flex>
+    )
+  }
+
+  const renderSet = () => {
+    return (
+      <Flex padding={'10px'} width={'450px'} borderRadius={'15px'} backgroundColor={'#201E2C'} flexDir={'column'}>
+        <BlockHeader type={'Remove liquidity'} protocolName={props.protocolName}
+                     handleRemoveAction={props.handleRemoveAction} action={props.action} set={set}
+                     unsetItem={unsetItem}/>
+        <Flex padding='5px' marginTop='5px' marginBottom={'5px'} flexDir={'column'}
+              alignItems={'center'}>
+          <Grid templateColumns={'2fr 1fr'} width={'90%'}>
+            <Box marginLeft='10px' width='100%' marginRight={'auto'} borderBottom={'1px solid #343047'}>{sliderValue}%</Box>
+            <span>{token0Selector.symbol}/{token1Selector.symbol}</span>
+          </Grid>
+          <Box marginY={'5px'}>
+            <ArrowDownIcon/>
+          </Box>
+          <LockedRemoveToken amount={amountToken0} selectedToken={token0Selector}/>
+          <LockedRemoveToken amount={amountToken1} selectedToken={token1Selector}/>
+        </Flex>
+      </Flex>
+    )
+  }
+
+
+  return (
+    <>
+      {!set && renderUnset()}
+      {set && renderSet()}
+    </>
+
   )
 }
 

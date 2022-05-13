@@ -99,6 +99,11 @@ const Navbar = () => {
               {Links.map((link) => (
                 <NavLink key={link.name} target={link.target} name={link.name}/>
               ))}
+              <Link href="https://docs.starcombo.xyz" passHref>
+                <a target="_blank" rel="noopener noreferrer">
+                  Docs
+                </a>
+              </Link>
             </HStack>
           </HStack>
           <Flex alignItems={'center'}>
