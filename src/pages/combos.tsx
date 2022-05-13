@@ -145,16 +145,7 @@ const Combos: NextPage = () => {
       <div className={styles.container}>
         <FundsRecap/>
         <div className={styles.container}>
-          <Button
-            w={10} h={10}
-            variant={'unstyled'}
-            onClick={() => setIsComponentVisible(true)}
-            hidden={isComponentVisible}
-          >
-            <Icon w={10} h={10} as={BsPlusCircle} _active={{bg: "brand.navbar"}}
 
-            />
-          </Button>
           {
             isComponentVisible &&
             <div ref={ref}>
@@ -185,11 +176,23 @@ const Combos: NextPage = () => {
 
         </div>
         <Button
+          w={10} h={10}
+          variant={'unstyled'}
+          onClick={() => setIsComponentVisible(true)}
+          hidden={isComponentVisible}
+        >
+          <Icon w={10} h={10} as={BsPlusCircle} _active={{bg: "brand.navbar"}}
+
+          />
+        </Button>
+
+        <Button
           background="brand.body"
           _hover={{bg: "brand.body"}}
           _active={{bg: "brand.navbar"}}
           onClick={() => send()}
           hidden={Object.keys(transactionItems).length === 0}
+          marginTop={'30px'}
         >
           Send
         </Button>

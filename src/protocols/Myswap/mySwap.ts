@@ -1,15 +1,15 @@
-import {DexCombo, StarknetConnector, SwapParameters, TradeInfo} from "../utils/constants/interfaces";
+import {DexCombo, StarknetConnector, SwapParameters, TradeInfo} from "../../utils/constants/interfaces";
 import {ethers} from "ethers";
 
 import {Abi, Call, Contract, number} from "starknet";
-import mySwapRouter from "../contracts/artifacts/abis/myswap/router.json";
+import mySwapRouter from "../../contracts/artifacts/abis/myswap/router.json";
 import {ChainId, Fraction, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
-import {Action, ActionTypes, MY_SWAP_ROUTER_ADDRESS, ProtocolNames, SLIPPAGE} from "../utils/constants/constants";
-import {PoolPosition} from "./jediSwap";
-import {formatToBigNumberish, formatToDecimal} from "../utils/helpers";
+import {Action, ActionTypes, MY_SWAP_ROUTER_ADDRESS, ProtocolNames, SLIPPAGE} from "../../utils/constants/constants";
+import {PoolPosition} from "../Jediswap/jediSwap";
+import {formatToBigNumberish, formatToDecimal} from "../../utils/helpers";
 import {bnToUint256, uint256ToBN} from "starknet/utils/uint256";
 import {bigNumberishArrayToDecimalStringArray} from "starknet/utils/number";
-import {myswapLpMapping} from "./myswap/constants/myswapLPTokenList";
+import {myswapLpMapping} from "./constants/myswapLPTokenList";
 
 export class MySwap implements DexCombo {
 

@@ -1,4 +1,4 @@
-import {DexCombo, findPoolRes, StarknetConnector, SwapParameters, TradeInfo} from "../utils/constants/interfaces";
+import {DexCombo, findPoolRes, StarknetConnector, SwapParameters, TradeInfo} from "../../utils/constants/interfaces";
 import {Call, number, Provider} from "starknet";
 import {
   Action,
@@ -7,13 +7,13 @@ import {
   JEDI_ROUTER_ADDRESS,
   ProtocolNames,
   SLIPPAGE
-} from "../utils/constants/constants";
+} from "../../utils/constants/constants";
 import {ethers} from "ethers";
 import {Fraction, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
-import {formatToBigNumberish, formatToDecimal, getBalanceOfErc20, getTotalSupplyOfErc20} from "../utils/helpers";
+import {formatToBigNumberish, formatToDecimal, getBalanceOfErc20, getTotalSupplyOfErc20} from "../../utils/helpers";
 import {bnToUint256} from "starknet/utils/uint256";
 import {bigNumberishArrayToDecimalStringArray} from "starknet/utils/number";
-import {jediLPMapping} from "./jediswap/constants/jediLPTokenList";
+import {jediLPMapping} from "./constants/jediLPTokenList";
 
 export interface PoolPosition {
   poolSupply: TokenAmount,
@@ -57,7 +57,6 @@ export class JediSwap implements DexCombo {
 
     const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountInBN, amountOutBN, SLIPPAGE)
     if (!trade) return undefined;
-
 
 
     //flatten the array because and uint256 and trade.pathAddresses is a subarray
@@ -374,7 +373,7 @@ export class JediSwap implements DexCombo {
     if (amountTo === "0") {
       trade = Trade.bestTradeExactIn([pairFromTo], new TokenAmount(from, amountFrom), to)[0];
     } else {
-      trade = Trade.bestTradeExactOut([pairFromTo], from, new TokenAmount(from, amountFrom))[0];
+      trade = Trade.bestTradeExactIn([pairFromTo], new TokenAmount(to, amountTo), from)[0];
     }
     // console.log("execution price: $" + trade.executionPrice.toSignificant(6));
     // console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");

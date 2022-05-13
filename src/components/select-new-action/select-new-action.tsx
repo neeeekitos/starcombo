@@ -8,7 +8,7 @@ const SelectNewAction = (props: any) => {
   return (
     <div className={styles.modalWrapper}>
       <div className={styles.modalContent}>
-        <h1 className={styles.titleAddAction}>Add new action</h1>
+        <h1 className={styles.titleAddAction}>Add block</h1>
 
         {
           Object.keys(PROTOCOLS).map((protocolKey: string) => {

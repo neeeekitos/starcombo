@@ -57,7 +57,7 @@ const AddAction = (props: any) => {
         id: props.newId,
         actionType: selectedAction.type,
         protocolName: selectedProtocol.type,
-      })}>Add new Action</Button>
+      })}>New Block</Button>
     </div>
   );
 }

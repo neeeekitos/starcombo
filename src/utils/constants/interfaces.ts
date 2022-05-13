@@ -1,6 +1,6 @@
 import {AccountInterface, Provider} from "starknet";
 import {BigintIsh, Pair, Percent, Token, TokenAmount} from "@jediswap/sdk";
-import {PoolPosition} from "../../protocols/jediSwap";
+import {PoolPosition} from "../../protocols/Jediswap/jediSwap";
 import {Action} from "./constants";
 
 export interface DexCombo {

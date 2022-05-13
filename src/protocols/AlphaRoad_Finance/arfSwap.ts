@@ -1,4 +1,4 @@
-import {DexCombo, StarknetConnector, SwapParameters} from "../utils/constants/interfaces";
+import {DexCombo, StarknetConnector, SwapParameters} from "../../utils/constants/interfaces";
 import {Call, number, Provider} from "starknet";
 import {ethers} from "ethers";
 import {BigintIsh, Pair, Percent, Price, Token, TokenAmount, Trade} from "@jediswap/sdk";
@@ -8,8 +8,8 @@ import {
   ARF_FACTORY_ADDRESS,
   ARF_ROUTER_ADDRESS,
   ProtocolNames
-} from "../utils/constants/constants";
-import {PoolPosition} from "./jediSwap";
+} from "../../utils/constants/constants";
+import {PoolPosition} from "../Jediswap/jediSwap";
 
 
 interface findPoolRes {

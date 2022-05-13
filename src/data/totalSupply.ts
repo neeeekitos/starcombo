@@ -1,6 +1,6 @@
 import {Token} from '@jediswap/sdk'
 import {number, uint256} from 'starknet'
-import {getTokenContract} from "../protocols/jediswap/contracts";
+import {getTokenContract} from "../protocols/Jediswap/contracts";
 import {StarknetConnector} from "../utils/constants/interfaces";
 // import { useSingleCallResult } from '../state/multicall/hooks'
 

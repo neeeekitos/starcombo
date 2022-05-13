@@ -8,7 +8,7 @@ import {useStarknet} from "../../hooks/useStarknet";
 import {DexCombo, StarknetConnector} from "../../utils/constants/interfaces";
 import {useAmounts} from "../../hooks/useAmounts";
 import {useTransactions} from "../../hooks/useTransactions";
-import {PoolPosition} from "../../protocols/jediSwap";
+import {PoolPosition} from "../../protocols/Jediswap/jediSwap";
 import {ethers} from "ethers";
 import {ArrowDownIcon} from "@chakra-ui/icons";
 import RemoveField from "./RemoveField";

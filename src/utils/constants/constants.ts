@@ -1,10 +1,10 @@
 import {Percent} from "@jediswap/sdk";
 import {Call} from "starknet/src/types/lib";
-import {JediSwap} from "../../protocols/jediSwap";
-import {MySwap} from "../../protocols/mySwap";
+import {JediSwap} from "../../protocols/Jediswap/jediSwap";
+import {MySwap} from "../../protocols/Myswap/mySwap";
 import styles from "../../components/select-new-action/select-new-action.module.css";
-import {jediTokensList} from "../../protocols/jediswap/constants/jediTokens";
-import {myswapTokenList} from "../../protocols/myswap/constants/myswapTokens";
+import {jediTokensList} from "../../protocols/Jediswap/constants/jediTokens";
+import {myswapTokenList} from "../../protocols/Myswap/constants/myswapTokens";
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000000000000000000000000000'
 

@@ -186,16 +186,44 @@ const Swap = (props: ActionBlockProps) => {
   }
 
   //Calculates the amount of quote token for user's input
-  const setQuoteTokenAmount = (value, priceWanted) => {
+  const setQuoteTokenAmount = async (value, priceWanted) => {
     if (value === '') value = '0'
-    if (isNaN(value as any)) return;
+    if (isNaN(value as any) || !pair) return;
 
     if (priceWanted === "from") {
-      const amountFrom = value * prices.priceBtoA
+      //If input is null => output is null, don't get exec price
+      if(parseFloat(value)===0) {
+        setAmountFrom('0')
+        return
+      }
+
+      const swapParameters: SwapParameters = {
+        tokenFrom: tokenFrom,
+        tokenTo: tokenTo,
+        amountIn: "0",
+        amountOut: value, //TODO support for this
+        poolPair: pair,
+      }
+      console.log(swapParameters)
+      const {execPrice} = await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters);
+      const amountFrom = value * execPrice
       setAmountFrom(amountFrom.toString())
     } else {
+      if(parseFloat(value)===0) {
+        setAmountTo('0')
+        return
+      }
       // to
-      const amountTo = value * prices.priceAtoB
+      const swapParameters: SwapParameters = {
+        tokenFrom: tokenFrom,
+        tokenTo: tokenTo,
+        amountIn: value,
+        amountOut: "0", //TODO support for this
+        poolPair: pair,
+      }
+      console.log(swapParameters)
+      const {execPrice} = await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters);
+      const amountTo = value * execPrice
       setAmountTo(amountTo.toString())
     }
   }

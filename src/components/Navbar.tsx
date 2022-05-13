@@ -77,7 +77,7 @@ const Navbar = () => {
           <HStack spacing={8} alignItems={'center'}>
             <Link href={"/"}>
               <Flex flexDir={"row"} alignItems={"center"} gap={"10px"} cursor={"pointer"}>
-                <Image width={"40px"} height={"40px"} src={starcomboLogo}/>
+                <Image width={"40px"} height={"44px"} src={starcomboLogo}/>
                 <Heading
                   as={"h1"}
                   bgGradient='linear(to-r, #F0C3EC, #7F6AFF)'

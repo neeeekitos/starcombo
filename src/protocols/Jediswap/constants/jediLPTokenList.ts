@@ -1,5 +1,4 @@
 import {
-  DAI,
   J23FEB0,
   J23FEB0_ADDRESS,
   J23FEB1,
@@ -8,11 +7,10 @@ import {
   J23FEB2_ADDRESS,
   J23FEB3,
   J23FEB3_ADDRESS,
-  jediTokensList,
-  USDC,
-  WBTC
+  jediTokensList
 } from './jediTokens'
 import {ChainId, LPToken} from '@jediswap/sdk'
+import {DAI, USDC, WBTC} from "../../shared/tokens";
 
 export const jediPairAddresses = {
   ETH_WBTC: '0x699b290b25c03cedf6a29e767b40420b572bee5296dd284b34304dfdf52f847',
@@ -26,12 +24,12 @@ export const jediPairAddresses = {
 
 }
 
-// export const LP_ETH_WBTC = new LPToken(ChainId.GÖRLI, WBTC, DAI, jediPairAddresses.ETH_WBTC)
-
-// export const LP_ETH_DAI = new LPToken(ChainId.GÖRLI, WBTC, DAI, jediPairAddresses.ETH_DAI)
+export const LP_ETH_WBTC = new LPToken(ChainId.GÖRLI, WBTC, DAI, jediPairAddresses.ETH_WBTC)
 //
-// export const LP_ETH_USDC = new LPToken(ChainId.GÖRLI, WBTC, USDC, jediPairAddresses.ETH_USDC)
+export const LP_ETH_DAI = new LPToken(ChainId.GÖRLI, WBTC, DAI, jediPairAddresses.ETH_DAI)
 
+export const LP_ETH_USDC = new LPToken(ChainId.GÖRLI, WBTC, USDC, jediPairAddresses.ETH_USDC)
+//
 export const LP_WBTC_USDC = new LPToken(ChainId.GÖRLI, WBTC, USDC, jediPairAddresses.WBTC_USDC)
 
 export const LP_DAI_USDC = new LPToken(ChainId.GÖRLI, DAI, USDC, jediPairAddresses.DAI_USDC)
