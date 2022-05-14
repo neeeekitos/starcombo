@@ -162,7 +162,7 @@ export class ArfSwap implements DexCombo {
     // Calculate the minimum amount of tokens out based on the slippage and the amount in
     const slippageTolerance = new Percent('50', '10000'); // 0.5%
     const trade = Trade.bestTradeExactIn([swapParameters.poolPair], new TokenAmount(swapParameters.tokenFrom, swapParameters.amountIn), swapParameters.tokenTo)[0];
-    const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;
+    const amountOutMin = trade?.minimumAmountOut(slippageTolerance).raw;
     const amountOutMinDec = number.toBN(amountOutMin.toString())
 
     const tokenFromDec = number.toBN(swapParameters.tokenFrom.address)

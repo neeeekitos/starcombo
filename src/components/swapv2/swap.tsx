@@ -204,13 +204,21 @@ const Swap = (props: ActionBlockProps) => {
         amountOut: value, //TODO support for this
         poolPair: pair,
       }
-      console.log(swapParameters)
-      const {execPrice} = await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters);
+      const {execPrice} = (await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters)) || {};
+      console.log(execPrice)
+      if(!execPrice){
+        setDisabled(true)
+        NotificationManager.error('Amount too small')
+        setAmountTo('0')
+        return;
+      }
+      setDisabled(false)
       const amountFrom = value * execPrice
       setAmountFrom(amountFrom.toString())
     } else {
       if(parseFloat(value)===0) {
         setAmountTo('0')
+
         return
       }
       // to
@@ -221,8 +229,15 @@ const Swap = (props: ActionBlockProps) => {
         amountOut: "0", //TODO support for this
         poolPair: pair,
       }
-      console.log(swapParameters)
-      const {execPrice} = await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters);
+      const {execPrice} = (await protocolInstance.getSwapExecutionPrice(starknetConnector, swapParameters)) || {};
+      console.log(execPrice)
+      if(!execPrice){
+        setDisabled(true)
+        NotificationManager.error('Amount too small')
+        setAmountTo('0')
+        return;
+      }
+      setDisabled(false)
       const amountTo = value * execPrice
       setAmountTo(amountTo.toString())
     }

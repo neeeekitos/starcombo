@@ -222,7 +222,7 @@ export class MySwap implements DexCombo {
 
 
     //TODO dynamic slippage value here
-    const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;
+    const amountOutMin = trade?.minimumAmountOut(slippageTolerance).raw;
     const amountOutMinDec = number.toBN(amountOutMin.toString());
 
     const path = trade.route.path;

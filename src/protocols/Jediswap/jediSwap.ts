@@ -292,6 +292,7 @@ export class JediSwap implements DexCombo {
     const amountOutBN = formatToBigNumberish(amountOut, tokenTo.decimals);
 
     const trade = await this.findBestTrade(tokenFrom, tokenTo, poolPair, amountInBN, amountOutBN, SLIPPAGE)
+    if(!trade) return undefined
     return {
       execPrice: parseFloat(trade.executionPrice),
       amountMin: formatToDecimal(trade.amountOutMin, tokenTo.decimals)
@@ -379,7 +380,8 @@ export class JediSwap implements DexCombo {
     // console.log("price impact: " + trade.priceImpact.toSignificant(6) + "%");
 
     //TODO dynamic slippage value here
-    const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw;
+    const amountOutMin = trade?.minimumAmountOut(slippageTolerance).raw;
+    if(!amountOutMin) return undefined;
     const amountOutMinDec = number.toBN(amountOutMin.toString());
 
     const path = trade.route.path;
