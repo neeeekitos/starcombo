@@ -19,7 +19,7 @@ sent on the Starknet network.
 To create a combo, you will need to add multiple blocks. Each block represents an action within a DeFi protocol, such as providing or removing liquidity or swapping tokens.
 Once you have multiple blocks and you have locked them, you can re-order the block as you wish.
 
-For example, this is a strategy that swaps 100 J23FEB0 tokens to _at least_ 3.54 J23FEB1 tokens on Jediswap, and then uses the output of this first operation as an input to the _add liquidity_ operation.
+For example, this is a strategy that swaps 100 J23FEB0 tokens to 3.54 J23FEB1 tokens on Jediswap, and then uses the output of this first operation as an input to the _add liquidity_ operation.
 ![](assets/strategy_1.png)
 
 I can easily modify this strategy by adding a block and re-ordering them with a simple drag&drop.

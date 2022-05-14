@@ -1,6 +1,7 @@
 input: .
 output: .retype
 url: testnet.starcombo.xyz
+favicon: src/utils/assets/logo/starcombo.png
 branding:
   title: Starcombo
   label: Docs
