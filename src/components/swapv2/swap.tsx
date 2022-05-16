@@ -78,6 +78,13 @@ const Swap = (props: ActionBlockProps) => {
   const [set, setSet] = useState<boolean>(false)
   const [disabled, setDisabled] = useState<boolean>(true);
 
+  const resetFetchedStates = () =>{
+    setPrices(undefined);
+    setPair(undefined);
+    setPoolId(undefined)
+    setTokenFromBalance(0);
+    setTokenToBalance(0);
+  }
 
   //REFS//
   const outsideSetButton = useRef(null);
@@ -86,9 +93,6 @@ const Swap = (props: ActionBlockProps) => {
   useEffect(() => {
 
     //Reset states
-    setPrices({priceAtoB: 0, priceBtoA: 0})
-    setAmountFrom('0')
-    setAmountTo('0')
     unsetItem();
 
     //Fetch pool pair
@@ -146,7 +150,7 @@ const Swap = (props: ActionBlockProps) => {
    */
   useEffect(() => {
     unsetItem();
-    if (!pair) return;
+    if (!pair || amountFrom==='') return;
     let value = amountFrom;
     let direction = "to"
     if (isNaN(parseFloat(value))) {
@@ -188,7 +192,7 @@ const Swap = (props: ActionBlockProps) => {
   //Calculates the amount of quote token for user's input
   const setQuoteTokenAmount = async (value, priceWanted) => {
     if (value === '') value = '0'
-    if (isNaN(value as any) || !pair) return;
+    if (isNaN(value as any) || !pair ||loading) return;
 
     if (priceWanted === "from") {
       //If input is null => output is null, don't get exec price
@@ -214,7 +218,8 @@ const Swap = (props: ActionBlockProps) => {
       }
       setDisabled(false)
       const amountFrom = value * execPrice
-      setAmountFrom(amountFrom.toString())
+      setAmountFrom(parseFloat(amountFrom.toPrecision(6)).toString())
+
     } else {
       if(parseFloat(value)===0) {
         setAmountTo('0')
@@ -239,7 +244,7 @@ const Swap = (props: ActionBlockProps) => {
       }
       setDisabled(false)
       const amountTo = value * execPrice
-      setAmountTo(amountTo.toString())
+      setAmountTo(parseFloat(amountTo.toPrecision(6)).toString())
     }
   }
 
@@ -250,8 +255,7 @@ const Swap = (props: ActionBlockProps) => {
     const tempAmtFrom = amountFrom;
     setTokenFromSelector(tokenToSelector);
     setTokenToSelector(tempFrom);
-    setAmountFrom(amountTo);
-    setAmountTo(tempAmtFrom);
+    setAmountTo("0");
   }
 
   //Sets the action, meaning that it will be executed when the user clicks on 'send'

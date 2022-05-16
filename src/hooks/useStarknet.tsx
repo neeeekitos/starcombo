@@ -1,6 +1,6 @@
 import create from "zustand";
 import {AccountInterface, Provider} from "starknet";
-import {getStarknet} from "get-starknet";
+import {getStarknet, disconnect} from "get-starknet";
 
 interface StarknetState {
   account: AccountInterface | undefined,
@@ -22,14 +22,18 @@ export const useStarknet = create<StarknetState>((set) => ({
       set((state) => ({...state, provider: provider}))
     },
     connectWallet: async () => {
+      console.log('connecting')
       const starknet = getStarknet();
-      await starknet.enable();
+      console.log(starknet)
+      await starknet.enable({showModal:true});
+      console.log(starknet)
       if(starknet.account.address==='' || !starknet.isConnected) return('Connection failed')
       // @ts-ignore
       if(starknet.account.chainId!==GOERLI_CHAIN_ID) return('Wrong chain. Use your Goerli testnet account.')
       set((state) => ({...state, account: starknet.account, provider: starknet.provider}))
     },
     disconnect: () => {
+      disconnect();
       set((state) => ({account: undefined, provider: undefined}))
     },
   })

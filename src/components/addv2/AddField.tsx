@@ -27,7 +27,7 @@ const AddField = (props: AddFieldProps) => {
                      }
                    }}
                    onChange={(e) => props.handleAmount(e)}>
-        <NumberInputField height='100%' value={props.amount}/>
+        <NumberInputField height='100%' placeholder={"0.0"} value={props.amount}/>
       </NumberInput>
       <Flex flexDir={'column'}>
         <Text marginLeft={'10px'} color={'grey'} fontSize={'sm'}>Balance : ~{props.balance?.toPrecision(6)}</Text>

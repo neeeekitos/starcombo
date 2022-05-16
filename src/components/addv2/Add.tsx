@@ -14,6 +14,7 @@ import {AddIcon, ArrowDownIcon} from "@chakra-ui/icons";
 import BlockHeader from "../BlockHeader";
 import BlockFooter from "../BlockFooter";
 import LockedAddInput from "./LockedAddInput";
+import {getBalanceOfErc20, getFloatFromBN} from "../../utils/helpers";
 
 
 interface ActionBlockProps {
@@ -56,6 +57,9 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   const [token1Selector, setToken1Selector] = useState(protocolTokens[1]);
   const [amountToken0, setAmountToken0] = useState("");
   const [amountToken1, setAmountToken1] = useState("");
+  const [token0Balance, setToken0Balance] = useState<number>();
+  const [token1Balance, setToken1Balance] = useState<number>();
+
   const [poolShare, setPoolShare] = useState<string>("0");
   const [lpAmount, setLpAmount] = useState<string>(); // lp token amount
   const [lpTokenSupply, setLpTokenSupply] = useState<string>();
@@ -73,20 +77,32 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   //REFS//
   const outsideSetButton = useRef(null);
 
+  const resetFetchedStates = () =>{
+    setPrices(undefined);
+    setPair(undefined);
+    setPoolShare("");
+    setToken0Balance(0);
+    setToken1Balance(0);
+  }
+
+
   //EFFECTS//
 
   /**
    * When changing one end of the pair, query the network to get pool details
    */
   useEffect(() => {
-    setAmountToken0('0')
-    setAmountToken1('0')
     unsetItem();
     const fetchPair = async () => {
       setLoading(true);
       const [token0, token1] = [token0Selector, token1Selector];
       setToken0(token0);
       setToken1(token1)
+      const [token0BalanceBN, token1BalanceBN] = await Promise.all([getBalanceOfErc20(starknetConnector, token0Selector), getBalanceOfErc20(starknetConnector, token1Selector)]);
+
+      setToken0Balance(getFloatFromBN(token0BalanceBN.toString(), token0Selector.decimals));
+      setToken1Balance(getFloatFromBN(token1BalanceBN.toString(), token1Selector.decimals));
+
       const poolDetails = await protocolInstance.getPoolDetails(token0, token1, provider);
       const poolPair: Pair = poolDetails.poolPair;
       if (poolDetails.poolId) setPoolId(poolDetails.poolId)
@@ -121,7 +137,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
    */
   useEffect(() => {
     unsetItem();
-    if (!pair || !lpTokenSupply) return;
+    if (!pair /*|| lpTokenSupply*/) return;
     let value = amountToken0;
     let direction = "to"
     if (isNaN(value as any)) {
@@ -132,7 +148,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
   }, [pair, loading])
 
   useEffect(() => {
-    setDisabled(isNaN(parseFloat(amountToken0)) || isNaN(parseFloat(amountToken1)))
+    setDisabled(isNaN(parseFloat(amountToken0)) || isNaN(parseFloat(amountToken1)) || parseFloat(amountToken0)===0)
   }, [amountToken0, amountToken1])
 
   /**
@@ -163,8 +179,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
    */
   const setQuoteTokenAmount = (value, priceWanted) => {
     if (value === '') value = '0'
-    if (isNaN(value as any)) return;
-
+    if (isNaN(value as any)|| !pair ||!prices) return;
 
     let tokenFrom: Token, tokenTo: Token, tokenFromIsToken0, tokenFromPrice: Price, tokenToPrice: Price,
       reserveFrom: TokenAmount, reserveTo: TokenAmount;
@@ -184,7 +199,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
     if (priceWanted === "from") {
       const amountFrom = value * prices.priceBtoA
-      setAmountToken0(amountFrom.toString())
+      setAmountToken0(parseFloat(amountFrom.toPrecision(6)).toString())
 
       const parsedValue = ethers.utils.parseUnits(value, tokenTo.decimals)
       const BNvalue = new BigNumber(parsedValue.toString());
@@ -192,7 +207,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     } else {
       // to
       const amountTo = value * prices.priceAtoB
-      setAmountToken1(amountTo.toString())
+      setAmountToken1(parseFloat(amountTo.toPrecision(6)).toString())
 
       const parsedValue = ethers.utils.parseUnits(value, tokenFrom.decimals)
       const BNvalue = new BigNumber(parsedValue.toString());
@@ -221,7 +236,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
     setToken0Selector(token1Selector);
     setToken1Selector(token1Temp);
     setAmountToken0(amountToken1);
-    setAmountToken1(amount1Temp);
+    setAmountToken1('0');
   }
 
   /**
@@ -270,7 +285,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
                      unsetItem={unsetItem}/>
         <Flex padding='10px' marginTop='10px' marginBottom={'10px'} flexDir={'column'} flexWrap={'wrap'}
               alignItems={'center'}>
-          <AddField fieldType={'0'} balance={0} amount={amountToken0} handleAmount={handleAmountToken0}
+          <AddField fieldType={'0'} balance={token0Balance} amount={amountToken0} handleAmount={handleAmountToken0}
                     selectedToken={token0} tokenSelector={token0Selector} setTokenSelector={setToken0Selector}
                     quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
           <Box marginY={'5px'}>
@@ -278,7 +293,7 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
               cursor={'pointer'}
               onClick={switchTokens}/>
           </Box>
-          <AddField fieldType={'1'} balance={0} amount={amountToken1} handleAmount={handleAmountToken1}
+          <AddField fieldType={'1'} balance={token1Balance} amount={amountToken1} handleAmount={handleAmountToken1}
                     selectedToken={token1} tokenSelector={token1Selector} setTokenSelector={setToken1Selector}
                     quoteTokenSelector={token1Selector} protocolTokens={protocolTokens}/>
           <Box marginY={'5px'}>
@@ -322,3 +337,4 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
 
 
 export default ActionBlockAdd;
+
