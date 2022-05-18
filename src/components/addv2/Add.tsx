@@ -231,11 +231,10 @@ const ActionBlockAdd = (props: ActionBlockProps) => {
    */
   const switchTokens = () => {
     unsetItem();
-    const token1Temp = token0Selector;
-    const amount1Temp = amountToken0;
+    const newToken1 = token0Selector;
     setToken0Selector(token1Selector);
-    setToken1Selector(token1Temp);
-    setAmountToken0(amountToken1);
+    setToken1Selector(newToken1);
+    setPrices({priceAtoB: 0, priceBtoA: 0})
     setAmountToken1('0');
   }
 
